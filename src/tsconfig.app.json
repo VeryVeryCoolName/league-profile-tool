@@ -10,7 +10,7 @@
     "main.ts",
     "polyfills.ts",
     "app/**/*.ts",
-    "environments/**/*.ts"
+    "environments/environment.ts"
   ],
   "exclude": [
     "**/*.spec.ts"

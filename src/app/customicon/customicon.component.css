@@ -1,6 +1,7 @@
 img{
   height: 100px;
   width: 100px;
+  display: block;
 }
 .mat-card{
   max-width: 50rem;
@@ -16,4 +17,13 @@ img{
 }
 .mat-form-field{
   text-align: center;
+  width: 100%;
+  max-width: 28rem;
+}
+.icon-grid {
+  max-width: 76rem;
+  margin: 0 auto 1rem;
+}
+.loading-text {
+  color: #c7dced;
 }

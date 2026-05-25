@@ -1,17 +1,47 @@
 main {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
   padding: 1rem;
+  text-align: left;
+}
+
+.mat-card {
+  width: 100%;
+}
+
+.mat-card-content p {
+  margin-bottom: 0;
 }
 
 .mat-form-field {
   display: block;
-  max-width: 52rem;
+  max-width: none;
+  width: 100%;
+}
+
+.endpoint-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.5rem;
+}
+
+.endpoint-actions p {
+  margin: 0;
+  color: #c7dced;
 }
 
 pre {
-  max-height: 28rem;
+  width: 100%;
+  max-height: min(56vh, 36rem);
   overflow: auto;
   padding: 1rem;
   white-space: pre-wrap;
+  word-break: break-word;
   background: #111;
   color: #eee;
+  border-radius: 4px;
 }

@@ -2,15 +2,18 @@ import { Injectable } from '@angular/core';
 
 // If you import a module but never use any of the imported values other than as TypeScript types,
 // the resulting javascript file will look as if you never imported the module at all.
-import { ipcRenderer, webFrame, shell, dialog } from 'electron';
-import * as remote from '@electron/remote';
+import { ipcRenderer, webFrame, shell } from 'electron';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as request from 'request-promise';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import LCUConnector from "lcu-connector";
+
+interface RequestOptions {
+  url: string;
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
+  rejectUnauthorized?: boolean;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -18,14 +21,13 @@ import LCUConnector from "lcu-connector";
 export class ElectronService {
   ipcRenderer: typeof ipcRenderer;
   webFrame: typeof webFrame;
-  remote: typeof remote;
   childProcess: typeof childProcess;
   fs: typeof fs;
   path: typeof path;
-  LCUConnector: typeof LCUConnector;
   shell: typeof shell;
-  dialog: typeof dialog;
-  request: typeof request;
+  request: (options: RequestOptions) => Promise<string>;
+  private http: any;
+  private https: any;
   get isElectron(): boolean {
     return !!(window && window.process && window.process.type);
   }
@@ -35,13 +37,55 @@ export class ElectronService {
       this.ipcRenderer = window.require('electron').ipcRenderer;
       this.webFrame = window.require('electron').webFrame;
       this.shell = window.require('electron').shell;
-      this.request = window.require('request-promise');
-      this.dialog = window.require('electron').remote.dialog;
       this.childProcess = window.require('child_process');
       this.fs = window.require('fs');
       this.path = window.require('path');
-      const lcuConnectorModule = window.require('lcu-connector');
-      this.LCUConnector = lcuConnectorModule.default || lcuConnectorModule;
+      this.http = window.require('http');
+      this.https = window.require('https');
+      this.request = (options: RequestOptions) => this.makeRequest(options);
     }
+  }
+
+  private makeRequest(options: RequestOptions): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const target = new URL(options.url);
+      const transport = target.protocol === 'http:' ? this.http : this.https;
+      const headers = {...(options.headers || {})};
+
+      const requestOptions = {
+        protocol: target.protocol,
+        hostname: target.hostname,
+        port: target.port,
+        path: `${target.pathname}${target.search}`,
+        method: options.method || 'GET',
+        headers,
+        rejectUnauthorized: options.rejectUnauthorized !== false
+      };
+
+      const request = transport.request(requestOptions, response => {
+        let body = '';
+        response.setEncoding('utf8');
+        response.on('data', chunk => {
+          body += chunk;
+        });
+        response.on('end', () => {
+          if (response.statusCode >= 200 && response.statusCode < 300) {
+            resolve(body);
+            return;
+          }
+
+          const error: any = new Error(`${response.statusCode} ${response.statusMessage}: ${body}`);
+          error.response = {
+            body,
+            statusCode: response.statusCode
+          };
+          reject(error);
+        });
+      });
+
+      request.on('error', reject);
+      if (options.body) request.write(options.body);
+      request.end();
+    });
   }
 }

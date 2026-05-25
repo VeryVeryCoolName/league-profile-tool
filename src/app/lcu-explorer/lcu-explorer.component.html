@@ -2,7 +2,7 @@
   <mat-card>
     <mat-card-title>LCU Explorer</mat-card-title>
     <mat-card-content>
-      <p>Read-only challenge, title, and identity endpoints.</p>
+      <p>Safely inspect selected read-only LCU endpoints. Choose an endpoint, then refresh to fetch the current response.</p>
     </mat-card-content>
   </mat-card>
 
@@ -20,8 +20,10 @@
     </mat-select>
   </mat-form-field>
 
-  <button mat-raised-button color="primary" (click)="refresh()">Refresh</button>
+  <div class="endpoint-actions">
+    <button mat-raised-button color="primary" (click)="refresh()">Refresh</button>
+    <p *ngIf="loading">Loading...</p>
+  </div>
 
-  <p *ngIf="loading">Loading...</p>
   <pre *ngIf="response">{{response}}</pre>
 </main>

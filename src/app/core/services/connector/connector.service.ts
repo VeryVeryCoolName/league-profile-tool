@@ -22,20 +22,9 @@ export class ConnectorService {
   }
 
   private initializeConnector() {
-    const clientConnection = new this.electronService.LCUConnector();
     const configuredPath = this.readConfiguredClientPath();
     if (configuredPath) {
       this.addInstallPathCandidate(configuredPath);
-      // @ts-ignore
-      clientConnection._dirPath = configuredPath; // Use user specified client path
-      clientConnection.on('connect', (data: Data) => {
-        this.verifyAndSetConnection(data, 'lcu-connector event');
-        clientConnection.stop();
-      });
-      clientConnection.on('disconnect', () => {
-        this.setReady(false, 'lcu-connector disconnect');
-      });
-      clientConnection.start();
     } else {
       console.warn('[LCU] config/clientPath.txt unavailable; falling back to dynamic lockfile discovery.');
     }

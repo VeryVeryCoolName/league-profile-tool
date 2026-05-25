@@ -1,18 +1,27 @@
 /* Global Styles */
 html, body {
-  height: 100%;
+  min-height: 100%;
   background:#2b2b2d;
   color: white;
 }
+* {
+  box-sizing: border-box;
+}
 main{
   text-align: center;
+  width: 100%;
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
 }
 mat-tab-header{
   background: #12324f;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 .mat-tab-label{
   opacity: 1 !important;
+  min-width: auto !important;
+  padding: 0 14px !important;
 }
 .mat-tab-group.mat-primary .mat-ink-bar, .mat-tab-nav-bar.mat-primary .mat-ink-bar{
   background-color: #8ecaff;
@@ -36,4 +45,21 @@ body {
 }
 .mat-card-header{
   display: block !important;
+}
+.mat-card {
+  max-width: 100%;
+}
+button, .mat-button-wrapper {
+  white-space: normal;
+}
+@media (max-width: 720px) {
+  main {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .mat-tab-label {
+    padding: 0 10px !important;
+    font-size: 0.82rem;
+  }
 }

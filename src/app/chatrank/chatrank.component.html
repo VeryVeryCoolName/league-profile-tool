@@ -1,30 +1,51 @@
 <main>
-  <mat-card>Your chat rank is the rank you and your friends see when you hover over your profile icon on the top right</mat-card>
-  <br>
-  <mat-form-field appearance="fill">
-    <mat-label>Queue</mat-label>
-    <mat-select [(value)]="queue">
-      <mat-option *ngFor="let queue of queues" [value]="queue">
-        {{queue}}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-  <mat-form-field appearance="fill">
-    <mat-label>Rank</mat-label>
-    <mat-select [(value)]="rank">
-      <mat-option *ngFor="let rank of ranks" [value]="rank">
-        {{rank}}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-  <mat-form-field appearance="fill">
-    <mat-label>Division</mat-label>
-    <mat-select [(value)]="division">
-      <mat-option *ngFor="let division of divisions" [value]="division">
-        {{division}}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-  <br>
-  <button (click)="chatRank()" mat-raised-button color="primary">Set Rank</button>
+  <section class="rank-panel">
+    <h2>Chat Rank</h2>
+    <div class="rank-grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Queue</mat-label>
+        <mat-select [(value)]="queue">
+          <mat-option *ngFor="let queue of queues" [value]="queue.value">
+            {{queue.label}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Rank</mat-label>
+        <mat-select [(value)]="rank">
+          <mat-option *ngFor="let rank of ranks" [value]="rank">
+            {{rank}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Division</mat-label>
+        <mat-select [(value)]="division">
+          <mat-option *ngFor="let division of divisions" [value]="division">
+            {{division}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <button (click)="chatRank()" mat-raised-button color="primary">Set Rank</button>
+  </section>
+
+  <section class="rank-panel">
+    <h2>Challenge Rank</h2>
+    <div class="rank-grid challenge-grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Challenge Level</mat-label>
+        <mat-select [(value)]="challengeLevel" (selectionChange)="syncChallengePointsToLevel()">
+          <mat-option *ngFor="let level of challengeLevels" [value]="level">
+            {{level}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Challenge Points</mat-label>
+        <input matInput type="number" min="0" name="challengePoints" [(ngModel)]="challengePoints">
+      </mat-form-field>
+    </div>
+    <button (click)="setChallengeRank()" mat-raised-button color="primary">Set Challenge Rank</button>
+  </section>
 </main>

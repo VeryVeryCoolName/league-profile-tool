@@ -22,6 +22,9 @@ export class LcuExplorerComponent {
     {method: 'GET', path: '/lol-challenges/v2/titles/local-player', notes: 'Unlocked local player titles'},
     {method: 'GET', path: '/lol-lobby/v2/lobby', notes: 'Current lobby state'},
     {method: 'GET', path: '/lol-gameflow/v1/gameflow-phase', notes: 'Current gameflow phase'},
+    {method: 'GET', path: '/lol-chat/v1/me', notes: 'Current chat presence'},
+    {method: 'GET', path: '/lol-regalia/v2/current-summoner/regalia', notes: 'Current profile border regalia'},
+    {method: 'GET', path: '/lol-regalia/v2/config', notes: 'Profile border regalia config'},
     {method: 'GET', path: '/lol-summoner/v1/current-summoner/summoner-profile', notes: 'Profile background/showcase data'},
     {method: 'GET', path: '/lol-summoner/v1/current-summoner', notes: 'Current summoner identity'}
   ];

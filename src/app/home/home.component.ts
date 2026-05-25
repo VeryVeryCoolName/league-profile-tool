@@ -10,9 +10,8 @@ export class HomeComponent implements OnInit {
   public title = 'LEAGUE PROFILE TOOL';
   public currentVersion = 'V.3.0.0';
   public newestVersion = '';
-  private _remote = new ElectronService().shell; // To open the default browser window for links instead of making a new electron window
 
-  constructor() {
+  constructor(private electronService: ElectronService) {
   }
 
   ngOnInit() {
@@ -31,10 +30,11 @@ export class HomeComponent implements OnInit {
   }
 
   public github() {
-    this._remote.openExternal('https://github.com/VeryVeryCoolName/league-profile-tool');
-  }
-
-  public youtube() {
-    this._remote.openExternal('https://www.youtube.com/c/mmanoah');
+    const url = 'https://github.com/VeryVeryCoolName/league-profile-tool';
+    if (this.electronService.shell) {
+      this.electronService.shell.openExternal(url);
+      return;
+    }
+    window.open(url, '_blank');
   }
 }

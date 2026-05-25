@@ -22,13 +22,12 @@ import {MatSortModule} from "@angular/material/sort";
 import {CustomapiComponent} from './customapi/customapi.component';
 import {FaqComponent} from './faq/faq.component';
 import { CustomiconComponent } from './customicon/customicon.component';
-import { IconsPipe } from './core/pipes/icons/icons.pipe';
 import {ElectronService} from "./core/services";
 import { HttpClientModule } from '@angular/common/http';
 import { LcuExplorerComponent } from './lcu-explorer/lcu-explorer.component';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, StatusComponent, DialogComponent, BackgroundComponent, ChampionsPipe, ChatrankComponent, ChampionPurchaseDateComponent, CustomapiComponent, FaqComponent, CustomiconComponent, IconsPipe, LcuExplorerComponent],
+  declarations: [AppComponent, HomeComponent, StatusComponent, DialogComponent, BackgroundComponent, ChampionsPipe, ChatrankComponent, ChampionPurchaseDateComponent, CustomapiComponent, FaqComponent, CustomiconComponent, LcuExplorerComponent],
   imports: [
     BrowserModule,
     FormsModule,

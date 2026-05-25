@@ -10,13 +10,17 @@
   <form (submit)="$event.preventDefault()">
     <mat-form-field>
       <mat-label>Search by name or ID</mat-label>
-      <input matInput [(ngModel)]="searchKeyword" name="search" placeholder="Ex. Ahri">
+      <input matInput [(ngModel)]="searchKeyword" (ngModelChange)="resetIconLimit()" name="search" placeholder="Ex. Ahri or 0">
     </mat-form-field>
   </form>
-  <div *ngIf="searchKeyword?.length >= 2">
-    <span class="icons" *ngFor="let icon of allIcons | icons: searchKeyword">
-        <button mat-stroked-button (click)="setIcon(icon.id)"><img onerror="this.onerror=null; this.remove()" src="https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/{{icon.id}}.jpg" alt="{{icon.id}}"/></button>
+  <p *ngIf="iconsLoading" class="loading-text">Loading icons...</p>
+  <p *ngIf="iconsError" class="loading-text">{{iconsError}}</p>
+  <div class="icon-grid" *ngIf="!iconsLoading && !iconsError">
+    <span class="icons" *ngFor="let icon of visibleIcons; trackBy: trackByIcon">
+        <button *ngIf="!icon.broken" mat-stroked-button (click)="setIcon(icon.id)">
+          <img [src]="icon.src" [alt]="icon.title || icon.id" loading="lazy" decoding="async" (error)="onIconError(icon)"/>
+        </button>
     </span>
   </div>
+  <button *ngIf="visibleIcons.length < filteredIcons.length" mat-raised-button color="primary" (click)="loadMoreIcons()">Load More</button>
 </main>
-

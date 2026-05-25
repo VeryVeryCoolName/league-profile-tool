@@ -10,28 +10,82 @@ import {ChampionService} from "../core/services/champion/champion.service";
   styleUrls: ['./customicon.component.css']
 })
 export class CustomiconComponent implements OnInit {
-  public searchKeyword: string;
-  public allIcons: [Record<string, unknown>];
+  public searchKeyword = '';
+  public allIcons: Array<Record<string, unknown>> = [];
+  public visibleIconLimit = 200;
+  public iconsLoading = true;
+  public iconsError = '';
 
   constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private championData: ChampionService) {
   }
 
   async ngOnInit() {
     this.championData.getSummonerIcons().subscribe(icons => {
-      // @ts-ignore
-      this.allIcons = icons;
+      this.allIcons = (icons as Array<Record<string, unknown>>)
+        .filter(icon => icon && icon.id !== undefined && icon.id !== null)
+        .sort((left, right) => Number(left.id) - Number(right.id))
+        .map(icon => {
+          return {
+            ...icon,
+            src: `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/${icon.id}.jpg`,
+            broken: false
+          };
+        });
+      this.iconsLoading = false;
+    }, error => {
+      console.error('[Assets] failed to load summoner icons', error);
+      this.iconsLoading = false;
+      this.iconsError = 'Could not load summoner icons.';
     })
   }
 
-  public setIcon(id: number) {
+  public get filteredIcons() {
+    const search = (this.searchKeyword || '').toLowerCase();
+    if (!search) return this.allIcons;
+    return this.allIcons.filter(icon => {
+      const title = String(icon.title || '').toLowerCase();
+      const id = String(icon.id || '');
+      return title.indexOf(search) >= 0 || id.indexOf(search) >= 0;
+    });
+  }
+
+  public get visibleIcons() {
+    return this.filteredIcons.slice(0, this.visibleIconLimit);
+  }
+
+  public resetIconLimit() {
+    this.visibleIconLimit = 200;
+  }
+
+  public loadMoreIcons() {
+    this.visibleIconLimit += 200;
+  }
+
+  public onIconError(icon: Record<string, unknown>) {
+    icon.broken = true;
+  }
+
+  public setIcon(id: unknown) {
+    const iconId = Number(id);
+    if (isNaN(iconId)) {
+      this.dialog.open(DialogComponent, {
+        data: {body: 'Select a valid icon ID.'}
+      });
+      return;
+    }
+
     const body = {
-      icon: id
+      icon: iconId
     };
     this.lcuConnectionService.requestSend(body, 'PUT', 'lolChat').then(response => {
       this.dialog.open(DialogComponent, {
         data: {body: response}
       });
     });
+  }
+
+  public trackByIcon(index: number, icon: Record<string, unknown>) {
+    return icon.id;
   }
 
 }

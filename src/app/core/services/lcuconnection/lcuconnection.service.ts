@@ -71,13 +71,13 @@ export class LCUConnectionService {
       return requestBody;
     }
 
-    if (endpoint === 'profile' && method === 'POST' && body.key === 'backgroundSkinId') {
+    if (endpoint === 'profile' && method === 'POST' && body.key) {
       const response = await this.makeRequest('GET', {}, endPoint, true);
       const current = this.parseResponse(response);
       if (!current) return response;
-      if (!Object.prototype.hasOwnProperty.call(current, 'backgroundSkinId')) {
+      if (!Object.prototype.hasOwnProperty.call(current, body.key as string)) {
         console.error('[LCU] Summoner profile schema mismatch', current);
-        return 'LCU summoner profile response did not include backgroundSkinId.';
+        return `LCU summoner profile response did not include ${body.key}.`;
       }
     }
 
@@ -91,8 +91,8 @@ export class LCUConnectionService {
       return await this.verifyWithRetry(endPoint, expectedBody, requestBody, endPoint);
     }
 
-    if (endpoint === 'profile' && expectedBody.key === 'backgroundSkinId') {
-      return await this.verifyWithRetry(endPoint, {backgroundSkinId: expectedBody.value}, requestBody, endPoint);
+    if (endpoint === 'profile' && expectedBody.key) {
+      return await this.verifyWithRetry(endPoint, {[expectedBody.key as string]: expectedBody.value}, requestBody, endPoint);
     }
 
     return 'Success';
@@ -135,6 +135,9 @@ export class LCUConnectionService {
   }
 
   private valuesMatch(key: string, actual: unknown, expected: unknown): boolean {
+    if (key === 'challengePoints') {
+      return String(actual) === String(expected);
+    }
     if (typeof actual === 'string' && typeof expected === 'string' && this.shouldNormalizeCase(key)) {
       return actual.toUpperCase() === expected.toUpperCase();
     }
@@ -142,7 +145,7 @@ export class LCUConnectionService {
   }
 
   private shouldNormalizeCase(key: string): boolean {
-    return ['rank', 'queue', 'division', 'rankedLeagueTier', 'rankedLeagueQueue', 'rankedLeagueDivision'].indexOf(key) >= 0;
+    return ['rank', 'queue', 'division', 'rankedLeagueTier', 'rankedLeagueQueue', 'rankedLeagueDivision', 'challengeCrystalLevel'].indexOf(key) >= 0;
   }
 
   private delay(ms: number): Promise<void> {

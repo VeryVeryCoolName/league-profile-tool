@@ -1,6 +1,40 @@
-.mat-card {
-  max-width: 25rem;
-  margin-left: auto;
-  margin-right: auto;
-  display: block;
+main {
+  display: grid;
+  gap: 1rem;
+  max-width: 58rem;
+}
+
+.rank-panel {
+  width: 100%;
+  padding: 1rem;
+  background: #3f3f3f;
+  border-radius: 4px;
+  text-align: left;
+}
+
+h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.rank-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.challenge-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mat-form-field {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .rank-grid,
+  .challenge-grid {
+    grid-template-columns: 1fr;
+  }
 }

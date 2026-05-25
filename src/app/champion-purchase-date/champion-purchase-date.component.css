@@ -21,7 +21,9 @@ table{
   margin-right: auto;
   text-align: left;
   font-size: 1.2rem;
+  max-width: 100%;
 }
 td{
   padding-right: 1rem;
+  word-break: break-word;
 }
