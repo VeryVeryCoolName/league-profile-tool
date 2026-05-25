@@ -13,6 +13,7 @@ function createWindow(): BrowserWindow {
 
   // Create the browser window.
   win = new BrowserWindow({
+    title: 'League Profile Tool 3.0',
     width: 950,
     height: 650,
     webPreferences: {

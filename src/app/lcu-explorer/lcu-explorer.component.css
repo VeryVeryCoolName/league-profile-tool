@@ -1,0 +1,17 @@
+main {
+  padding: 1rem;
+}
+
+.mat-form-field {
+  display: block;
+  max-width: 52rem;
+}
+
+pre {
+  max-height: 28rem;
+  overflow: auto;
+  padding: 1rem;
+  white-space: pre-wrap;
+  background: #111;
+  color: #eee;
+}

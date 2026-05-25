@@ -8,14 +8,21 @@ main{
   text-align: center;
 }
 mat-tab-header{
-  background: #422948;
+  background: #12324f;
   margin-bottom: 2rem;
 }
 .mat-tab-label{
   opacity: 1 !important;
 }
 .mat-tab-group.mat-primary .mat-ink-bar, .mat-tab-nav-bar.mat-primary .mat-ink-bar{
-  background-color: white;
+  background-color: #8ecaff;
+}
+.mat-raised-button.mat-primary, .mat-flat-button.mat-primary {
+  background-color: #145a8f;
+}
+.mat-stroked-button.mat-primary {
+  color: #8ecaff;
+  border-color: #8ecaff;
 }
 body {
   margin: 0;

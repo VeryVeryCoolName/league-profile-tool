@@ -1,8 +1,8 @@
 {
   "name": "league-profile-tool",
-  "version": "2.4.8",
+  "version": "3.0.0",
   "description": "Tool that interacts with the Riot LCU",
-  "homepage": "https://github.com/MManoah/league-profile-tool",
+  "homepage": "https://github.com/VeryVeryCoolName/league-profile-tool",
   "author": "Manoah",
   "main": "main.js",
   "private": true,

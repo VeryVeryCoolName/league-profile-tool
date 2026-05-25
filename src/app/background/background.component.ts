@@ -35,7 +35,7 @@ export class BackgroundComponent implements OnInit {
             });
           }
         } catch (err) {
-          console.log(err);
+          console.error(err);
         }
       })
     })
@@ -60,7 +60,7 @@ export class BackgroundComponent implements OnInit {
         console.error('[Assets] failed to load champion skin data', {champion: alt, error});
       })
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 

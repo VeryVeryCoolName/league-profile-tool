@@ -8,7 +8,7 @@ import {ElectronService} from "../core/services";
 })
 export class HomeComponent implements OnInit {
   public title = 'LEAGUE PROFILE TOOL';
-  public currentVersion = 'V.2.4.9';
+  public currentVersion = 'V.3.0.0';
   public newestVersion = '';
   private _remote = new ElectronService().shell; // To open the default browser window for links instead of making a new electron window
 
@@ -17,7 +17,7 @@ export class HomeComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      const url = 'https://raw.githubusercontent.com/MManoah/league-profile-tool/master/version.json';
+      const url = 'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/master/version.json';
       const obj = await (await fetch(url)).json();
       this.newestVersion = obj.version;
     } catch (error){
@@ -26,7 +26,7 @@ export class HomeComponent implements OnInit {
   }
 
   public github() {
-    this._remote.openExternal('https://github.com/MManoah/league-profile-tool');
+    this._remote.openExternal('https://github.com/VeryVeryCoolName/league-profile-tool');
   }
 
   public youtube() {

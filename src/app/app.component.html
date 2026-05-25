@@ -1,13 +1,16 @@
+<div class="connection-status" [class.connected]="isConnected()">
+  LCU {{isConnected() ? 'Connected' : 'Connecting'}}
+</div>
 <mat-tab-group>
   <mat-tab label="Home"><app-home></app-home></mat-tab>
   <mat-tab label="Status"><ng-template matTabContent><app-status></app-status></ng-template></mat-tab>
-  <mat-tab label="Chibi Icons"><ng-template matTabContent><app-chibi></app-chibi></ng-template></mat-tab>
   <mat-tab label="Custom Icons"><ng-template matTabContent><app-customicon></app-customicon></ng-template></mat-tab>
   <mat-tab label="Background"><ng-template matTabContent><app-background></app-background></ng-template></mat-tab>
   <mat-tab label="Chat Rank"><ng-template matTabContent><app-chatrank></app-chatrank></ng-template></mat-tab>
   <mat-tab label="Practice Tool"><ng-template matTabContent><app-practicetool></app-practicetool></ng-template></mat-tab>
   <mat-tab label="Champion Purchase Date"><ng-template matTabContent><app-champion-purchase-date></app-champion-purchase-date></ng-template></mat-tab>
   <mat-tab label="Custom API Call"><ng-template matTabContent><app-customapi></app-customapi></ng-template></mat-tab>
+  <mat-tab label="Advanced"><ng-template matTabContent><app-lcu-explorer></app-lcu-explorer></ng-template></mat-tab>
   <mat-tab label="F.A.Q"><ng-template matTabContent><app-faq></app-faq></ng-template></mat-tab>
 </mat-tab-group>
 <router-outlet></router-outlet>

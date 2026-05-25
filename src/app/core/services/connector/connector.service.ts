@@ -56,7 +56,7 @@ export class ConnectorService {
         }
         if (!this.loggedMissingLockfile) {
           this.loggedMissingLockfile = true;
-          console.log(`[LCU] lockfile not found during ${source}; retrying.`);
+          console.warn(`[LCU] lockfile not found during ${source}; retrying.`);
         }
         return;
       }
@@ -85,7 +85,6 @@ export class ConnectorService {
       if (!candidate) continue;
       const lockfilePath = this.electronService.path.join(this.normalizeClientPath(candidate), 'lockfile');
       if (this.electronService.fs.existsSync(lockfilePath)) {
-        console.log('[LCU] lockfile found', lockfilePath);
         return lockfilePath;
       }
     }
@@ -155,12 +154,6 @@ export class ConnectorService {
         password: parts[3],
         protocol: parts[4]
       };
-      console.log('[LCU] lockfile parsed', {
-        path: lockfilePath,
-        port: data.port,
-        protocol: data.protocol,
-        passwordLength: data.password.length
-      });
       return data;
     } catch (err) {
       console.error('[LCU] failed to parse lockfile', err);
@@ -173,16 +166,10 @@ export class ConnectorService {
     const requestOptions = JSON.parse(JSON.stringify(nextConnector));
     requestOptions.method = 'GET';
     requestOptions.url += '/lol-summoner/v1/current-summoner';
-    console.log('[LCU] connection attempt', {source, url: nextConnector.url});
     try {
       await this.electronService.request(requestOptions);
       this.connector = nextConnector;
       this.setReady(true, source);
-      console.log('[LCU] auth success', {
-        port: data.port,
-        protocol: data.protocol,
-        passwordLength: data.password.length
-      });
     } catch (err) {
       this.setReady(false, 'auth failed');
       console.error('[LCU] auth failed', err && (err.message || err.error || err));
@@ -204,8 +191,11 @@ export class ConnectorService {
     if (!ready) this.connector = null;
     if (this.ready !== ready) {
       this.ready = ready;
-      console.log('[LCU] ready state', {ready, reason});
     }
+  }
+
+  public isReady(): boolean {
+    return this.ready;
   }
 
   private normalizeClientPath(clientPath: string): string {

@@ -1,0 +1,11 @@
+.connection-status {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  color: #f7d7d7;
+  background: #5a2020;
+}
+
+.connection-status.connected {
+  color: #d7f7df;
+  background: #205a34;
+}

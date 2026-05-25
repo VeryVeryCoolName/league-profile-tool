@@ -15,7 +15,7 @@ export class PracticetoolComponent {
   }
 
   public makeLobby() {
-    if (this.lobbyName === "") this.lobbyName = "Practice Tool";
+    const lobbyName = this.cleanLobbyName(this.lobbyName);
     const body = {
       "customGameLobby": {
         "configuration": {
@@ -26,11 +26,11 @@ export class PracticetoolComponent {
           "mutators": {
             "id": 1
           },
-          "spectatorPolicy": "NotAllowed",
+          "spectatorPolicy": "AllAllowed",
           "teamSize": 5
         },
-        "lobbyName": this.lobbyName,
-        "lobbyPassword": ""
+        "lobbyName": lobbyName,
+        "lobbyPassword": null
       },
       "isCustom": true
     };
@@ -39,5 +39,10 @@ export class PracticetoolComponent {
         data: {body: response}
       });
     });
+  }
+
+  private cleanLobbyName(name: string): string {
+    const cleanName = (name || '').trim().replace(/[^a-zA-Z0-9 _-]/g, '').substring(0, 24);
+    return cleanName || `LPT ${Date.now().toString().slice(-6)}`;
   }
 }
