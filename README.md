@@ -1,8 +1,6 @@
 # League of Legends Profile Tool
 
-This project is not maintained anymore. Thank you to everyone who enjoyed it!
-
-This application shows how data sent to the LCU can be modified or read to change visual stuff like, icon, background, hovercard, or read data such as profile data, friends, and more.
+This fork attempts to restore functionality to League Profile Tool, an app made by [MManoah](https://github.com/MManoah). I way wish to add more stuff in the future, but the main focus is restoring most of the features without tampering too much with the original project. The rest of this readme is unchanged.
 
 ## How to install 
 [Click Here To Download Application 64 BIT](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V.3.0.0/League.Profile.Tool.zip)
