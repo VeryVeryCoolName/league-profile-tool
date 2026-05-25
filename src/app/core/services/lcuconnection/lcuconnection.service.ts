@@ -16,13 +16,7 @@ export class LCUConnectionService {
     const requestBody = await this.prepareRequestBody(body, method, endpoint, endPoint);
     if (typeof requestBody === 'string') return requestBody;
     const response = await this.makeRequest(method, requestBody, endPoint, false);
-    if (response !== 'Success') {
-      if (endpoint === 'lobby') {
-        const lobbyVerification = await this.verifyPracticeLobby(endPoint);
-        if (lobbyVerification === 'Success') return lobbyVerification;
-      }
-      return response;
-    }
+    if (response !== 'Success') return response;
     return await this.verifyWrite(body, requestBody, method, endpoint, endPoint);
   }
 
@@ -101,10 +95,6 @@ export class LCUConnectionService {
       return await this.verifyWithRetry(endPoint, {backgroundSkinId: expectedBody.value}, requestBody, endPoint);
     }
 
-    if (endpoint === 'lobby') {
-      return await this.verifyPracticeLobby(endPoint);
-    }
-
     return 'Success';
   }
 
@@ -130,16 +120,6 @@ export class LCUConnectionService {
       if (this.matchesPatch(current, expected)) return 'Success';
     }
     return this.verificationFailed(writeEndPoint, requestBody, current, expected);
-  }
-
-  private async verifyPracticeLobby(endPoint: string): Promise<string> {
-    const response = await this.makeRequest('GET', {}, endPoint, true);
-    const current = this.parseResponse(response);
-    if (!current) return response;
-    const gameConfig = (current.gameConfig || {}) as Record<string, unknown>;
-    const isPracticeTool = gameConfig.gameMode === 'PRACTICETOOL' && gameConfig.mapId === 11 && gameConfig.isCustom === true;
-    if (isPracticeTool) return 'Success';
-    return this.verificationFailed(endPoint, {gameMode: 'PRACTICETOOL', mapId: 11, isCustom: true}, current, {gameConfig: {gameMode: 'PRACTICETOOL', mapId: 11, isCustom: true}});
   }
 
   private matchesPatch(current: Record<string, unknown>, patch: Record<string, unknown>): boolean {

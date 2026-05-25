@@ -1,8 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'champions',
-  pure: false
+  name: 'champions'
 })
 export class ChampionsPipe implements PipeTransform {
   transform(items: any[], filter: string): any {

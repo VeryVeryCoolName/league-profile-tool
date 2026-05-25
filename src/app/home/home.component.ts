@@ -15,7 +15,12 @@ export class HomeComponent implements OnInit {
   constructor() {
   }
 
-  async ngOnInit() {
+  ngOnInit() {
+    this.newestVersion = this.currentVersion;
+    setTimeout(() => this.checkNewestVersion(), 0);
+  }
+
+  private async checkNewestVersion() {
     try {
       const url = 'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/master/version.json';
       const obj = await (await fetch(url)).json();

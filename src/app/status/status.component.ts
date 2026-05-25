@@ -10,12 +10,20 @@ import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection
 })
 export class StatusComponent {
   public text = '';
+  public availability = 'chat';
+  public statuses = [
+    {label: 'Online', value: 'chat'},
+    {label: 'Away', value: 'away'},
+    {label: 'Mobile', value: 'mobile'},
+    {label: 'Offline', value: 'offline'}
+  ];
 
   constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService) {
   }
 
   public setStatus() {
     const body = {
+      availability: this.availability,
       statusMessage: this.text
     };
     this.lcuConnectionService.requestSend(body, 'PUT', 'lolChat').then(response => {

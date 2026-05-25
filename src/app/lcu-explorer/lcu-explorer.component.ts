@@ -21,7 +21,6 @@ export class LcuExplorerComponent {
     {method: 'GET', path: '/lol-challenges/v2/titles/all', notes: 'All known titles'},
     {method: 'GET', path: '/lol-challenges/v2/titles/local-player', notes: 'Unlocked local player titles'},
     {method: 'GET', path: '/lol-lobby/v2/lobby', notes: 'Current lobby state'},
-    {method: 'GET', path: '/lol-lobby/v2/lobby/custom/available-bots', notes: 'Practice/custom lobby bot support'},
     {method: 'GET', path: '/lol-gameflow/v1/gameflow-phase', notes: 'Current gameflow phase'},
     {method: 'GET', path: '/lol-summoner/v1/current-summoner/summoner-profile', notes: 'Profile background/showcase data'},
     {method: 'GET', path: '/lol-summoner/v1/current-summoner', notes: 'Current summoner identity'}

@@ -16,6 +16,7 @@ function createWindow(): BrowserWindow {
     title: 'League Profile Tool 3.0',
     width: 950,
     height: 650,
+    backgroundColor: '#2b2b2d',
     webPreferences: {
       nodeIntegration: true,
       allowRunningInsecureContent: (serve),

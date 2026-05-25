@@ -1,6 +1,12 @@
 img{
   height: 100px;
   width: 100px;
+  display: block;
+  opacity: 0;
+  transition: opacity 160ms ease-in;
+}
+.loaded{
+  opacity: 1;
 }
 .mat-stroked-button{
   margin: 0.5rem;
@@ -12,4 +18,29 @@ img{
 .skinSplash{
   width: 187px;
   height: 348px;
+}
+.image-button{
+  position: relative;
+  overflow: hidden;
+  vertical-align: top;
+}
+.champion-button{
+  width: 104px;
+  height: 104px;
+}
+.skin-button{
+  width: 191px;
+  height: 352px;
+}
+.image-placeholder{
+  position: absolute;
+  inset: 1px;
+  background: #1a2630;
+}
+.skin-placeholder{
+  background: #17232c;
+}
+.loading-text{
+  margin: 0.75rem 0;
+  color: #c7dced;
 }

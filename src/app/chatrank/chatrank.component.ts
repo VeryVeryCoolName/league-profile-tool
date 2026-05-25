@@ -9,7 +9,7 @@ import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection
   styleUrls: ['./chatrank.component.css']
 })
 export class ChatrankComponent {
-  public ranks = ["IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"];
+  public ranks = ["IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "EMERALD", "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"];
   public divisions = ["I", "II", "III", "IV"];
   public queues = ["RANKED_TFT", "RANKED_SOLO_5x5"];
   public queue: string;

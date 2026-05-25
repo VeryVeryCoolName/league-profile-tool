@@ -18,8 +18,11 @@ export class ConnectorService {
 
   constructor(private electronService: ElectronService) {
     if (!electronService.isElectron) return;
+    setTimeout(() => this.initializeConnector(), 250);
+  }
 
-    const clientConnection = new electronService.LCUConnector();
+  private initializeConnector() {
+    const clientConnection = new this.electronService.LCUConnector();
     const configuredPath = this.readConfiguredClientPath();
     if (configuredPath) {
       this.addInstallPathCandidate(configuredPath);
@@ -49,7 +52,7 @@ export class ConnectorService {
     if (this.connecting) return;
     this.connecting = true;
     try {
-      const lockfilePath = this.findLockfilePath();
+      const lockfilePath = this.findLockfilePath(source !== 'startup');
       if (!lockfilePath) {
         if (this.connector && this.lockfilePath && !this.electronService.fs.existsSync(this.lockfilePath)) {
           this.setReady(false, 'lockfile removed');
@@ -75,12 +78,21 @@ export class ConnectorService {
     }
   }
 
-  private findLockfilePath(): string {
+  private findLockfilePath(allowProcessLookup = true): string {
     if (this.lockfilePath && this.electronService.fs.existsSync(this.lockfilePath)) return this.lockfilePath;
+
+    const candidateLockfilePath = this.findLockfileInCandidates();
+    if (candidateLockfilePath) return candidateLockfilePath;
+
+    if (!allowProcessLookup) return null;
 
     const processPath = this.getLeagueClientPathFromProcess();
     if (processPath) this.addInstallPathCandidate(processPath);
 
+    return this.findLockfileInCandidates();
+  }
+
+  private findLockfileInCandidates(): string {
     for (const candidate of this.installPathCandidates) {
       if (!candidate) continue;
       const lockfilePath = this.electronService.path.join(this.normalizeClientPath(candidate), 'lockfile');

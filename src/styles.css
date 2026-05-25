@@ -26,8 +26,9 @@ mat-tab-header{
 }
 body {
   margin: 0;
-  font-family: Roboto,
+  font-family: "Segoe UI",
   "Helvetica Neue",
+  Arial,
   sans-serif;
 }
 .simple-snack-bar .mat-simple-snackbar {
