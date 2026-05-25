@@ -30,7 +30,8 @@ export class BackgroundComponent implements OnInit {
             const src = `https://ddragon.leagueoflegends.com/cdn/${this.currentVersion}/img/champion/${champion}.png`;
             this.championImages.push({
               src: src,
-              alt: champion
+              alt: champion,
+              broken: false
             });
           }
         } catch (err) {
@@ -47,15 +48,27 @@ export class BackgroundComponent implements OnInit {
       this.championData.getSkins(this.currentVersion, alt).subscribe(champion => {
         const skins = champion["data"][alt]["skins"];
         for (let i = 0; i < skins.length; i++) {
+          const src = `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${alt}_${skins[i]["num"]}.jpg`;
           this.skinsImages.push({
-            src: `http://ddragon.leagueoflegends.com/cdn/img/champion/loading/${alt}_${skins[i]["num"]}.jpg`,
-            alt: skins[i]["id"]
+            src: src,
+            alt: skins[i]["id"],
+            num: skins[i]["num"],
+            broken: false
           });
         }
+      }, error => {
+        console.error('[Assets] failed to load champion skin data', {champion: alt, error});
       })
     } catch (error) {
       console.log(error);
     }
+  }
+
+  public onImageError(event: Event, image: Record<string, unknown>) {
+    image.broken = true;
+    console.warn('[Assets] failed image load', image);
+    const target = event.target as HTMLImageElement;
+    target.style.display = 'none';
   }
 
   public setBackground(id: string) {

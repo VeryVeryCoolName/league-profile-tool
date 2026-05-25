@@ -1,13 +1,13 @@
 <mat-tab-group>
   <mat-tab label="Home"><app-home></app-home></mat-tab>
-  <mat-tab label="Status"><app-status></app-status></mat-tab>
-  <mat-tab label="Chibi Icons"><app-chibi></app-chibi></mat-tab>
-  <mat-tab label="Custom Icons"><app-customicon></app-customicon></mat-tab>
-  <mat-tab label="Background"><app-background></app-background></mat-tab>
-  <mat-tab label="Chat Rank"><app-chatrank></app-chatrank></mat-tab>
-  <mat-tab label="Practice Tool"><app-practicetool></app-practicetool></mat-tab>
-  <mat-tab label="Champion Purchase Date"><app-champion-purchase-date></app-champion-purchase-date></mat-tab>
-  <mat-tab label="Custom API Call"><app-customapi></app-customapi></mat-tab>
-  <mat-tab label="F.A.Q"><app-faq></app-faq></mat-tab>
+  <mat-tab label="Status"><ng-template matTabContent><app-status></app-status></ng-template></mat-tab>
+  <mat-tab label="Chibi Icons"><ng-template matTabContent><app-chibi></app-chibi></ng-template></mat-tab>
+  <mat-tab label="Custom Icons"><ng-template matTabContent><app-customicon></app-customicon></ng-template></mat-tab>
+  <mat-tab label="Background"><ng-template matTabContent><app-background></app-background></ng-template></mat-tab>
+  <mat-tab label="Chat Rank"><ng-template matTabContent><app-chatrank></app-chatrank></ng-template></mat-tab>
+  <mat-tab label="Practice Tool"><ng-template matTabContent><app-practicetool></app-practicetool></ng-template></mat-tab>
+  <mat-tab label="Champion Purchase Date"><ng-template matTabContent><app-champion-purchase-date></app-champion-purchase-date></ng-template></mat-tab>
+  <mat-tab label="Custom API Call"><ng-template matTabContent><app-customapi></app-customapi></ng-template></mat-tab>
+  <mat-tab label="F.A.Q"><ng-template matTabContent><app-faq></app-faq></ng-template></mat-tab>
 </mat-tab-group>
 <router-outlet></router-outlet>

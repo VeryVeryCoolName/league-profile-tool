@@ -20,6 +20,12 @@ export class ChatrankComponent {
   }
 
   public chatRank() {
+    if (!this.queue || !this.rank || !this.division) {
+      this.dialog.open(DialogComponent, {
+        data: {body: 'Select a queue, rank, and division before updating chat rank.'}
+      });
+      return;
+    }
     const body = {
       lol: {
         rankedLeagueQueue: this.queue,

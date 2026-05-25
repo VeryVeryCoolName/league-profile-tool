@@ -6,10 +6,11 @@ import { ipcRenderer, webFrame, shell, dialog } from 'electron';
 import * as remote from '@electron/remote';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
+import * as path from 'path';
 import * as request from 'request-promise';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import * as LCUConnector from "lcu-connector";
+import LCUConnector from "lcu-connector";
 
 @Injectable({
   providedIn: 'root'
@@ -20,6 +21,7 @@ export class ElectronService {
   remote: typeof remote;
   childProcess: typeof childProcess;
   fs: typeof fs;
+  path: typeof path;
   LCUConnector: typeof LCUConnector;
   shell: typeof shell;
   dialog: typeof dialog;
@@ -37,7 +39,9 @@ export class ElectronService {
       this.dialog = window.require('electron').remote.dialog;
       this.childProcess = window.require('child_process');
       this.fs = window.require('fs');
-      this.LCUConnector = window.require('lcu-connector');
+      this.path = window.require('path');
+      const lcuConnectorModule = window.require('lcu-connector');
+      this.LCUConnector = lcuConnectorModule.default || lcuConnectorModule;
     }
   }
 }

@@ -8,12 +8,12 @@
   </div>
   <div *ngIf="!showingSkins">
     <span class="champions" *ngFor="let champion of championImages | champions: searchText">
-        <button mat-stroked-button (click)="getSkins(champion.alt)"><img src="{{champion.src}}" alt="{{champion.alt}}"/></button>
+        <button *ngIf="!champion.broken" mat-stroked-button (click)="getSkins(champion.alt)"><img [src]="champion.src" [alt]="champion.alt" (error)="onImageError($event, champion)"/></button>
     </span>
   </div>
   <div *ngIf="showingSkins">
     <span class="championSkin" *ngFor="let skin of skinsImages">
-        <button mat-stroked-button (click)="setBackground(skin.alt)"><img class="skinSplash" src="{{skin.src}}" alt="{{skin.alt}}"/></button>
+        <button *ngIf="!skin.broken" mat-stroked-button (click)="setBackground(skin.alt)"><img class="skinSplash" [src]="skin.src" [alt]="skin.alt" (error)="onImageError($event, skin)"/></button>
     </span>
   </div>
 </main>

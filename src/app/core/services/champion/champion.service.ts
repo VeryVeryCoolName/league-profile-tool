@@ -13,7 +13,7 @@ export class ChampionService {
   }
 
   getSkins(version: string, alt: string){
-    return this.http.get(`http://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion/${alt}.json`);
+    return this.http.get(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion/${alt}.json`);
   }
 
   getSummonerIcons(){

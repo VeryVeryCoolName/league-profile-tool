@@ -4,5 +4,6 @@ export interface Options {
     Accept: string,
     Authorization: string
   },
-  url: string
+  url: string,
+  method?: string
 }
