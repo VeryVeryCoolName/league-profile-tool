@@ -32,6 +32,8 @@
 
   <section class="rank-panel">
     <h2>Challenge Rank</h2>
+    <p class="rank-source" *ngIf="challengeRankSource">Current values from {{challengeRankSource}}</p>
+    <p class="rank-source">Changing the crystal fills Challenge Points with that crystal's minimum threshold. Manual point edits after that are preserved.</p>
     <div class="rank-grid challenge-grid">
       <mat-form-field appearance="fill">
         <mat-label>Challenge Level</mat-label>

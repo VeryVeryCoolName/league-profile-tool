@@ -18,6 +18,12 @@ h2 {
   line-height: 1.2;
 }
 
+.rank-source {
+  margin: -0.35rem 0 0.75rem;
+  color: #c7dced;
+  font-size: 0.85rem;
+}
+
 .rank-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
