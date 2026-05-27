@@ -8,8 +8,8 @@ import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection
 })
 export class CustomapiComponent {
   public methods = ["GET", "POST", "PUT", "PATCH", "DELETE"];
-  public method: string;
-  public body = "{\n     \"\":\"\"\n}";
+  public method = "GET";
+  public body = "{}";
   public response: string;
   public endPoint: string;
 
@@ -17,16 +17,37 @@ export class CustomapiComponent {
   }
 
   public sendRequest() {
-    let body: Record<string, unknown>;
-    try {
-      body = JSON.parse(this.body);
-    } catch (error) {
-      this.response = 'Invalid JSON Format';
+    const endpoint = (this.endPoint || '').trim();
+    if (!this.method || !endpoint) {
+      this.response = 'Select a method and enter an endpoint.';
       return;
     }
-    this.lcuConnectionService.requestCustomAPI(body, this.method, this.endPoint).then(response => {
-      this.response = JSON.stringify(JSON.parse(response), null, 3);
+    if (endpoint.charAt(0) !== '/') {
+      this.response = 'Endpoint must start with /.';
+      return;
+    }
+
+    let body: Record<string, unknown> = {};
+    if (this.method !== 'GET') {
+      try {
+        body = JSON.parse(this.body || '{}');
+      } catch (error) {
+        this.response = 'Invalid JSON Format';
+        return;
+      }
+    }
+    this.lcuConnectionService.requestCustomAPI(body, this.method, endpoint).then(response => {
+      this.response = this.formatResponse(response);
     });
+  }
+
+  private formatResponse(response: any): string {
+    if (typeof response !== 'string') return JSON.stringify(response, null, 3);
+    try {
+      return JSON.stringify(JSON.parse(response), null, 3);
+    } catch (error) {
+      return response;
+    }
   }
 
 }

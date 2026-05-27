@@ -15,11 +15,6 @@ interface LcuEndpointGroup {
   endpoints: LcuEndpoint[];
 }
 
-interface DiagnosticField {
-  path: string;
-  value: string;
-}
-
 interface EndpointState {
   loading: boolean;
   expanded: boolean;
@@ -34,32 +29,7 @@ interface EndpointState {
   response: any;
   error: any;
   changedFields: string[];
-  diagnostics: DiagnosticField[];
   copyState: string;
-  flatSnapshot: Record<string, string>;
-}
-
-interface ChallengeRankDiagnostic {
-  label: string;
-  value: string;
-}
-
-interface ComparisonResult {
-  path: string;
-  changedFields: string[];
-}
-
-interface IdentityTraceField {
-  endpoint: string;
-  path: string;
-  value: string;
-}
-
-interface StateTimelineSnapshot {
-  capturedAt: string;
-  gameflowPhase: string;
-  changedFields: string[];
-  endpointCount: number;
   flatSnapshot: Record<string, string>;
 }
 
@@ -72,41 +42,17 @@ export class LcuExplorerComponent implements OnDestroy {
   public query = '';
   public watchedEndpoint = '';
   public bulkRefreshing = false;
-  public comparisonLeft: any = null;
-  public comparisonRight: any = null;
-  public comparisonError = '';
-  public comparisonResults: ComparisonResult[] = [];
-  public snapshotTimeline: StateTimelineSnapshot[] = [];
   public endpointStates: Record<string, EndpointState> = {};
   public endpointGroups: LcuEndpointGroup[] = [
     {
       name: 'Regalia',
       endpoints: [
         {method: 'GET', path: '/lol-regalia/v2/config', notes: 'Regalia configuration and mapping data'},
-        {method: 'GET', path: '/lol-regalia/v2/current-regalia', notes: 'Current player regalia selection'},
         {method: 'GET', path: '/lol-regalia/v2/current-summoner/regalia', notes: 'Current summoner regalia payload'},
-        {method: 'GET', path: '/lol-regalia/v2/regalia', notes: 'Regalia payload collection'},
-        {method: 'GET', path: '/lol-regalia/v2/inventories', notes: 'Owned regalia inventory references'},
-        {method: 'GET', path: '/lol-regalia/v2/crests', notes: 'Crest definitions and IDs'},
-        {method: 'GET', path: '/lol-regalia/v2/banners', notes: 'Banner definitions and IDs'},
-        {method: 'GET', path: '/lol-regalia/v2/profile', notes: 'Profile-facing regalia data'}
-      ]
-    },
-    {
-      name: 'Regalia Parameter Exploration',
-      endpoints: [
-        {method: 'GET', path: '/lol-regalia/v2/crests/0', notes: 'Probe crest parameter shape with ID 0'},
-        {method: 'GET', path: '/lol-regalia/v2/banners/0', notes: 'Probe banner parameter shape with ID 0'},
-        {method: 'GET', path: '/lol-regalia/v2/profile/0', notes: 'Probe profile parameter shape with ID 0'},
-        {method: 'GET', path: '/lol-regalia/v2/regalia/0', notes: 'Probe regalia parameter shape with ID 0'},
-        {method: 'GET', path: '/lol-regalia/v2/inventories/0', notes: 'Probe inventory parameter shape with ID 0'}
-      ]
-    },
-    {
-      name: 'Summoner-Bound Regalia',
-      endpoints: [
         {method: 'GET', path: '/lol-regalia/v2/summoners/{summonerId}/regalia', notes: 'Regalia by current summonerId'},
-        {method: 'GET', path: '/lol-regalia/v2/summoner-regalia/{summonerId}', notes: 'Alternate summoner regalia route by current summonerId'}
+        {method: 'GET', path: '/lol-regalia/v2/summoners/{summonerId}/regalia/async', notes: 'Async regalia by current summonerId'},
+        {method: 'GET', path: '/lol-regalia/v2/summoners/{summonerId}/queues/RANKED_SOLO_5x5/regalia', notes: 'Solo/Duo queue-scoped regalia'},
+        {method: 'GET', path: '/lol-regalia/v2/summoners/{summonerId}/queues/RANKED_FLEX_SR/regalia', notes: 'Flex queue-scoped regalia'}
       ]
     },
     {
@@ -117,8 +63,6 @@ export class LcuExplorerComponent implements OnDestroy {
         {method: 'GET', path: '/lol-challenges/v1/summary-player-data/local-player', notes: 'Challenge score, crystal, crest, title summary'},
         {method: 'GET', path: '/lol-challenges/v1/challenges/category-data', notes: 'Challenge category and threshold mappings'},
         {method: 'GET', path: '/lol-challenges/v1/level-points', notes: 'Challenge level point thresholds'},
-        {method: 'GET', path: '/lol-challenges/v1/player-preferences', notes: 'Selected challenge preferences'},
-        {method: 'GET', path: '/lol-challenges/v1/percentiles', notes: 'Challenge percentile mappings'},
         {method: 'GET', path: '/lol-challenges/v2/titles/all', notes: 'All title definitions and title IDs'},
         {method: 'GET', path: '/lol-challenges/v2/titles/local-player', notes: 'Unlocked local player titles'}
       ]
@@ -128,18 +72,7 @@ export class LcuExplorerComponent implements OnDestroy {
       endpoints: [
         {method: 'GET', path: '/lol-chat/v1/me', notes: 'Live local chat presence payload'},
         {method: 'GET', path: '/lol-chat/v1/friends', notes: 'Friend presence and social payloads'},
-        {method: 'GET', path: '/lol-hovercard/v1/profile-card', notes: 'Local hovercard profile-card structure'},
-        {method: 'GET', path: '/lol-hovercard/v1/friend-info', notes: 'Hovercard friend-info structure'},
-        {method: 'GET', path: '/lol-hovercard/v1/profile-card/{summonerId}', notes: 'Hovercard profile-card by current summonerId'},
         {method: 'GET', path: '/lol-hovercard/v1/friend-info/{puuid}', notes: 'Hovercard friend-info by current puuid'}
-      ]
-    },
-    {
-      name: 'Challenge Identity Tracing',
-      endpoints: [
-        {method: 'GET', path: '/lol-challenges/v1/summary-player-data/local-player', notes: 'Challenge score, crest, title, and crystal summary'},
-        {method: 'GET', path: '/lol-challenges/v1/player-preferences', notes: 'Selected challenge/title preferences'},
-        {method: 'GET', path: '/lol-challenges/v1/percentiles', notes: 'Challenge percentile and rank mapping data'}
       ]
     },
     {
@@ -163,12 +96,6 @@ export class LcuExplorerComponent implements OnDestroy {
   private identityContext: Record<string, string> = {};
   private identityContextPromise: Promise<Record<string, string>> = null;
   private readonly watchIntervalMs = 5000;
-  private readonly priorityComparisonEndpoints = [
-    '/lol-chat/v1/me',
-    '/lol-regalia/v2/current-summoner/regalia',
-    '/lol-challenges/v1/summary-player-data/local-player',
-    '/lol-summoner/v1/current-summoner/summoner-profile'
-  ];
   private readonly sensitiveExportKeys = [
     'idtoken',
     'accesstoken',
@@ -178,30 +105,6 @@ export class LcuExplorerComponent implements OnDestroy {
     'password',
     'entitlement',
     'jwt'
-  ];
-  private readonly diagnosticKeywords = [
-    'banner',
-    'border',
-    'challenge',
-    'contentid',
-    'crest',
-    'crystal',
-    'gameflow',
-    'hover',
-    'icon',
-    'itemid',
-    'league',
-    'presence',
-    'profile',
-    'puuid',
-    'rank',
-    'regalia',
-    'selectedprestigecrest',
-    'summonerid',
-    'title',
-    'tokenid',
-    'cresttype',
-    'bannertype'
   ];
 
   constructor(private lcuConnectionService: LCUConnectionService, private connectorService: ConnectorService) {
@@ -226,65 +129,6 @@ export class LcuExplorerComponent implements OnDestroy {
         };
       })
       .filter(group => group.endpoints.length > 0);
-  }
-
-  public get challengeRankDiagnostics(): ChallengeRankDiagnostic[] {
-    const chatState = this.ensureState('/lol-chat/v1/me');
-    const lol = chatState.response && chatState.response.lol;
-    const fields = [
-      'challengeCrystalLevel',
-      'challengePoints',
-      'challengeTokensSelected',
-      'regalia',
-      'bannerIdSelected',
-      'playerTitleSelected'
-    ];
-
-    return fields.map(field => {
-      return {
-        label: field,
-        value: lol && Object.prototype.hasOwnProperty.call(lol, field) ? this.valueString(lol[field]) : ''
-      };
-    });
-  }
-
-  public get identityTraceLog(): IdentityTraceField[] {
-    const explicitFields = [
-      'summonerid',
-      'puuid',
-      'selectedprestigecrest',
-      'cresttype',
-      'bannertype',
-      'challengepoints',
-      'challengecrystallevel',
-      'contentid',
-      'itemid',
-      'tokenid'
-    ];
-    const fields: IdentityTraceField[] = [];
-
-    this.allEndpoints().forEach(endpoint => {
-      const state = this.ensureState(endpoint.path);
-      if (!state.fetchedAt) return;
-
-      const payload = state.error || state.response;
-      const flat = this.flattenResponse(payload);
-      Object.keys(flat).forEach(path => {
-        const normalizedPath = path.toLowerCase();
-        const isExplicitField = explicitFields.some(field => normalizedPath.indexOf(field) >= 0);
-        const isHovercardIdentity = endpoint.path.indexOf('/lol-hovercard/') >= 0 &&
-          /identity|profile|summoner|puuid|icon|title|rank|crest|challenge|regalia/i.test(path);
-        if (!isExplicitField && !isHovercardIdentity) return;
-
-        fields.push({
-          endpoint: state.resolvedPath || endpoint.path,
-          path,
-          value: flat[path]
-        });
-      });
-    });
-
-    return fields.slice(0, 500);
   }
 
   public stateFor(endpoint: LcuEndpoint): EndpointState {
@@ -323,18 +167,12 @@ export class LcuExplorerComponent implements OnDestroy {
     state.response = parsed === null ? rawResponse : parsed;
     state.error = this.errorFor(status, parsed, rawResponse);
     state.changedFields = this.changedFields(state.flatSnapshot, nextFlatSnapshot);
-    state.diagnostics = this.extractDiagnostics(parsed);
     state.flatSnapshot = nextFlatSnapshot;
     if (!fromWatch) state.expanded = true;
 
     if (endpoint.path === '/lol-gameflow/v1/gameflow-phase') {
       state.phaseAtFetch = formattedResponse.replace(/^"|"$/g, '');
     }
-  }
-
-  public refreshChatPresence() {
-    const endpoint = this.findEndpoint('/lol-chat/v1/me');
-    if (endpoint) this.refresh(endpoint);
   }
 
   public toggleExpanded(endpoint: LcuEndpoint) {
@@ -398,67 +236,6 @@ export class LcuExplorerComponent implements OnDestroy {
     }
   }
 
-  public loadComparisonFile(event: Event, side: 'left' | 'right') {
-    const input = event.target as HTMLInputElement;
-    const file = input.files && input.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result || ''));
-        if (side === 'left') {
-          this.comparisonLeft = parsed;
-        } else {
-          this.comparisonRight = parsed;
-        }
-        this.comparisonError = '';
-        this.compareExports();
-      } catch (err) {
-        this.comparisonError = `Could not parse ${file.name} as JSON.`;
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  public compareExports() {
-    if (!this.comparisonLeft || !this.comparisonRight) {
-      this.comparisonResults = [];
-      return;
-    }
-
-    const leftEndpoints = this.exportEndpointMap(this.comparisonLeft);
-    const rightEndpoints = this.exportEndpointMap(this.comparisonRight);
-    const paths = this.sortedComparisonPaths(leftEndpoints, rightEndpoints);
-    this.comparisonResults = paths
-      .map(path => {
-        const left = leftEndpoints[path] || null;
-        const right = rightEndpoints[path] || null;
-        const changedFields = this.changedFields(this.flattenResponse(left), this.flattenResponse(right));
-        return {
-          path,
-          changedFields
-        };
-      })
-      .filter(result => result.changedFields.length > 0);
-  }
-
-  public captureStateSnapshot() {
-    const flatSnapshot = this.buildCurrentStateSnapshot();
-    const previous = this.snapshotTimeline.length > 0
-      ? this.snapshotTimeline[this.snapshotTimeline.length - 1].flatSnapshot
-      : {};
-    const snapshot = {
-      capturedAt: new Date().toISOString(),
-      gameflowPhase: this.exportedGameflowPhase(),
-      changedFields: this.changedFields(previous, flatSnapshot),
-      endpointCount: Object.keys(this.endpointStates).filter(path => this.endpointStates[path].fetchedAt).length,
-      flatSnapshot
-    };
-
-    this.snapshotTimeline = this.snapshotTimeline.concat(snapshot).slice(-20);
-  }
-
   public statusClass(status: EndpointStatus): string {
     if (status === '404') return 'not-found';
     return status.toLowerCase();
@@ -488,7 +265,6 @@ export class LcuExplorerComponent implements OnDestroy {
         response: null,
         error: null,
         changedFields: [],
-        diagnostics: [],
         copyState: '',
         flatSnapshot: {}
       };
@@ -502,10 +278,6 @@ export class LcuExplorerComponent implements OnDestroy {
       this.watchTimer = null;
     }
     this.watchedEndpoint = '';
-  }
-
-  private findEndpoint(path: string): LcuEndpoint {
-    return this.allEndpoints().find(endpoint => endpoint.path === path);
   }
 
   private async resolveEndpointPath(path: string): Promise<string> {
@@ -617,7 +389,7 @@ export class LcuExplorerComponent implements OnDestroy {
 
   private flattenResponse(value: any): Record<string, string> {
     const output: Record<string, string> = {};
-    this.flatten(value, '', output, {count: 0, max: 6000});
+    this.flatten(value, '', output, {count: 0, max: 2500});
     return output;
   }
 
@@ -655,21 +427,6 @@ export class LcuExplorerComponent implements OnDestroy {
     return changed.concat(removed).slice(0, 120);
   }
 
-  private extractDiagnostics(parsed: any): DiagnosticField[] {
-    if (parsed === null || parsed === undefined) return [];
-
-    const flat = this.flattenResponse(parsed);
-    return Object.keys(flat)
-      .filter(path => this.diagnosticKeywords.some(keyword => path.toLowerCase().indexOf(keyword) >= 0))
-      .slice(0, 300)
-      .map(path => {
-        return {
-          path,
-          value: flat[path]
-        };
-      });
-  }
-
   private valueString(value: any): string {
     if (value === undefined) return 'undefined';
     if (value === null) return 'null';
@@ -705,27 +462,10 @@ export class LcuExplorerComponent implements OnDestroy {
     return this.endpointGroups.reduce((endpoints, group) => endpoints.concat(group.endpoints), []);
   }
 
-  private buildCurrentStateSnapshot(): Record<string, string> {
-    const snapshot: Record<string, string> = {};
-    this.allEndpoints().forEach(endpoint => {
-      const state = this.ensureState(endpoint.path);
-      if (!state.fetchedAt) return;
-
-      const payload = state.error || state.response;
-      const flat = this.flattenResponse(payload);
-      Object.keys(flat).forEach(path => {
-        snapshot[`${state.resolvedPath || endpoint.path}.${path}`] = flat[path];
-      });
-      snapshot[`${state.resolvedPath || endpoint.path}.__status`] = state.status;
-      snapshot[`${state.resolvedPath || endpoint.path}.__httpStatus`] = this.valueString(state.httpStatus);
-    });
-    return snapshot;
-  }
-
   private buildExportPayload(): Record<string, unknown> {
     return {
       app: 'League Profile Tool',
-      version: '3.0.0',
+      version: '3.1.0',
       exportedAt: new Date().toISOString(),
       gameflowPhase: this.exportedGameflowPhase(),
       lcuConnected: this.connectorService.isReady(),
@@ -822,28 +562,4 @@ export class LcuExplorerComponent implements OnDestroy {
     return /^[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}$/.test(trimmed);
   }
 
-  private exportEndpointMap(exportData: any): Record<string, any> {
-    const map: Record<string, any> = {};
-    const groups = exportData && Array.isArray(exportData.groups) ? exportData.groups : [];
-    groups.forEach(group => {
-      const endpoints = group && Array.isArray(group.endpoints) ? group.endpoints : [];
-      endpoints.forEach(endpoint => {
-        if (endpoint && endpoint.path) map[endpoint.path] = endpoint;
-      });
-    });
-    return map;
-  }
-
-  private sortedComparisonPaths(left: Record<string, any>, right: Record<string, any>): string[] {
-    const allPaths = Object.keys(left)
-      .concat(Object.keys(right).filter(path => !Object.prototype.hasOwnProperty.call(left, path)));
-    return allPaths.sort((a, b) => {
-      const aPriority = this.priorityComparisonEndpoints.indexOf(a);
-      const bPriority = this.priorityComparisonEndpoints.indexOf(b);
-      if (aPriority >= 0 && bPriority >= 0) return aPriority - bPriority;
-      if (aPriority >= 0) return -1;
-      if (bPriority >= 0) return 1;
-      return a.localeCompare(b);
-    });
-  }
 }

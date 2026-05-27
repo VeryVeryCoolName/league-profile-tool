@@ -1,0 +1,49 @@
+<mat-card class="preview-card">
+  <div class="preview-art" *ngIf="backgroundStyle" [style.background-image]="backgroundStyle"></div>
+  <div class="preview-shade"></div>
+
+  <div class="preview-content">
+    <header class="preview-header">
+      <div class="profile-icon">
+        <img *ngIf="state.profileIconUrl && !iconFailed" [src]="state.profileIconUrl" alt="Profile icon" (error)="iconFailed = true">
+        <span *ngIf="!state.profileIconUrl || iconFailed">{{state.profileIconId || '?'}}</span>
+      </div>
+
+      <div class="identity-copy">
+        <span class="eyebrow">Live Preview</span>
+        <h2>{{summonerTitle}}</h2>
+      </div>
+
+      <button mat-stroked-button (click)="refreshPreview()" [disabled]="state.loading">
+        {{state.loading ? 'Refreshing...' : 'Refresh Preview'}}
+      </button>
+    </header>
+
+    <div class="preview-grid">
+      <div>
+        <span>Chat Rank</span>
+        <strong>{{chatRankText}}</strong>
+      </div>
+      <div>
+        <span>Challenge Rank</span>
+        <strong>{{challengeText}}</strong>
+      </div>
+      <div>
+        <span>Profile Icon</span>
+        <strong class="stacked-value">
+          {{profileIconName}}
+          <small *ngIf="state.profileIconId !== undefined && state.profileIconId !== null">({{state.profileIconId}})</small>
+        </strong>
+      </div>
+      <div>
+        <span>Background</span>
+        <strong>{{state.backgroundLabel || 'Not loaded'}}</strong>
+      </div>
+    </div>
+
+    <p class="preview-note" *ngIf="!state.loaded && !state.loading">Refresh once to preview your current League identity.</p>
+    <p class="preview-note warning" *ngIf="state.challengeSpoofActive">Showing your selected Challenge Rank until the lobby changes.</p>
+    <p class="preview-note error" *ngIf="state.error">{{state.error}}</p>
+    <p class="preview-note" *ngIf="state.updatedAt">Updated {{state.updatedAt}}</p>
+  </div>
+</mat-card>

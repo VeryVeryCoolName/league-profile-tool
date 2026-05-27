@@ -3,6 +3,7 @@ import {DialogComponent} from "../core/dialog/dialog.component";
 import {MatDialog} from "@angular/material/dialog";
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {ChampionService} from "../core/services/champion/champion.service";
+import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
 
 @Component({
   selector: 'app-customicon',
@@ -16,7 +17,7 @@ export class CustomiconComponent implements OnInit {
   public iconsLoading = true;
   public iconsError = '';
 
-  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private championData: ChampionService) {
+  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private championData: ChampionService, private identityPreviewService: IdentityPreviewService) {
   }
 
   async ngOnInit() {
@@ -78,6 +79,7 @@ export class CustomiconComponent implements OnInit {
       icon: iconId
     };
     this.lcuConnectionService.requestSend(body, 'PUT', 'lolChat').then(response => {
+      if (response === 'Success') this.identityPreviewService.applyProfileIcon(iconId);
       this.dialog.open(DialogComponent, {
         data: {body: response}
       });

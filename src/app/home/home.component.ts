@@ -8,7 +8,7 @@ import {ElectronService} from "../core/services";
 })
 export class HomeComponent implements OnInit {
   public title = 'LEAGUE PROFILE TOOL';
-  public currentVersion = 'V.3.0.0';
+  public currentVersion = 'V.3.1.0';
   public newestVersion = '';
 
   constructor(private electronService: ElectronService) {

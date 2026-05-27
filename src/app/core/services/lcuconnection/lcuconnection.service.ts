@@ -20,6 +20,13 @@ export class LCUConnectionService {
     return await this.verifyWrite(body, requestBody, method, endpoint, endPoint);
   }
 
+  public async requestSendNoVerify(body: Record<string, unknown>, method: string, endpoint: string): Promise<any> {
+    const endPoint = this._endpoints[endpoint];
+    const requestBody = await this.prepareRequestBody(body, method, endpoint, endPoint);
+    if (typeof requestBody === 'string') return requestBody;
+    return await this.makeRequest(method, requestBody, endPoint, false);
+  }
+
   public async requestCustomAPI(body: Record<string, unknown>, method: string, endpoint: string): Promise<any> {
     return await this.makeRequest(method, body, endpoint, true);
   }

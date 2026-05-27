@@ -32,8 +32,7 @@
 
   <section class="rank-panel">
     <h2>Challenge Rank</h2>
-    <p class="rank-source" *ngIf="challengeRankSource">Current values from {{challengeRankSource}}</p>
-    <p class="rank-source">Changing the crystal fills Challenge Points with that crystal's minimum threshold. Manual point edits after that are preserved.</p>
+    <p class="rank-source">Temporary presence change; it resets on every lobby change.</p>
     <div class="rank-grid challenge-grid">
       <mat-form-field appearance="fill">
         <mat-label>Challenge Level</mat-label>
@@ -48,6 +47,9 @@
         <input matInput type="number" min="0" name="challengePoints" [(ngModel)]="challengePoints">
       </mat-form-field>
     </div>
-    <button (click)="setChallengeRank()" mat-raised-button color="primary">Set Challenge Rank</button>
+    <div class="challenge-actions">
+      <button (click)="setChallengeRank()" mat-raised-button color="primary">Apply Challenge Rank</button>
+      <button (click)="reloadRealChallengeRank()" mat-stroked-button>Reload Real Challenge Rank</button>
+    </div>
   </section>
 </main>

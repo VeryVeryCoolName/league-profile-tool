@@ -1,8 +1,9 @@
 <main>
   <mat-card>
-    <mat-card-title>LCU Explorer</mat-card-title>
+    <mat-card-title>Developer Tools</mat-card-title>
     <mat-card-content>
       <p>Read-only identity, regalia, challenge, hovercard, and presence inspection.</p>
+      <p class="explorer-warning">Refresh all and exports can reset temporary Challenge Rank changes.</p>
     </mat-card-content>
   </mat-card>
 
@@ -23,70 +24,6 @@
       Watching {{watchedEndpoint}}
     </div>
   </div>
-
-  <section class="diagnostic-summary">
-    <header>
-      <h2>Challenge Rank Diagnostics</h2>
-      <button mat-stroked-button (click)="refreshChatPresence()">Refresh Chat Presence</button>
-    </header>
-    <div class="diagnostic-row" *ngFor="let item of challengeRankDiagnostics">
-      <code>{{item.label}}</code>
-      <span>{{item.value || 'Not loaded'}}</span>
-    </div>
-  </section>
-
-  <section class="comparison-helper">
-    <header>
-      <h2>Export Comparison</h2>
-      <button mat-stroked-button (click)="compareExports()" [disabled]="!comparisonLeft || !comparisonRight">
-        Compare
-      </button>
-    </header>
-    <div class="comparison-inputs">
-      <label>
-        Export A
-        <input type="file" accept="application/json,.json" (change)="loadComparisonFile($event, 'left')">
-      </label>
-      <label>
-        Export B
-        <input type="file" accept="application/json,.json" (change)="loadComparisonFile($event, 'right')">
-      </label>
-    </div>
-    <p class="comparison-error" *ngIf="comparisonError">{{comparisonError}}</p>
-    <div class="comparison-results" *ngIf="comparisonResults.length > 0">
-      <article *ngFor="let result of comparisonResults">
-        <h3>{{result.path}}</h3>
-        <code *ngFor="let field of result.changedFields">{{field}}</code>
-      </article>
-    </div>
-  </section>
-
-  <section class="timeline-helper">
-    <header>
-      <h2>State Snapshot Timeline</h2>
-      <button mat-stroked-button (click)="captureStateSnapshot()">Capture Current Snapshot</button>
-    </header>
-    <p>Captures currently loaded endpoint payloads and shows field diffs against the previous snapshot.</p>
-    <div class="timeline-results" *ngIf="snapshotTimeline.length > 0">
-      <article *ngFor="let snapshot of snapshotTimeline">
-        <h3>{{snapshot.capturedAt}}</h3>
-        <div class="endpoint-meta">
-          <span>Phase {{snapshot.gameflowPhase || 'Unknown'}}</span>
-          <span>{{snapshot.endpointCount}} loaded endpoints</span>
-          <span>{{snapshot.changedFields.length}} changed fields</span>
-        </div>
-        <code *ngFor="let field of snapshot.changedFields">{{field}}</code>
-      </article>
-    </div>
-  </section>
-
-  <section class="trace-helper">
-    <h2>Identity Trace Log</h2>
-    <div class="diagnostic-row" *ngFor="let item of identityTraceLog">
-      <code>{{item.endpoint}} :: {{item.path}}</code>
-      <span>{{item.value}}</span>
-    </div>
-  </section>
 
   <section class="endpoint-group" *ngFor="let group of filteredGroups; trackBy: trackByGroup">
     <h2>{{group.name}}</h2>
@@ -136,14 +73,6 @@
       <div class="change-panel" *ngIf="state.changedFields.length > 0">
         <h3>Changed Fields</h3>
         <code *ngFor="let field of state.changedFields">{{field}}</code>
-      </div>
-
-      <div class="diagnostic-panel" *ngIf="state.diagnostics.length > 0">
-        <h3>Identity Diagnostics</h3>
-        <div class="diagnostic-row" *ngFor="let item of state.diagnostics">
-          <code>{{item.path}}</code>
-          <span>{{item.value}}</span>
-        </div>
       </div>
 
       <pre *ngIf="state.expanded && state.formattedResponse">{{state.formattedResponse}}</pre>

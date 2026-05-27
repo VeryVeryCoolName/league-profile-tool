@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {MatDialog} from "@angular/material/dialog";
 import {DialogComponent} from "../core/dialog/dialog.component";
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
+import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
 
 const CHALLENGE_CRYSTAL_POINT_THRESHOLDS: Record<string, number> = {
   IRON: 0,
@@ -36,7 +37,7 @@ export class ChatrankComponent implements OnInit {
   public challengePoints: number;
   public challengeRankSource = '';
 
-  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService) {
+  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private identityPreviewService: IdentityPreviewService) {
   }
 
   ngOnInit() {
@@ -58,6 +59,7 @@ export class ChatrankComponent implements OnInit {
       },
     };
     this.lcuConnectionService.requestSend(body, 'PUT', 'lolChat').then(response => {
+      if (response === 'Success') this.identityPreviewService.applyChatRank(this.queue, this.rank, this.division);
       this.dialog.open(DialogComponent, {
         data: {body: response}
       });
@@ -83,11 +85,20 @@ export class ChatrankComponent implements OnInit {
         challengePoints: String(this.challengePoints)
       },
     };
-    this.lcuConnectionService.requestSend(body, 'PUT', 'lolChat').then(response => {
-      this.dialog.open(DialogComponent, {
-        data: {body: response}
-      });
+    this.lcuConnectionService.requestSendNoVerify(body, 'PUT', 'lolChat').then(response => {
+      if (response !== 'Success') {
+        this.dialog.open(DialogComponent, {
+          data: {body: response}
+        });
+        return;
+      }
+      this.identityPreviewService.applyChallengeSpoof(normalizedLevel, this.challengePoints);
     });
+  }
+
+  public reloadRealChallengeRank() {
+    this.identityPreviewService.clearChallengeSpoof();
+    this.loadChallengeSummaryRank();
   }
 
   public syncChallengePointsToLevel() {
@@ -114,6 +125,9 @@ export class ChatrankComponent implements OnInit {
         if (summary.totalChallengeScore !== undefined) this.challengePoints = Number(summary.totalChallengeScore);
         if (summary.overallChallengeLevel || summary.totalChallengeScore !== undefined) {
           this.challengeRankSource = '/lol-challenges/v1/summary-player-data/local-player';
+          if (this.challengeLevel && this.challengePoints !== undefined && this.challengePoints !== null) {
+            this.identityPreviewService.applyRealChallengeRank(this.challengeLevel, this.challengePoints);
+          }
         }
       });
   }
@@ -130,7 +144,10 @@ export class ChatrankComponent implements OnInit {
       this.challengePoints = Number(lol.challengePoints);
       loaded = true;
     }
-    if (loaded) this.challengeRankSource = '/lol-chat/v1/me.lol';
+    if (loaded) {
+      this.challengeRankSource = '/lol-chat/v1/me.lol';
+      this.identityPreviewService.applyRealChallengeRank(this.challengeLevel, this.challengePoints);
+    }
     return loaded;
   }
 

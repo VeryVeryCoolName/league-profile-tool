@@ -4,6 +4,7 @@ import {MatDialog} from "@angular/material/dialog";
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {VersionService} from "../core/services/version/version.service";
 import {ChampionService} from "../core/services/champion/champion.service";
+import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
 
 @Component({
   selector: 'app-background',
@@ -27,7 +28,7 @@ export class BackgroundComponent implements OnInit {
   public skinsLoaded = 0;
   public skinsTotal = 0;
 
-  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private version: VersionService, private championData: ChampionService) {
+  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private version: VersionService, private championData: ChampionService, private identityPreviewService: IdentityPreviewService) {
   }
 
   async ngOnInit() {
@@ -252,6 +253,7 @@ export class BackgroundComponent implements OnInit {
       value: parseInt(id)
     };
     this.lcuConnectionService.requestSend(body, 'POST', 'profile').then(response => {
+      if (response === 'Success') this.identityPreviewService.applyBackgroundSkinId(body.value);
       this.dialog.open(DialogComponent, {
         data: {body: response}
       });

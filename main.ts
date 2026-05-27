@@ -2,9 +2,6 @@ import {app, BrowserWindow, globalShortcut} from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 
-// Initialize remote module
-require('@electron/remote/main').initialize();
-
 let win: BrowserWindow = null;
 const args = process.argv.slice(1),
   serve = args.some(val => val === '--serve');
@@ -13,7 +10,7 @@ function createWindow(): BrowserWindow {
 
   // Create the browser window.
   win = new BrowserWindow({
-    title: 'League Profile Tool 3.0',
+    title: 'League Profile Tool 3.1',
     width: 950,
     height: 650,
     backgroundColor: '#2b2b2d',
@@ -21,7 +18,7 @@ function createWindow(): BrowserWindow {
       nodeIntegration: true,
       allowRunningInsecureContent: (serve),
       contextIsolation: false,  // false if you want to run 2e2 test with Spectron
-      enableRemoteModule: true, // true if you want to run 2e2 test  with Spectron or use remote module in renderer context (ie. Angular)
+      enableRemoteModule: false,
       devTools: false
     },
     autoHideMenuBar: true,

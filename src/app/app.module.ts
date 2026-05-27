@@ -25,9 +25,10 @@ import { CustomiconComponent } from './customicon/customicon.component';
 import {ElectronService} from "./core/services";
 import { HttpClientModule } from '@angular/common/http';
 import { LcuExplorerComponent } from './lcu-explorer/lcu-explorer.component';
+import {IdentityPreviewComponent} from './identity-preview/identity-preview.component';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, StatusComponent, DialogComponent, BackgroundComponent, ChampionsPipe, ChatrankComponent, ChampionPurchaseDateComponent, CustomapiComponent, FaqComponent, CustomiconComponent, LcuExplorerComponent],
+  declarations: [AppComponent, HomeComponent, StatusComponent, DialogComponent, BackgroundComponent, ChampionsPipe, ChatrankComponent, ChampionPurchaseDateComponent, CustomapiComponent, FaqComponent, CustomiconComponent, LcuExplorerComponent, IdentityPreviewComponent],
   imports: [
     BrowserModule,
     FormsModule,

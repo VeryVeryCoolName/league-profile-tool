@@ -1,6 +1,6 @@
 {
   "name": "league-profile-tool",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Tool that interacts with the Riot LCU",
   "homepage": "https://github.com/VeryVeryCoolName/league-profile-tool",
   "author": "Manoah",
@@ -56,9 +56,6 @@
       "config"
     ]
   },
-  "dependencies": {
-    "@electron/remote": "1.0.4"
-  },
   "devDependencies": {
     "@angular-builders/custom-webpack": "11.1.1",
     "@angular-devkit/build-angular": "0.1102.5",
@@ -67,12 +64,16 @@
     "@angular-eslint/eslint-plugin-template": "2.0.2",
     "@angular-eslint/schematics": "2.0.2",
     "@angular-eslint/template-parser": "2.0.2",
+    "@angular/animations": "11.2.6",
+    "@angular/cdk": "11.2.6",
     "@angular/cli": "11.2.5",
     "@angular/common": "11.2.6",
     "@angular/compiler": "11.2.6",
     "@angular/compiler-cli": "11.2.6",
     "@angular/core": "11.2.6",
+    "@angular/forms": "11.2.6",
     "@angular/language-service": "11.2.6",
+    "@angular/material": "11.2.6",
     "@angular/platform-browser": "11.2.6",
     "@angular/platform-browser-dynamic": "11.2.6",
     "@angular/router": "11.2.6",
@@ -80,10 +81,6 @@
     "@ngx-translate/http-loader": "6.0.0",
     "@types/jasmine": "3.6.7",
     "@types/jasminewd2": "2.0.8",
-    "@angular/animations": "^11.0.0 || ^12.0.0-0",
-    "@angular/cdk": "11.2.6",
-    "@angular/forms": "^11.0.0 || ^12.0.0-0",
-    "@angular/material": "11.2.6",
     "@types/mocha": "8.2.1",
     "@types/node": "14.14.35",
     "@typescript-eslint/eslint-plugin": "4.16.1",

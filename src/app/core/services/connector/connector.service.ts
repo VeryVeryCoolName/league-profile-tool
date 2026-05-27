@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import {BehaviorSubject, Observable} from 'rxjs';
 import { ElectronService } from "..";
 import {Options} from "./options";
 import {Data} from "./data";
@@ -7,6 +8,8 @@ import {Data} from "./data";
   providedIn: 'root'
 })
 export class ConnectorService {
+  private readonly readySubject = new BehaviorSubject<boolean>(false);
+  public readonly ready$: Observable<boolean> = this.readySubject.asObservable();
   connector: Options;
   private retryTimer: any;
   private connecting = false;
@@ -192,6 +195,7 @@ export class ConnectorService {
     if (!ready) this.connector = null;
     if (this.ready !== ready) {
       this.ready = ready;
+      this.readySubject.next(ready);
     }
   }
 
