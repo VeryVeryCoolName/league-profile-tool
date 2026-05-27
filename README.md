@@ -1,42 +1,57 @@
-# League of Legends Profile Tool
+# League Profile Tool
 
-This fork attempts to restore functionality to League Profile Tool, an app made by [MManoah](https://github.com/MManoah). I way wish to add more stuff in the future, but the main focus is restoring most of the features without tampering too much with the original project. The rest of this readme is unchanged.
+A modernized and actively maintained League of Legends profile customization tool built around Riot's LCU API.
 
-## How to install 
-[Click Here To Download Application 64 BIT](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.1.0/LeagueProfileTool.zip)
+Originally based on the project by [MManoah](https://github.com/MManoah/league-profile-tool), this fork focuses on restoring broken functionality, improving compatibility with the modern League Client, polishing the UI, and adding new customization features while preserving the original spirit of the application.
 
-[Click Here To Download Application 32 BIT](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.1.0/LeagueProfileTool.32-bit.zip)
+## Features
 
-then extract all the files somewhere and run League Profile Tool.exe
+- Custom profile icons
+- Custom profile backgrounds
+- Chat rank customization
+- Challenge rank spoofing
+- Custom status/presence editing
+- Live profile preview
+- Direct LCU API requests through Custom API
+- Modern League Client compatibility
+- Lightweight Electron desktop application
 
-*To see old builds/change: [Releases](https://github.com/VeryVeryCoolName/league-profile-tool/releases)*
+## Download
 
-## Project Overview
+### 64-Bit
+[Download League Profile Tool (64-bit)](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.1.0/LeagueProfileTool.zip)
 
-### Purpose 
+### 32-Bit
+[Download League Profile Tool (32-bit)](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.1.0/LeagueProfileTool.32-bit.zip)
 
-I developed this as an undergraduate student with no prior html/css/js knowledge and started working on this just to learn Javascript and DOM manipulation.
+After downloading:
+1. Extract the ZIP archive somewhere on your computer
+2. Launch `League Profile Tool.exe`
+3. Make sure the League Client is already running
 
-### Preview
+Older versions and changelogs are available in the [Releases](https://github.com/VeryVeryCoolName/league-profile-tool/releases) section.
 
-![](https://i.gyazo.com/9f010ff86490fe37e78bb8430faa0dc7.png)
+## Preview
+
+[![image.png](https://i.postimg.cc/ZRFSckpJ/image.png)](https://postimg.cc/Q9tw8yfz)
 
 ## Built With
 
-* [Lcu Connector](https://github.com/Pupix/lcu-connector) - Accessing the LCU API
-* [Electron](https://github.com/electron/electron)
-* [Angular CLI](https://github.com/angular/angular-cli)
-* Typescript
-* HTML
-* CSS
-* Javascript
+- [Electron](https://github.com/electron/electron)
+- [Angular](https://github.com/angular/angular)
+- [Angular Material](https://material.angular.io/)
+- [lcu-connector](https://github.com/Pupix/lcu-connector)
+- TypeScript
 
-## Riot Games
+## Notes
 
-This project isn’t endorsed by Riot Games and doesn’t reflect the views or opinions of Riot Games
-or anyone officially involved in producing or managing League of Legends. League of Legends and Riot Games are
-trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
+- This tool uses Riot's local LCU API exposed by the League Client.
+- Some cosmetic changes are temporary and may reset after certain League Client refreshes.
+- No game files are modified.
 
-## License
+## Riot Games Disclaimer
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+This project is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends.
+
+League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc.
+League of Legends © Riot Games, Inc.
