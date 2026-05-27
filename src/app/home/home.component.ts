@@ -1,5 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {ElectronService} from "../core/services";
+import {VersionService} from "../core/services/version/version.service";
 
 @Component({
   selector: 'app-home',
@@ -9,24 +10,32 @@ import {ElectronService} from "../core/services";
 export class HomeComponent implements OnInit {
   public title = 'LEAGUE PROFILE TOOL';
   public currentVersion = 'V.3.1.0';
-  public newestVersion = '';
+  public newestVersion = 'Checking...';
+  public updateCheckStatus = 'Checking GitHub for updates.';
 
-  constructor(private electronService: ElectronService) {
+  constructor(private electronService: ElectronService, private versionService: VersionService) {
   }
 
   ngOnInit() {
-    this.newestVersion = this.currentVersion;
     setTimeout(() => this.checkNewestVersion(), 0);
   }
 
   private async checkNewestVersion() {
     try {
-      const url = 'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/master/version.json';
-      const obj = await (await fetch(url)).json();
-      this.newestVersion = obj.version;
+      const newestVersion = await this.versionService.latestGithubVersion();
+      this.newestVersion = this.formatVersion(newestVersion);
+      this.updateCheckStatus = this.newestVersion === this.currentVersion
+        ? 'You are up to date.'
+        : 'Update available on GitHub.';
     } catch (error){
-      this.newestVersion = this.currentVersion;
+      this.newestVersion = 'Unavailable';
+      this.updateCheckStatus = 'Could not check GitHub updates.';
     }
+  }
+
+  private formatVersion(version: string): string {
+    const normalized = (version || '').trim().replace(/^v\.?/i, '');
+    return normalized ? `V.${normalized}` : 'Unavailable';
   }
 
   public github() {

@@ -13,6 +13,11 @@ h1{
 .versions {
   min-width: 0;
 }
+.versions small {
+  display: block;
+  margin-top: 0.45rem;
+  color: #c7dced;
+}
 #linkButtons{
   margin-top: 2rem;
   text-align: center;
