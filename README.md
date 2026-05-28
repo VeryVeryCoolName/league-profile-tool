@@ -11,6 +11,10 @@ then extract all the files somewhere and run League Profile Tool.exe
 
 *To see old builds/change: [Releases](https://github.com/VeryVeryCoolName/league-profile-tool/releases)*
 
+## Releasing
+
+Release builds are handled by the Windows GitHub Actions workflow. See [RELEASE.md](RELEASE.md) for the checklist and artifact upload steps.
+
 ## Project Overview
 
 ### Purpose 
