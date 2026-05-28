@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {ElectronService} from "../core/services";
 import {VersionService} from "../core/services/version/version.service";
+import {APP_VERSION_LABEL} from "../app-version";
 
 @Component({
   selector: 'app-home',
@@ -9,7 +10,7 @@ import {VersionService} from "../core/services/version/version.service";
 })
 export class HomeComponent implements OnInit {
   public title = 'LEAGUE PROFILE TOOL';
-  public currentVersion = 'V.3.1.0';
+  public currentVersion = APP_VERSION_LABEL;
   public newestVersion = 'Checking...';
   public updateCheckStatus = 'Checking GitHub for updates.';
 

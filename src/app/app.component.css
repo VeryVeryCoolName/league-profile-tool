@@ -1,11 +1,14 @@
 .connection-status {
-  padding: 0.4rem 0.75rem;
-  font-size: 0.8rem;
-  color: #f7d7d7;
+  padding: 0.48rem 0.75rem;
+  color: #ffdede;
   background: #5a2020;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .connection-status.connected {
-  color: #d7f7df;
-  background: #205a34;
+  color: #e3ffe9;
+  background: #1f5b36;
 }

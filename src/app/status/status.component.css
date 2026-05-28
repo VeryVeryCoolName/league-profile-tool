@@ -1,10 +1,19 @@
-.mat-form-field{
+.status-page {
+  max-width: 50rem;
+}
+
+.mat-form-field {
   display: block;
   width: 100%;
-  max-width: 48rem;
-  margin: 0 auto 1rem;
+  margin-bottom: 0.8rem;
 }
-textarea{
-  min-height: 14rem;
-  height: 45vh;
+
+.message-field {
+  margin-bottom: 0.35rem;
+}
+
+textarea {
+  min-height: 12rem;
+  height: 32vh;
+  max-height: 22rem;
 }

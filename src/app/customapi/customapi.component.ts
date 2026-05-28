@@ -9,7 +9,7 @@ import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection
 export class CustomapiComponent {
   public methods = ["GET", "POST", "PUT", "PATCH", "DELETE"];
   public method = "GET";
-  public body = "{}";
+  public body = "{\n     \"\":\"\"\n}";
   public response: string;
   public endPoint: string;
 

@@ -1,5 +1,5 @@
-<main>
-  <mat-card>
+<main class="custom-icons-page">
+  <mat-card class="note-card">
     <mat-card-header>
       <mat-card-title>Note</mat-card-title>
     </mat-card-header>
@@ -7,12 +7,14 @@
       <p>These icons will ONLY be seen by your friends, you will not be able to see them unless you hover over your name. These are not permanent and will reset.</p>
     </mat-card-content>
   </mat-card>
-  <form (submit)="$event.preventDefault()">
+
+  <form class="tool-panel search-panel" (submit)="$event.preventDefault()">
     <mat-form-field>
       <mat-label>Search by name or ID</mat-label>
       <input matInput [(ngModel)]="searchKeyword" (ngModelChange)="resetIconLimit()" name="search" placeholder="Ex. Ahri or 0">
     </mat-form-field>
   </form>
+
   <p *ngIf="iconsLoading" class="loading-text">Loading icons...</p>
   <p *ngIf="iconsError" class="loading-text">{{iconsError}}</p>
   <div class="icon-grid" *ngIf="!iconsLoading && !iconsError">

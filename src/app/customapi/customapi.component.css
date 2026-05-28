@@ -1,11 +1,42 @@
-.api-warning {
-  margin: 0.75rem 10px;
-  color: #ffd38d;
+.custom-api-page {
+  max-width: 78rem;
 }
 
-.default{
+.api-form {
+  display: grid;
+  grid-template-columns: 10rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.method-field,
+.endpoint-field {
+  width: 100%;
+}
+
+.api-textareas {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.35rem;
+}
+
+.default {
   display: block;
-  margin-left: 10px;
-  margin-right: 10px;
-  font-size: 1.1rem;
+  width: 100%;
+  font-size: 1rem;
+}
+
+textarea {
+  min-height: 5.5rem;
+  max-height: 18rem;
+}
+
+@media (max-width: 760px) {
+  .api-form {
+    grid-template-columns: 1fr;
+  }
+
+  .api-form button {
+    justify-self: start;
+  }
 }

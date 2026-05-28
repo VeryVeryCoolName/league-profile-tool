@@ -1,31 +1,55 @@
-h1{
-  font-size: 2.4rem;
-  margin: 1.5rem 0 1rem;
-  line-height: 1.15;
+main {
+  text-align: center;
 }
+
+h1 {
+  margin: 0.75rem 0 1rem;
+  color: #f7fbff;
+  font-size: 2.25rem;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
 .version-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
   gap: 1rem;
   max-width: 42rem;
-  margin: 2rem auto 0;
+  margin: 1.5rem auto 0;
 }
+
 .versions {
   min-width: 0;
 }
+
+.versions p {
+  margin: 0.35rem 0 0;
+  color: #fff;
+  font-weight: 700;
+}
+
 .versions small {
   display: block;
   margin-top: 0.45rem;
   color: #c7dced;
 }
-#linkButtons{
-  margin-top: 2rem;
+
+#linkButtons {
+  margin-top: 1.5rem;
   text-align: center;
 }
-button{
-  margin: 1rem;
+
+button {
+  margin: 0.5rem;
 }
+
 .credits {
-  margin: 3rem auto 0;
+  margin: 2.25rem auto 0;
   color: #c7dced;
+}
+
+@media (max-width: 720px) {
+  h1 {
+    font-size: 1.8rem;
+  }
 }

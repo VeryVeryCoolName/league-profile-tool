@@ -1,12 +1,13 @@
-<main>
-  <div class="search-champion">
+<main class="background-page">
+  <section class="tool-panel search-champion">
     <mat-form-field *ngIf="!showingSkins">
       <mat-label>Search for a champion</mat-label>
       <input matInput name="search" [(ngModel)]="searchText" placeholder="Ex. Ahri">
     </mat-form-field>
     <button (click)="showChampions()" *ngIf="showingSkins" mat-flat-button color="primary">Go Back</button>
-  </div>
-  <div *ngIf="!showingSkins">
+  </section>
+
+  <div class="asset-grid champion-grid" *ngIf="!showingSkins">
     <p *ngIf="championsLoading" class="loading-text">Loading champions...</p>
     <span class="champions" *ngFor="let champion of championImages | champions: searchText; trackBy: trackByAlt">
         <button *ngIf="!champion.broken" class="image-button champion-button" mat-stroked-button (click)="getSkins(champion.alt)">
@@ -15,7 +16,7 @@
         </button>
     </span>
   </div>
-  <div *ngIf="showingSkins">
+  <div class="asset-grid skin-grid" *ngIf="showingSkins">
     <p *ngIf="skinsLoading" class="loading-text">Loading backgrounds{{skinsLoaded ? ' (' + skinsLoaded + ' ready)' : ''}}...</p>
     <span class="championSkin" *ngFor="let skin of skinsImages; trackBy: trackBySkin">
         <button *ngIf="!skin.broken" class="image-button skin-button" mat-stroked-button (click)="setBackground(skin.alt)">

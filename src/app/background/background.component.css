@@ -1,46 +1,91 @@
-img{
+.background-page {
+  max-width: 88rem;
+}
+
+img {
   height: 100px;
   width: 100px;
   display: block;
   opacity: 0;
   transition: opacity 160ms ease-in;
 }
-.loaded{
+
+.loaded {
   opacity: 1;
 }
-.mat-stroked-button{
-  margin: 0.5rem;
+
+.search-champion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 4.25rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+}
+
+.search-champion .mat-form-field {
+  width: min(100%, 28rem);
+}
+
+.asset-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.mat-stroked-button {
+  margin: 0;
   padding: 1px;
 }
-.mat-form-field{
+
+.mat-form-field {
   text-align: center;
 }
-.skinSplash{
+
+.skinSplash {
   width: 187px;
   height: 348px;
 }
-.image-button{
+
+.image-button {
   position: relative;
   overflow: hidden;
   vertical-align: top;
+  background: #17232c;
+  border-color: rgba(255, 255, 255, 0.16);
+  transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 }
-.champion-button{
+
+.image-button:hover {
+  border-color: rgba(142, 202, 255, 0.85);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+.champion-button {
   width: 104px;
   height: 104px;
 }
-.skin-button{
+
+.skin-button {
   width: 191px;
   height: 352px;
 }
-.image-placeholder{
+
+.image-placeholder {
   position: absolute;
   inset: 1px;
   background: #1a2630;
 }
-.skin-placeholder{
+
+.skin-placeholder {
   background: #17232c;
 }
-.loading-text{
+
+.loading-text {
+  flex-basis: 100%;
   margin: 0.75rem 0;
+  text-align: center;
   color: #c7dced;
 }

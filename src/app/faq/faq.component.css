@@ -1,6 +1,17 @@
-.mat-card{
+main {
+  display: grid;
+  gap: 1rem;
+  max-width: 46rem;
+}
+
+.mat-card {
   max-width: 40rem;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 1.5rem;
+  width: 100%;
+}
+
+p {
+  margin-bottom: 0;
+  line-height: 1.55;
 }

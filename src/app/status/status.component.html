@@ -1,17 +1,28 @@
-<main>
-<mat-form-field appearance="fill">
-  <mat-label>Status</mat-label>
-  <mat-select [(value)]="availability">
-    <mat-option *ngFor="let status of statuses" [value]="status.value">
-      {{status.label}}
-    </mat-option>
-  </mat-select>
-</mat-form-field>
-<mat-form-field appearance="fill">
-  <mat-label>Putting too many characters will bug out your chat/friends list</mat-label>
-  <textarea matInput [(ngModel)]="text"></textarea>
-</mat-form-field>
-  <button mat-raised-button color="primary" (click)="setStatus()">Set Status</button>
-</main>
+<main class="status-page">
+  <section class="tool-panel">
+    <div class="panel-header">
+      <h2>Status</h2>
+      <p>Set your chat availability and a short visible message.</p>
+    </div>
 
+    <mat-form-field appearance="fill">
+      <mat-label>Status</mat-label>
+      <mat-select [(value)]="availability">
+        <mat-option *ngFor="let status of statuses" [value]="status.value">
+          {{status.label}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="message-field">
+      <mat-label>Status Message</mat-label>
+      <textarea matInput [(ngModel)]="text"></textarea>
+      <mat-hint>Long messages can bug out your chat/friends list.</mat-hint>
+    </mat-form-field>
+
+    <div class="panel-actions">
+      <button mat-raised-button color="primary" (click)="setStatus()">Set Status</button>
+    </div>
+  </section>
+</main>
 

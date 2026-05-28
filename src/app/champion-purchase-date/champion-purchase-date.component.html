@@ -1,32 +1,37 @@
-<main>
+<main class="purchase-date-page">
   <div *ngIf="ownershipLoading">
-    <mat-card>Loading champion purchase dates...</mat-card>
+    <mat-card class="state-card">Loading champion purchase dates...</mat-card>
   </div>
   <div *ngIf="ownershipError && !ownershipLoading">
-    <mat-card>{{ownershipError}}</mat-card>
+    <mat-card class="state-card">{{ownershipError}}</mat-card>
   </div>
-  <div class="search-champion">
+
+  <section class="tool-panel search-champion" *ngIf="ownedChamps !== null && !ownershipLoading && !ownershipError">
     <mat-form-field *ngIf="ownedChamps !== null && !ownershipLoading && !ownershipError && !showingSkins">
       <mat-label>Search for a champion</mat-label>
       <input matInput name="search" [(ngModel)]="searchText" placeholder="Ex. Ahri">
     </mat-form-field>
     <button (click)="showingSkins = false" *ngIf="showingSkins" mat-flat-button color="primary">Go Back</button>
-  </div>
-  <div *ngIf="!showingSkins && ownedChamps !== null && !ownershipLoading && !ownershipError">
+  </section>
+
+  <div class="champion-grid" *ngIf="!showingSkins && ownedChamps !== null && !ownershipLoading && !ownershipError">
     <span class="champions" *ngFor="let champion of ownedChamps | champions: searchText">
         <button mat-stroked-button (click)="showSkins(champion)"><img [src]="champion.iconSrc" alt="{{champion.name}}"/></button>
     </span>
-    <p *ngIf="ownedChamps.length === 0">No owned champions found.</p>
+    <p class="empty-state" *ngIf="ownedChamps.length === 0">No owned champions found.</p>
   </div>
-  <table *ngIf="showingSkins" matSort (matSortChange)="sortData($event)">
-    <tr>
-      <th mat-sort-header="name">Name</th>
-      <th mat-sort-header="purchased">Purchased</th>
-    </tr>
 
-    <tr *ngFor="let champion of sortedData">
-      <td>{{champion.name}}</td>
-      <td>{{champion.purchased}}</td>
-    </tr>
-  </table>
+  <div class="table-wrap" *ngIf="showingSkins">
+    <table matSort (matSortChange)="sortData($event)">
+      <tr>
+        <th mat-sort-header="name">Name</th>
+        <th mat-sort-header="purchased">Purchased</th>
+      </tr>
+
+      <tr *ngFor="let champion of sortedData">
+        <td>{{champion.name}}</td>
+        <td>{{champion.purchased}}</td>
+      </tr>
+    </table>
+  </div>
 </main>

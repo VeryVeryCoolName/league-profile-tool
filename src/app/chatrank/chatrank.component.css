@@ -7,8 +7,10 @@ main {
 .rank-panel {
   width: 100%;
   padding: 1rem;
-  background: #3f3f3f;
-  border-radius: 4px;
+  background: #3e3f40;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 6px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.11);
   text-align: left;
 }
 
@@ -43,6 +45,7 @@ h2 {
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
+  margin-top: 0.1rem;
 }
 
 @media (max-width: 720px) {

@@ -1,6 +1,7 @@
 import {Component, OnDestroy} from '@angular/core';
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {ConnectorService} from "../core/services/connector/connector.service";
+import {APP_VERSION} from "../app-version";
 
 type EndpointStatus = 'Idle' | 'Loading' | 'OK' | '404' | 'Unauthorized' | 'Empty' | 'Error';
 
@@ -465,7 +466,7 @@ export class LcuExplorerComponent implements OnDestroy {
   private buildExportPayload(): Record<string, unknown> {
     return {
       app: 'League Profile Tool',
-      version: '3.1.0',
+      version: APP_VERSION,
       exportedAt: new Date().toISOString(),
       gameflowPhase: this.exportedGameflowPhase(),
       lcuConnected: this.connectorService.isReady(),

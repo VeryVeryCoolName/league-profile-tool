@@ -28,8 +28,8 @@ This project uses a Windows GitHub Actions build to verify and package release a
 6. Push to `main` or `master` and confirm the `Windows Build` workflow passes.
 7. Create and push the release tag, for example:
    ```powershell
-   git tag V3.1.0
-   git push origin V3.1.0
+   git tag V3.1.1
+   git push origin V3.1.1
    ```
 8. Download the `league-profile-tool-windows` workflow artifact from GitHub Actions.
 9. Create a GitHub Release using the same tag and upload the packaged files.
