@@ -48,9 +48,72 @@ h2 {
   margin-top: 0.1rem;
 }
 
+.automation-panel {
+  background: #38393a;
+}
+
+.automation-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.event-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.event-status {
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: #c7dced;
+  font-size: 0.85rem;
+}
+
+.event-status .connected {
+  color: #90f0b1;
+}
+
+.toggle-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 2.25rem;
+  color: #f2f7fb;
+}
+
+.toggle-row input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.reapply-toggle {
+  align-items: flex-start;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+.automation-note {
+  margin: 0.5rem 0 0;
+  color: #c7dced;
+  font-size: 0.85rem;
+}
+
 @media (max-width: 720px) {
   .rank-grid,
   .challenge-grid {
     grid-template-columns: 1fr;
+  }
+
+  .automation-heading {
+    flex-direction: column;
   }
 }

@@ -3,6 +3,9 @@ import {MatDialog} from "@angular/material/dialog";
 import {DialogComponent} from "../core/dialog/dialog.component";
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
+import {PresenceAutomationService, PresenceAutomationState} from '../core/services/presence-automation/presence-automation.service';
+import {LcuEventsService, LcuEventState} from '../core/services/lcu-events/lcu-events.service';
+import {Observable} from 'rxjs';
 
 const CHALLENGE_CRYSTAL_POINT_THRESHOLDS: Record<string, number> = {
   IRON: 0,
@@ -36,8 +39,18 @@ export class ChatrankComponent implements OnInit {
   public challengeLevel: string;
   public challengePoints: number;
   public challengeRankSource = '';
+  public automationState$: Observable<PresenceAutomationState>;
+  public eventState$: Observable<LcuEventState>;
 
-  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private identityPreviewService: IdentityPreviewService) {
+  constructor(
+    public dialog: MatDialog,
+    private lcuConnectionService: LCUConnectionService,
+    private identityPreviewService: IdentityPreviewService,
+    private presenceAutomationService: PresenceAutomationService,
+    private lcuEventsService: LcuEventsService
+  ) {
+    this.automationState$ = this.presenceAutomationService.state$;
+    this.eventState$ = this.lcuEventsService.state$;
   }
 
   ngOnInit() {
@@ -59,7 +72,10 @@ export class ChatrankComponent implements OnInit {
       },
     };
     this.lcuConnectionService.requestSend(body, 'PUT', 'lolChat').then(response => {
-      if (response === 'Success') this.identityPreviewService.applyChatRank(this.queue, this.rank, this.division);
+      if (response === 'Success') {
+        this.identityPreviewService.applyChatRank(this.queue, this.rank, this.division);
+        this.presenceAutomationService.recordChatRankPreset(this.queue, this.rank, this.division);
+      }
       this.dialog.open(DialogComponent, {
         data: {body: response}
       });
@@ -93,6 +109,7 @@ export class ChatrankComponent implements OnInit {
         return;
       }
       this.identityPreviewService.applyChallengeSpoof(normalizedLevel, this.challengePoints);
+      this.presenceAutomationService.recordChallengeRankPreset(normalizedLevel, this.challengePoints);
     });
   }
 
@@ -104,6 +121,19 @@ export class ChatrankComponent implements OnInit {
   public syncChallengePointsToLevel() {
     if (!this.challengeLevel) return;
     this.challengePoints = CHALLENGE_CRYSTAL_POINT_THRESHOLDS[this.challengeLevel] || 0;
+  }
+
+  public toggleAutoReapply(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.presenceAutomationService.setAutoReapply(input.checked);
+  }
+
+  public restoreOriginalIdentity() {
+    this.presenceAutomationService.restoreOriginalPresence().then(response => {
+      this.dialog.open(DialogComponent, {
+        data: {body: response}
+      });
+    });
   }
 
   private loadCurrentChallengeRank() {

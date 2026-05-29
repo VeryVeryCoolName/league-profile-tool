@@ -52,4 +52,30 @@
       <button (click)="reloadRealChallengeRank()" mat-stroked-button>Reload Real Challenge Rank</button>
     </div>
   </section>
+
+  <section class="rank-panel automation-panel">
+    <div class="automation-heading">
+      <div>
+        <h2>Presence Automation</h2>
+        <p class="rank-source">Optional event-based helpers for restoring or reapplying your last chosen values.</p>
+      </div>
+      <button (click)="restoreOriginalIdentity()" mat-stroked-button>Restore Original Identity</button>
+    </div>
+
+    <div class="event-status" *ngIf="eventState$ | async as eventState">
+      <span [class.connected]="eventState.connected">{{eventState.connected ? 'LCU events connected' : eventState.message}}</span>
+      <span *ngIf="eventState.gameflowPhase">Phase: {{eventState.gameflowPhase}}</span>
+      <span *ngIf="eventState.lastEventUri">Last: {{eventState.lastEventUri}}</span>
+    </div>
+
+    <ng-container *ngIf="automationState$ | async as automationState">
+      <label class="toggle-row reapply-toggle">
+        <input type="checkbox" [checked]="automationState.autoReapply" (change)="toggleAutoReapply($event)">
+        Reapply changes after client refresh
+      </label>
+      <p class="automation-note" *ngIf="automationState.lastAction">
+        {{automationState.lastAction}} <span *ngIf="automationState.lastActionAt">at {{automationState.lastActionAt}}</span>
+      </p>
+    </ng-container>
+  </section>
 </main>

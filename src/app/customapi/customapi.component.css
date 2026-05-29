@@ -4,11 +4,12 @@
 
 .api-form {
   display: grid;
-  grid-template-columns: 10rem minmax(0, 1fr) auto;
+  grid-template-columns: minmax(12rem, 16rem) 9rem minmax(0, 1fr) auto;
   gap: 1rem;
   align-items: center;
 }
 
+.preset-field,
 .method-field,
 .endpoint-field {
   width: 100%;

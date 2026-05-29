@@ -8,12 +8,31 @@ import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection
 })
 export class CustomapiComponent {
   public methods = ["GET", "POST", "PUT", "PATCH", "DELETE"];
+  public endpointPresets = [
+    {label: 'Current Summoner', method: 'GET', endpoint: '/lol-summoner/v1/current-summoner'},
+    {label: 'Chat Presence', method: 'GET', endpoint: '/lol-chat/v1/me'},
+    {label: 'Gameflow Phase', method: 'GET', endpoint: '/lol-gameflow/v1/gameflow-phase'},
+    {label: 'Current Lobby', method: 'GET', endpoint: '/lol-lobby/v2/lobby'},
+    {label: 'Current Regalia', method: 'GET', endpoint: '/lol-regalia/v2/current-summoner/regalia'},
+    {label: 'Challenge Summary', method: 'GET', endpoint: '/lol-challenges/v1/summary-player-data/local-player'},
+    {label: 'Friend Hovercard', method: 'GET', endpoint: '/lol-hovercard/v1/friend-info/{puuid}'}
+  ];
+  public selectedPreset = '';
   public method = "GET";
   public body = "{\n     \"\":\"\"\n}";
   public response: string;
   public endPoint: string;
 
   constructor(private lcuConnectionService: LCUConnectionService) {
+  }
+
+  public applyPreset(endpoint: string) {
+    const preset = this.endpointPresets.find(item => item.endpoint === endpoint);
+    if (!preset) return;
+    this.method = preset.method;
+    this.endPoint = preset.endpoint;
+    if (this.method === 'GET') return;
+    this.body = "{\n     \"\":\"\"\n}";
   }
 
   public sendRequest() {

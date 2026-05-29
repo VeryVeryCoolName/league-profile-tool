@@ -2,6 +2,7 @@ import {Component} from '@angular/core';
 import {MatDialog} from "@angular/material/dialog";
 import {DialogComponent} from "../core/dialog/dialog.component";
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
+import {PresenceAutomationService} from '../core/services/presence-automation/presence-automation.service';
 
 @Component({
   selector: 'app-status',
@@ -18,7 +19,7 @@ export class StatusComponent {
     {label: 'Offline', value: 'offline'}
   ];
 
-  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService) {
+  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private presenceAutomationService: PresenceAutomationService) {
   }
 
   public setStatus() {
@@ -27,6 +28,7 @@ export class StatusComponent {
       statusMessage: this.text
     };
     this.lcuConnectionService.requestSend(body, 'PUT', 'lolChat').then(response => {
+      if (response === 'Success') this.presenceAutomationService.recordStatusPreset(this.availability, this.text);
       this.dialog.open(DialogComponent, {
         data: {body: response}
       });

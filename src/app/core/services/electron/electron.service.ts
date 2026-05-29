@@ -6,6 +6,8 @@ import { ipcRenderer, webFrame, shell } from 'electron';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as tls from 'tls';
+import * as crypto from 'crypto';
 
 interface RequestOptions {
   url: string;
@@ -24,6 +26,8 @@ export class ElectronService {
   childProcess: typeof childProcess;
   fs: typeof fs;
   path: typeof path;
+  tls: typeof tls;
+  crypto: typeof crypto;
   shell: typeof shell;
   request: (options: RequestOptions) => Promise<string>;
   private http: any;
@@ -40,6 +44,8 @@ export class ElectronService {
       this.childProcess = window.require('child_process');
       this.fs = window.require('fs');
       this.path = window.require('path');
+      this.tls = window.require('tls');
+      this.crypto = window.require('crypto');
       this.http = window.require('http');
       this.https = window.require('https');
       this.request = (options: RequestOptions) => this.makeRequest(options);

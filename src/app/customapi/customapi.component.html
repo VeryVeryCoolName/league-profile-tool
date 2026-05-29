@@ -6,6 +6,16 @@
     </div>
 
     <form class="api-form" (submit)="$event.preventDefault()">
+      <mat-form-field appearance="fill" class="preset-field">
+        <mat-label>Preset</mat-label>
+        <mat-select [(value)]="selectedPreset" (selectionChange)="applyPreset($event.value)">
+          <mat-option value="">Custom endpoint</mat-option>
+          <mat-option *ngFor="let preset of endpointPresets" [value]="preset.endpoint">
+            {{preset.label}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
       <mat-form-field appearance="fill" class="method-field">
         <mat-label>Method</mat-label>
         <mat-select [(value)]="method">
