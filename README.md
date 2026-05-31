@@ -33,7 +33,7 @@ Older versions and changelogs are available in the [Releases](https://github.com
 
 ## Preview
 
-[![image.png](https://i.postimg.cc/ZRFSckpJ/image.png)](https://postimg.cc/Q9tw8yfz)
+[![Screenshot.png](https://i.postimg.cc/brsrZCqC/Screenshot.png)](https://postimg.cc/4HRsM17V)
 
 ## Built With
 
