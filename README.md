@@ -8,10 +8,10 @@ Originally based on the project by [MManoah](https://github.com/MManoah/league-p
 
 - Custom profile icons
 - Custom profile backgrounds
-- Chat rank customization
-- Challenge rank spoofing
+- Chat and challenge rank customization
 - Custom status/presence editing
 - Live profile preview
+- Match Tools (auto accept, lane prediction, matchup links)
 - Direct LCU API requests through Custom API
 - Modern League Client compatibility
 - Lightweight Electron desktop application
