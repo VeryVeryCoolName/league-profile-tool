@@ -25,7 +25,7 @@
           </mat-select>
         </mat-form-field>
         <button mat-stroked-button type="button" *ngIf="state.matchup?.sourceUrl" (click)="openExternal(state.matchup.sourceUrl)">
-          Open matchup
+          {{state.champSelect.enemyMatchupSource === 'manual' ? 'Open selected matchup' : 'Open detected matchup'}}
         </button>
       </article>
     </div>
@@ -43,7 +43,7 @@
     <div class="champ-grid">
       <div class="info-card champion-card primary-champion-card">
         <div class="champion-meta-line">
-          <span class="role-badge" *ngIf="state.champSelect.role && state.champSelect.role !== 'Unknown'">{{state.champSelect.role}}</span>
+          <span class="role-badge" *ngIf="state.champSelect.role && state.champSelect.role !== 'Unknown'">{{state.champSelect.role}}{{state.champSelect.roleSource === 'recommended' ? '?' : ''}}</span>
         </div>
         <strong>{{state.champSelect.playerChampionName || 'No champion selected'}}</strong>
         <img class="champion-icon main-icon" *ngIf="state.champSelect.playerChampionIconUrl" [src]="state.champSelect.playerChampionIconUrl" [alt]="state.champSelect.playerChampionName">

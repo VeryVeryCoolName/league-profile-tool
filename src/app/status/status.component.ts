@@ -27,6 +27,7 @@ export class StatusComponent {
       availability: this.availability,
       statusMessage: this.text
     };
+    this.presenceAutomationService.suspendAutoReapply();
     this.lcuConnectionService.requestSend(body, 'PUT', 'lolChat').then(response => {
       if (response === 'Success') this.presenceAutomationService.recordStatusPreset(this.availability, this.text);
       this.dialog.open(DialogComponent, {

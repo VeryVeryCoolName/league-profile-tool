@@ -39,6 +39,7 @@ export class PresenceAutomationService {
   private chatRankPatch: PresencePatch = null;
   private challengeRankPatch: PresencePatch = null;
   private lastReapplyAt = 0;
+  private autoReapplySuppressedUntil = 0;
 
   public readonly state$: Observable<PresenceAutomationState> = this.stateSubject.asObservable();
 
@@ -85,6 +86,10 @@ export class PresenceAutomationService {
     this.patchState({autoReapply: enabled});
   }
 
+  public suspendAutoReapply(durationMs = 5000) {
+    this.autoReapplySuppressedUntil = Date.now() + durationMs;
+  }
+
   public async restoreOriginalPresence(): Promise<string> {
     if (!this.originalPresence) {
       await this.captureOriginalPresence();
@@ -103,11 +108,12 @@ export class PresenceAutomationService {
 
   public async reapplyEnabledPresets(): Promise<void> {
     if (!this.stateSubject.value.autoReapply) return;
+    if (this.isAutoReapplySuppressed()) return;
     const merged = this.mergePatches(this.statusPatch, this.chatRankPatch, this.challengeRankPatch);
     if (!merged) return;
 
-    await this.writePresence(merged);
-    this.markAction('Reapplied changes after client refresh');
+    const response = await this.writePresence(merged);
+    if (response === 'Success') this.markAction('Reapplied changes after client refresh');
   }
 
   private async captureOriginalPresence() {
@@ -141,6 +147,7 @@ export class PresenceAutomationService {
 
   private reapplyAfterRefresh(event?: LcuJsonApiEvent) {
     if (!this.stateSubject.value.autoReapply) return;
+    if (this.isAutoReapplySuppressed()) return;
     const patch = this.mergePatches(this.statusPatch, this.chatRankPatch, this.challengeRankPatch);
     if (!patch) return;
     if (event && event.uri === '/lol-chat/v1/me' && this.matchesPatch(event.data, patch)) return;
@@ -150,6 +157,7 @@ export class PresenceAutomationService {
 
   private async writeWithCooldown(patch: PresencePatch, action: string) {
     if (!patch) return;
+    if (this.isAutoReapplySuppressed()) return;
     const now = Date.now();
     if (now - this.lastReapplyAt < 2500) return;
     this.lastReapplyAt = now;
@@ -198,6 +206,10 @@ export class PresenceAutomationService {
 
   private shouldNormalizeCase(key: string): boolean {
     return ['rankedLeagueQueue', 'rankedLeagueTier', 'rankedLeagueDivision', 'challengeCrystalLevel'].indexOf(key) >= 0;
+  }
+
+  private isAutoReapplySuppressed(): boolean {
+    return Date.now() < this.autoReapplySuppressedUntil;
   }
 
   private resetRuntimeState(message: string) {

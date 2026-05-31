@@ -32,11 +32,18 @@ interface LaneOpponentResult {
   source: 'assigned' | 'recommended' | 'class' | 'manual' | 'none';
 }
 
+interface LaneOpponentScore {
+  championId: number;
+  score: number;
+  source: 'recommended' | 'class';
+}
+
 export interface ChampSelectViewState {
   inChampSelect: boolean;
   phase: string;
   localCellId: number | null;
   role: string;
+  roleSource: 'assigned' | 'recommended' | 'none';
   playerChampionId: number | null;
   playerChampionName: string;
   playerChampionIconUrl: string;
@@ -87,6 +94,7 @@ export class MatchToolsService {
     phase: '',
     localCellId: null,
     role: '',
+    roleSource: 'none',
     playerChampionId: null,
     playerChampionName: '',
     playerChampionIconUrl: '',
@@ -128,6 +136,7 @@ export class MatchToolsService {
   private lastMatchupKey = '';
   private championNameById: Record<number, string> = {};
   private championMetadataById: Record<number, ChampionMetadata> = {};
+  private championMetadataPromise: Promise<void>;
   private recommendedPositionsByChampionId: Record<number, string[]> = {};
   private recommendedPositionsPromise: Promise<void>;
   private lastChampSelectSession: any = null;
@@ -165,7 +174,7 @@ export class MatchToolsService {
     if (!this.providers.some(provider => provider.id === providerId)) return;
     this.lastMatchupKey = '';
     this.patchState({providerId});
-    this.updateMatchup(this.stateSubject.value.champSelect);
+    this.updateMatchup(this.stateSubject.value.champSelect).catch(() => undefined);
   }
 
   public selectManualOpponent(championId: number) {
@@ -191,7 +200,7 @@ export class MatchToolsService {
         manualOpponentChampionId: null
       }
     });
-    if (this.lastChampSelectSession) this.applyChampSelectSession(this.lastChampSelectSession);
+    if (this.lastChampSelectSession) this.applyChampSelectSession(this.lastChampSelectSession).catch(() => undefined);
   }
 
   private handleLcuEvent(event: LcuJsonApiEvent) {
@@ -215,7 +224,7 @@ export class MatchToolsService {
         return;
       }
 
-      this.applyChampSelectSession(event.data);
+      this.applyChampSelectSession(event.data).catch(() => undefined);
     }
   }
 
@@ -226,6 +235,7 @@ export class MatchToolsService {
       await this.refreshGameflow();
       const currentPhase = this.stateSubject.value.champSelect.phase;
       if (currentPhase && currentPhase !== 'ChampSelect') {
+        this.ensureChampionNames().catch(() => undefined);
         this.ensureRecommendedChampionPositions().catch(() => undefined);
       }
     } finally {
@@ -247,7 +257,7 @@ export class MatchToolsService {
       return;
     }
 
-    if (response === 'Success' || response === '' || typeof response === 'string') {
+    if (response === 'Success' || response === '') {
       this.acceptedResponseSuppressUntil = Date.now() + 10000;
       this.patchState({
         readyCheckStatus: 'Accepted',
@@ -255,7 +265,13 @@ export class MatchToolsService {
         lastAcceptedAt: new Date().toLocaleTimeString()
       });
       this.scheduleAcceptedStatusClear();
+      return;
     }
+
+    this.patchState({
+      readyCheckStatus: 'Ready Check',
+      readyCheckMessage: 'Auto Accept request failed'
+    });
   }
 
   private applyReadyCheck(readyCheck: any) {
@@ -293,7 +309,7 @@ export class MatchToolsService {
   }
 
   private acceptWhenReady() {
-    this.acceptReadyCheck();
+    this.acceptReadyCheck().catch(() => undefined);
   }
 
   private isAutoAcceptModeEnabled(): boolean {
@@ -325,6 +341,10 @@ export class MatchToolsService {
 
     if (phase !== 'ChampSelect') {
       this.resetChampSelect(phase);
+      if (phase) {
+        this.ensureChampionNames().catch(() => undefined);
+        this.ensureRecommendedChampionPositions().catch(() => undefined);
+      }
       this.patchState({
         readyCheckStatus: phase === 'Matchmaking' ? 'Searching' : this.stateSubject.value.readyCheckStatus,
         readyCheckMessage: ''
@@ -363,11 +383,12 @@ export class MatchToolsService {
     const myTeam = Array.isArray(session.myTeam) ? session.myTeam as ChampSelectMember[] : [];
     const theirTeam = Array.isArray(session.theirTeam) ? session.theirTeam as ChampSelectMember[] : [];
     const localMember = this.findLocalMember(myTeam, localCellId);
-    const localRole = this.normalizeRole(localMember.assignedPosition);
     const lockedChampionId = this.numberOrNull(localMember.championId);
     const pickIntentChampionId = this.numberOrNull(localMember.championPickIntent);
     const hoveredChampionId = pickIntentChampionId || this.findHoveredChampionId(session, localCellId, lockedChampionId);
     const playerChampionId = lockedChampionId || pickIntentChampionId || hoveredChampionId;
+    const roleContext = this.resolveLocalRole(localMember.assignedPosition, playerChampionId);
+    const localRole = roleContext.role;
     const visibleEnemies = theirTeam
       .map(member => this.memberChampionId(member))
       .filter(id => !!id)
@@ -386,6 +407,7 @@ export class MatchToolsService {
       phase: 'ChampSelect',
       localCellId,
       role: localRole,
+      roleSource: roleContext.source,
       playerChampionId,
       playerChampionName: this.championName(playerChampionId),
       playerChampionIconUrl: this.championIconUrl(playerChampionId),
@@ -406,7 +428,7 @@ export class MatchToolsService {
     };
 
     this.patchState({champSelect});
-    this.updateMatchup(champSelect);
+    this.updateMatchup(champSelect).catch(() => undefined);
   }
 
   private findHoveredChampionId(session: any, localCellId: number, lockedChampionId: number): number | null {
@@ -445,37 +467,48 @@ export class MatchToolsService {
     }
 
     const visibleEnemyIds = theirTeam.map(member => this.memberChampionId(member)).filter(id => !!id);
-    const recommendedCandidates = this.recommendedLaneOpponentCandidates(visibleEnemyIds as number[], normalizedLocalRole);
-    if (recommendedCandidates.length === 1) {
-      return {championId: recommendedCandidates[0], isFallback: true, candidateIds: recommendedCandidates, source: 'recommended'};
-    }
-    if (recommendedCandidates.length > 1) {
-      return {championId: null, isFallback: true, candidateIds: recommendedCandidates, source: 'recommended'};
-    }
-
-    const inferredCandidates = this.inferLaneOpponentCandidates(visibleEnemyIds as number[], normalizedLocalRole);
-    if (inferredCandidates.length === 1) {
-      return {championId: inferredCandidates[0], isFallback: true, candidateIds: inferredCandidates, source: 'class'};
-    }
-    if (inferredCandidates.length > 1) {
-      return {championId: null, isFallback: true, candidateIds: inferredCandidates, source: 'class'};
-    }
-
-    return {championId: null, isFallback: false, candidateIds: [], source: 'none'};
+    return this.inferLaneOpponentByScore(visibleEnemyIds as number[], normalizedLocalRole);
   }
 
-  private recommendedLaneOpponentCandidates(championIds: number[], localRole: string): number[] {
-    if (!localRole || localRole === 'Unknown' || !championIds.length) return [];
+  private inferLaneOpponentByScore(championIds: number[], localRole: string): LaneOpponentResult {
+    if (!localRole || localRole === 'Unknown' || !championIds.length) {
+      return {championId: null, isFallback: false, candidateIds: [], source: 'none'};
+    }
 
     const scored = championIds
-      .map(championId => ({championId, score: this.recommendedPositionScore(championId, localRole)}))
-      .filter(item => item.score > 0);
-    if (!scored.length) return [];
+      .map(championId => this.laneOpponentScore(championId, localRole))
+      .filter(item => item.score >= this.minimumRoleScore(localRole));
+    if (!scored.length) return {championId: null, isFallback: false, candidateIds: [], source: 'none'};
 
     const bestScore = Math.max(...scored.map(item => item.score));
-    return scored
-      .filter(item => item.score === bestScore)
-      .map(item => item.championId);
+    const best = scored
+      .filter(item => bestScore - item.score <= this.scoreTieWindow(localRole))
+      .sort((left, right) => right.score - left.score || left.championId - right.championId);
+    const source = best.some(item => item.source === 'recommended') ? 'recommended' : 'class';
+    const candidateIds = best.map(item => item.championId);
+
+    if (candidateIds.length === 1) {
+      return {championId: candidateIds[0], isFallback: true, candidateIds, source};
+    }
+    return {championId: null, isFallback: true, candidateIds, source};
+  }
+
+  private laneOpponentScore(championId: number, localRole: string): LaneOpponentScore {
+    const recommendedScore = this.recommendedPositionScore(championId, localRole);
+    const classScore = this.roleScore(championId, localRole);
+    if (recommendedScore > 0) {
+      return {
+        championId,
+        score: recommendedScore * 10 + Math.max(classScore, 0),
+        source: 'recommended'
+      };
+    }
+
+    return {
+      championId,
+      score: classScore,
+      source: 'class'
+    };
   }
 
   private recommendedPositionScore(championId: number, localRole: string): number {
@@ -484,20 +517,6 @@ export class MatchToolsService {
     const index = recommendedPositions.findIndex(position => this.normalizeRole(position) === normalizedLocalRole);
     if (index < 0) return 0;
     return 100 - index;
-  }
-
-  private inferLaneOpponentCandidates(championIds: number[], localRole: string): number[] {
-    if (!localRole || localRole === 'Unknown' || !championIds.length) return [];
-
-    const scored = championIds
-      .map(championId => ({championId, score: this.roleScore(championId, localRole)}))
-      .filter(item => item.score >= this.minimumRoleScore(localRole));
-    if (!scored.length) return [];
-
-    const bestScore = Math.max(...scored.map(item => item.score));
-    return scored
-      .filter(item => bestScore - item.score <= 1)
-      .map(item => item.championId);
   }
 
   private roleScore(championId: number, role: string): number {
@@ -515,12 +534,12 @@ export class MatchToolsService {
     if (normalizedRole === 'TOP') {
       return 0
         + (has('FIGHTER') ? 5 : 0)
-        + (has('TANK') ? 4 : 0)
-        + (has('MAGE') && has('FIGHTER') ? 3 : 0)
-        + (defense >= 7 ? 2 : 0)
-        + (magic >= 7 && has('FIGHTER') ? 2 : 0)
+        + (has('TANK') ? 3 : 0)
+        + (has('MAGE') && has('FIGHTER') ? 4 : 0)
+        + (defense >= 7 ? 1 : 0)
+        + (magic >= 7 && has('FIGHTER') ? 3 : 0)
         + (attack >= 6 ? 1 : 0)
-        - (has('TANK') && has('FIGHTER') && attack <= 5 && magic <= 6 ? 2 : 0)
+        - (has('TANK') && has('FIGHTER') && attack <= 5 && magic <= 6 ? 3 : 0)
         - (has('TANK') && !has('FIGHTER') ? 2 : 0)
         - (has('MARKSMAN') ? 3 : 0)
         - (has('SUPPORT') ? 2 : 0)
@@ -570,6 +589,21 @@ export class MatchToolsService {
     return 0;
   }
 
+  private resolveLocalRole(assignedPosition: string, championId: number | null): {role: string; source: 'assigned' | 'recommended' | 'none'} {
+    const assignedRole = this.normalizeRole(assignedPosition);
+    if (assignedRole && assignedRole !== 'Unknown') {
+      return {role: assignedRole, source: 'assigned'};
+    }
+
+    const recommended = championId ? this.recommendedPositionsByChampionId[championId] || [] : [];
+    const firstRecommended = recommended.length ? this.normalizeRole(recommended[0]) : '';
+    if (firstRecommended && firstRecommended !== 'Unknown') {
+      return {role: firstRecommended, source: 'recommended'};
+    }
+
+    return {role: 'Unknown', source: 'none'};
+  }
+
   private minimumRoleScore(role: string): number {
     const normalizedRole = this.normalizeRole(role);
     if (normalizedRole === 'TOP') return 6;
@@ -578,6 +612,10 @@ export class MatchToolsService {
     if (normalizedRole === 'BOTTOM') return 6;
     if (normalizedRole === 'SUPPORT') return 6;
     return 99;
+  }
+
+  private scoreTieWindow(role: string): number {
+    return this.normalizeRole(role) === 'TOP' ? 0 : 1;
   }
 
   private laneOpponentLabel(enemyChampionName: string, candidates: ChampionCard[], laneOpponent: LaneOpponentResult): string {
@@ -634,7 +672,7 @@ export class MatchToolsService {
     };
 
     this.patchState({champSelect});
-    this.updateMatchup(champSelect);
+    this.updateMatchup(champSelect).catch(() => undefined);
   }
 
   private shouldApplyChampSelectSessionEvent(event: LcuJsonApiEvent): boolean {
@@ -664,6 +702,17 @@ export class MatchToolsService {
 
   private async ensureChampionNames(): Promise<void> {
     if (Object.keys(this.championNameById).length > 0) return;
+    if (!this.championMetadataPromise) {
+      this.championMetadataPromise = this.loadChampionMetadata();
+    }
+    try {
+      await this.championMetadataPromise;
+    } catch (error) {
+      this.championMetadataPromise = null;
+    }
+  }
+
+  private async loadChampionMetadata(): Promise<void> {
     if (!this.dataDragonVersion) {
       const versions = await this.versionService.apiVersion().toPromise() as string[];
       this.dataDragonVersion = versions && versions.length ? versions[0] : '';
@@ -737,11 +786,11 @@ export class MatchToolsService {
 
   private normalizeRole(role: string): string {
     const normalized = String(role || '').toUpperCase();
-    if (normalized === 'UTILITY') return 'SUPPORT';
-    if (normalized === 'BOTTOM') return 'BOTTOM';
-    if (normalized === 'MIDDLE') return 'MIDDLE';
-    if (normalized === 'JUNGLE') return 'JUNGLE';
-    if (normalized === 'TOP') return 'TOP';
+    if (normalized.indexOf('UTILITY') >= 0 || normalized.indexOf('SUPPORT') >= 0) return 'SUPPORT';
+    if (normalized.indexOf('BOTTOM') >= 0 || normalized.indexOf('BOT') >= 0) return 'BOTTOM';
+    if (normalized.indexOf('MIDDLE') >= 0 || normalized.indexOf('MID') >= 0) return 'MIDDLE';
+    if (normalized.indexOf('JUNGLE') >= 0) return 'JUNGLE';
+    if (normalized.indexOf('TOP') >= 0) return 'TOP';
     return normalized || 'Unknown';
   }
 

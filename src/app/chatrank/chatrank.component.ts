@@ -71,6 +71,7 @@ export class ChatrankComponent implements OnInit {
         rankedLeagueDivision: this.division,
       },
     };
+    this.presenceAutomationService.suspendAutoReapply();
     this.lcuConnectionService.requestSend(body, 'PUT', 'lolChat').then(response => {
       if (response === 'Success') {
         this.identityPreviewService.applyChatRank(this.queue, this.rank, this.division);
@@ -101,6 +102,7 @@ export class ChatrankComponent implements OnInit {
         challengePoints: String(this.challengePoints)
       },
     };
+    this.presenceAutomationService.suspendAutoReapply();
     this.lcuConnectionService.requestSendNoVerify(body, 'PUT', 'lolChat').then(response => {
       if (response !== 'Success') {
         this.dialog.open(DialogComponent, {
@@ -110,6 +112,9 @@ export class ChatrankComponent implements OnInit {
       }
       this.identityPreviewService.applyChallengeSpoof(normalizedLevel, this.challengePoints);
       this.presenceAutomationService.recordChallengeRankPreset(normalizedLevel, this.challengePoints);
+      this.dialog.open(DialogComponent, {
+        data: {body: response}
+      });
     });
   }
 
