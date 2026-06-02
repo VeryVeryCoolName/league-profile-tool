@@ -17,12 +17,15 @@ img {
 }
 
 .search-panel {
-  max-width: 34rem;
+  max-width: 46rem;
   margin: 1rem auto;
   padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.mat-stroked-button {
+.icon-button.mat-stroked-button {
   margin: 0;
   padding: 1px;
   background: #17232c;
@@ -30,10 +33,52 @@ img {
   transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 }
 
-.mat-stroked-button:hover {
+.icon-button.mat-stroked-button:hover {
   border-color: rgba(142, 202, 255, 0.85);
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
   transform: translateY(-1px);
+}
+
+.icon-button.mat-stroked-button[disabled] {
+  opacity: 0.72;
+  cursor: wait;
+  transform: none;
+}
+
+.icon-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-button.owned-icon {
+  border-color: rgba(94, 197, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(94, 197, 255, 0.2);
+}
+
+.owned-badge {
+  position: absolute;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(10, 46, 70, 0.92);
+  color: #aee7ff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.owned-filter {
+  min-width: 8.5rem;
+  height: 2.75rem;
+  white-space: nowrap;
+}
+
+.owned-filter.active {
+  border-color: rgba(94, 197, 255, 0.9);
+  background: rgba(26, 68, 96, 0.7);
+  color: #dff6ff;
 }
 
 .mat-form-field {
@@ -52,4 +97,29 @@ img {
 
 .loading-text {
   color: #c7dced;
+}
+
+.inventory-text,
+.selection-note {
+  color: #c7dced;
+  margin: 0.5rem auto 1rem;
+}
+
+.selection-note {
+  max-width: 34rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(94, 197, 255, 0.24);
+  border-radius: 6px;
+  background: rgba(18, 38, 52, 0.72);
+}
+
+@media (max-width: 720px) {
+  .search-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .owned-filter {
+    width: 100%;
+  }
 }

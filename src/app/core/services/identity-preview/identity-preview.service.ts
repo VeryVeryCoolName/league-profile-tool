@@ -71,14 +71,19 @@ export class IdentityPreviewService {
       const [summoner, profile, chat, challengeSummary] = await Promise.all([
         this.readObject('/lol-summoner/v1/current-summoner'),
         this.readObject('/lol-summoner/v1/current-summoner/summoner-profile'),
-        current.challengeSpoofActive ? Promise.resolve(null) : this.readObject('/lol-chat/v1/me'),
+        this.readObject('/lol-chat/v1/me'),
         current.challengeSpoofActive ? Promise.resolve(null) : this.readObject('/lol-challenges/v1/summary-player-data/local-player')
       ]);
 
       const lol = chat && chat.lol ? chat.lol as Record<string, unknown> : {};
       const summaryLevel = this.stringFrom(challengeSummary && challengeSummary.overallChallengeLevel, '');
       const summaryPoints = this.numberFrom(challengeSummary && challengeSummary.totalChallengeScore, null);
-      const profileIconId = this.numberFrom(summoner.profileIconId, this.numberFrom(lol.profileIcon, current.profileIconId));
+      const accountProfileIconId = this.numberFrom(summoner.profileIconId, current.profileIconId);
+      const chatIconId = this.numberFrom(chat && chat.icon, null);
+      const hovercardIconId = chatIconId === null
+        ? await this.readHovercardProfileIcon(summoner)
+        : null;
+      const profileIconId = this.firstKnownNumber(chatIconId, hovercardIconId, accountProfileIconId);
       const profileIconName = await this.resolveProfileIconName(profileIconId);
       const backgroundSkinId = this.numberFrom(profile.backgroundSkinId, current.backgroundSkinId);
       const background = await this.resolveBackground(backgroundSkinId);
@@ -193,6 +198,21 @@ export class IdentityPreviewService {
     return parsed;
   }
 
+  private async readHovercardProfileIcon(summoner: Record<string, unknown>): Promise<number | null> {
+    const puuid = this.stringFrom(summoner && summoner.puuid, '');
+    if (!puuid) return null;
+
+    try {
+      const hovercard = await this.readObject(`/lol-hovercard/v1/friend-info/${puuid}`);
+      return this.firstKnownNumber(
+        this.numberFrom(hovercard.summonerIcon, null),
+        this.numberFrom(hovercard.icon, null)
+      );
+    } catch (error) {
+      return null;
+    }
+  }
+
   private parseResponse(response: any): any {
     if (typeof response !== 'string') return response;
     try {
@@ -282,5 +302,12 @@ export class IdentityPreviewService {
     if (value === undefined || value === null || value === '') return fallback;
     const parsed = Number(value);
     return isNaN(parsed) ? fallback : parsed;
+  }
+
+  private firstKnownNumber(...values: Array<number | null>): number | null {
+    for (const value of values) {
+      if (value !== undefined && value !== null && !isNaN(value)) return value;
+    }
+    return null;
   }
 }

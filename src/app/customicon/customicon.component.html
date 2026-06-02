@@ -4,7 +4,7 @@
       <mat-card-title>Note</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <p>These icons will ONLY be seen by your friends, you will not be able to see them unless you hover over your name. These are not permanent and will reset.</p>
+      <p>Owned icons can update your account icon when Riot accepts them. Any icon can still be applied to your social/profile-card presence and may reset after a client refresh.</p>
     </mat-card-content>
   </mat-card>
 
@@ -13,14 +13,34 @@
       <mat-label>Search by name or ID</mat-label>
       <input matInput [(ngModel)]="searchKeyword" (ngModelChange)="resetIconLimit()" name="search" placeholder="Ex. Ahri or 0">
     </mat-form-field>
+    <button
+      mat-stroked-button
+      type="button"
+      class="owned-filter"
+      [class.active]="ownedOnly"
+      [disabled]="!canFilterOwnedIcons"
+      (click)="toggleOwnedOnly()">
+      Owned Only
+    </button>
   </form>
 
   <p *ngIf="iconsLoading" class="loading-text">Loading icons...</p>
   <p *ngIf="iconsError" class="loading-text">{{iconsError}}</p>
+  <p *ngIf="inventoryLoading" class="inventory-text">Checking owned icons...</p>
+  <p *ngIf="inventoryUnavailable" class="inventory-text">Owned icon inventory is unavailable or empty. Showing all icons.</p>
+  <p *ngIf="selectionNote" class="selection-note">{{selectionNote}}</p>
   <div class="icon-grid" *ngIf="!iconsLoading && !iconsError">
     <span class="icons" *ngFor="let icon of visibleIcons; trackBy: trackByIcon">
-        <button *ngIf="!icon.broken" mat-stroked-button (click)="setIcon(icon.id)">
+        <button
+          *ngIf="!icon.broken"
+          mat-stroked-button
+          class="icon-button"
+          [class.owned-icon]="isOwnedIcon(icon)"
+          [disabled]="updatingIconId !== null"
+          [attr.title]="(icon.title || icon.id) + ' - ' + ownershipLabel(icon)"
+          (click)="setIcon(icon.id)">
           <img [src]="icon.src" [alt]="icon.title || icon.id" loading="lazy" decoding="async" (error)="onIconError(icon)"/>
+          <span *ngIf="isOwnedIcon(icon)" class="owned-badge">Owned</span>
         </button>
     </span>
   </div>
