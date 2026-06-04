@@ -53,11 +53,11 @@ export class ChatrankComponent implements OnInit {
     this.eventState$ = this.lcuEventsService.state$;
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.loadCurrentChallengeRank();
   }
 
-  public chatRank() {
+  public chatRank(): void {
     if (!this.queue || !this.rank || !this.division) {
       this.dialog.open(DialogComponent, {
         data: {body: 'Select a queue, rank, and division before updating chat rank.'}
@@ -83,7 +83,7 @@ export class ChatrankComponent implements OnInit {
     });
   }
 
-  public setChallengeRank() {
+  public setChallengeRank(): void {
     const points = Number(this.challengePoints);
     if (!this.challengeLevel || isNaN(points) || points < 0) {
       this.dialog.open(DialogComponent, {
@@ -118,22 +118,22 @@ export class ChatrankComponent implements OnInit {
     });
   }
 
-  public reloadRealChallengeRank() {
+  public reloadRealChallengeRank(): void {
     this.identityPreviewService.clearChallengeSpoof();
     this.loadChallengeSummaryRank();
   }
 
-  public syncChallengePointsToLevel() {
+  public syncChallengePointsToLevel(): void {
     if (!this.challengeLevel) return;
     this.challengePoints = CHALLENGE_CRYSTAL_POINT_THRESHOLDS[this.challengeLevel] || 0;
   }
 
-  public toggleAutoReapply(event: Event) {
+  public toggleAutoReapply(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.presenceAutomationService.setAutoReapply(input.checked);
   }
 
-  public restoreOriginalIdentity() {
+  public restoreOriginalIdentity(): void {
     this.presenceAutomationService.restoreOriginalPresence().then(response => {
       this.dialog.open(DialogComponent, {
         data: {body: response}

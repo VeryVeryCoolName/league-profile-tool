@@ -30,7 +30,9 @@
         <input matInput [(ngModel)]="endPoint" name="endpoint">
       </mat-form-field>
 
-      <button mat-raised-button color="primary" (click)="sendRequest()">Request</button>
+      <button mat-raised-button color="primary" [disabled]="requestLoading" (click)="sendRequest()">
+        {{requestLoading ? 'Sending...' : 'Request'}}
+      </button>
     </form>
 
     <div class="api-textareas">

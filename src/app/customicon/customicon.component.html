@@ -35,12 +35,12 @@
           *ngIf="!icon.broken"
           mat-stroked-button
           class="icon-button"
-          [class.owned-icon]="isOwnedIcon(icon)"
+          [class.owned-icon]="icon.owned"
           [disabled]="updatingIconId !== null"
-          [attr.title]="(icon.title || icon.id) + ' - ' + ownershipLabel(icon)"
+          [attr.title]="(icon.title || icon.id) + ' - ' + icon.ownershipLabel"
           (click)="setIcon(icon.id)">
           <img [src]="icon.src" [alt]="icon.title || icon.id" loading="lazy" decoding="async" (error)="onIconError(icon)"/>
-          <span *ngIf="isOwnedIcon(icon)" class="owned-badge">Owned</span>
+          <span *ngIf="icon.owned" class="owned-badge">Owned</span>
         </button>
     </span>
   </div>

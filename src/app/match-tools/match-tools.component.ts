@@ -17,24 +17,24 @@ export class MatchToolsComponent {
   ) {
   }
 
-  public toggleAutoAccept(event: Event) {
+  public toggleAutoAccept(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.matchToolsService.setAutoAccept(input.checked);
   }
 
-  public setProvider(providerId: string) {
+  public setProvider(providerId: string): void {
     this.matchToolsService.setProvider(providerId);
   }
 
-  public selectOpponent(championId: number) {
+  public selectOpponent(championId: number): void {
     this.matchToolsService.selectManualOpponent(championId);
   }
 
-  public clearOpponent() {
+  public clearOpponent(): void {
     this.matchToolsService.clearManualOpponent();
   }
 
-  public openExternal(url: string) {
+  public openExternal(url: string): void {
     if (!url) return;
     if (this.electronService.isElectron && this.electronService.shell) {
       this.electronService.shell.openExternal(url);

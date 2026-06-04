@@ -5,13 +5,8 @@ This project uses a Windows GitHub Actions build to verify and package release a
 ## Local release checklist
 
 1. Update the release version in:
-   - `package.json`
-   - `package-lock.json`
-   - `src/app/home/home.component.ts`
-   - `main.ts`
-   - `src/index.html`
    - `version.json`
-2. Update README download links for the target release tag.
+2. Run `npm run sync:version` so `package.json`, `package-lock.json`, `src/index.html`, `README.md`, and `RELEASE.md` are synchronized from `version.json`.
 3. Run local checks:
    ```powershell
    npm run lint

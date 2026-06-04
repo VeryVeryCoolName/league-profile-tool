@@ -38,12 +38,12 @@ export class IdentityPreviewComponent implements OnDestroy {
     }
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     if (this.subscription) this.subscription.unsubscribe();
     if (this.connectionSubscription) this.connectionSubscription.unsubscribe();
   }
 
-  public refreshPreview() {
+  public refreshPreview(): void {
     this.identityPreviewService.refreshPreview();
   }
 

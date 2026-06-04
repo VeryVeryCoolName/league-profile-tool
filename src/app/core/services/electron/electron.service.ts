@@ -80,7 +80,7 @@ export class ElectronService {
             return;
           }
 
-          const error: any = new Error(`${response.statusCode} ${response.statusMessage}: ${body}`);
+          const error: any = new Error(`${String(response.statusCode)} ${String(response.statusMessage)}: ${body}`);
           error.response = {
             body,
             statusCode: response.statusCode

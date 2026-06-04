@@ -57,7 +57,7 @@ export class LcuEventsService {
     });
   }
 
-  public connect() {
+  public connect(): void {
     if (!this.electronService.isElectron || !this.connector.connector || this.socket || this.stateSubject.value.connecting) return;
 
     this.clearReconnectTimer();
@@ -77,11 +77,11 @@ export class LcuEventsService {
 
       socket.once('secureConnect', () => this.sendHandshake(target));
       socket.on('data', chunk => this.receiveData(chunk));
-      socket.on('error', error => this.handleSocketClose(`Event socket error: ${error && error.message || error}`));
+      socket.on('error', error => this.handleSocketClose(`Event socket error: ${String(error && error.message || error)}`));
       socket.on('end', () => this.handleSocketClose('Event socket ended'));
       socket.on('close', () => this.handleSocketClose('Event socket closed'));
     } catch (error) {
-      this.handleSocketClose(`Could not connect event socket: ${error && error.message || error}`);
+      this.handleSocketClose(`Could not connect event socket: ${String(error && error.message || error)}`);
     }
   }
 

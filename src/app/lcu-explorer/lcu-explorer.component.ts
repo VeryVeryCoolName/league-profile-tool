@@ -111,11 +111,11 @@ export class LcuExplorerComponent implements OnDestroy {
   constructor(private lcuConnectionService: LCUConnectionService, private connectorService: ConnectorService) {
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.stopWatch();
   }
 
-  public get filteredGroups() {
+  public get filteredGroups(): LcuEndpointGroup[] {
     const search = this.query.toLowerCase().trim();
     return this.endpointGroups
       .map(group => {
@@ -136,7 +136,7 @@ export class LcuExplorerComponent implements OnDestroy {
     return this.ensureState(endpoint.path);
   }
 
-  public async refresh(endpoint: LcuEndpoint, fromWatch = false, phaseOverride = '') {
+  public async refresh(endpoint: LcuEndpoint, fromWatch = false, phaseOverride = ''): Promise<void> {
     const state = this.ensureState(endpoint.path);
     if (state.loading) return;
 
@@ -176,12 +176,12 @@ export class LcuExplorerComponent implements OnDestroy {
     }
   }
 
-  public toggleExpanded(endpoint: LcuEndpoint) {
+  public toggleExpanded(endpoint: LcuEndpoint): void {
     const state = this.ensureState(endpoint.path);
     state.expanded = !state.expanded;
   }
 
-  public toggleWatch(endpoint: LcuEndpoint) {
+  public toggleWatch(endpoint: LcuEndpoint): void {
     if (this.watchedEndpoint === endpoint.path) {
       this.stopWatch();
       return;
@@ -189,11 +189,13 @@ export class LcuExplorerComponent implements OnDestroy {
 
     this.stopWatch();
     this.watchedEndpoint = endpoint.path;
-    this.refresh(endpoint);
-    this.watchTimer = setInterval(() => this.refresh(endpoint, true), this.watchIntervalMs);
+    void this.refresh(endpoint);
+    this.watchTimer = setInterval(() => {
+      void this.refresh(endpoint, true);
+    }, this.watchIntervalMs);
   }
 
-  public copyResponse(endpoint: LcuEndpoint) {
+  public copyResponse(endpoint: LcuEndpoint): void {
     const state = this.ensureState(endpoint.path);
     const text = state.formattedResponse || state.rawResponse;
     if (!text) return;
@@ -208,7 +210,7 @@ export class LcuExplorerComponent implements OnDestroy {
       });
   }
 
-  public exportResponse(endpoint: LcuEndpoint) {
+  public exportResponse(endpoint: LcuEndpoint): void {
     const state = this.ensureState(endpoint.path);
     if (!state.formattedResponse && !state.rawResponse) return;
 
@@ -216,11 +218,11 @@ export class LcuExplorerComponent implements OnDestroy {
     this.downloadJson(this.redactForExport(payload), `${this.fileSafeEndpoint(endpoint.path)}.json`);
   }
 
-  public exportAllResults() {
+  public exportAllResults(): void {
     this.downloadJson(this.buildExportPayload(), this.exportFilename());
   }
 
-  public async refreshAllThenExport() {
+  public async refreshAllThenExport(): Promise<void> {
     if (this.bulkRefreshing) return;
 
     this.stopWatch();
@@ -242,11 +244,11 @@ export class LcuExplorerComponent implements OnDestroy {
     return status.toLowerCase();
   }
 
-  public trackByGroup(index: number, group: LcuEndpointGroup) {
+  public trackByGroup(index: number, group: LcuEndpointGroup): string {
     return group.name;
   }
 
-  public trackByEndpoint(index: number, endpoint: LcuEndpoint) {
+  public trackByEndpoint(index: number, endpoint: LcuEndpoint): string {
     return endpoint.path;
   }
 
@@ -292,7 +294,7 @@ export class LcuExplorerComponent implements OnDestroy {
 
   private async loadIdentityContext(): Promise<Record<string, string>> {
     if (this.identityContext.summonerId && this.identityContext.puuid) return this.identityContext;
-    if (this.identityContextPromise) return this.identityContextPromise;
+    if (this.identityContextPromise !== null) return this.identityContextPromise;
 
     this.identityContextPromise = this.lcuConnectionService.requestCustomAPI({}, 'GET', '/lol-summoner/v1/current-summoner')
       .then(response => {

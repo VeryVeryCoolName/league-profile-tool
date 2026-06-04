@@ -37,7 +37,9 @@ export class ConnectorService {
   private startRetryLoop() {
     this.getCommonInstallPaths().forEach(path => this.addInstallPathCandidate(path));
     this.tryConnectFromLockfile('startup');
-    this.retryTimer = setInterval(() => this.tryConnectFromLockfile('retry'), 3000);
+    this.retryTimer = setInterval(() => {
+      void this.tryConnectFromLockfile('retry');
+    }, 3000);
   }
 
   private async tryConnectFromLockfile(source: string) {
@@ -47,7 +49,7 @@ export class ConnectorService {
       const lockfilePath = this.findLockfilePath(source !== 'startup');
       if (!lockfilePath) {
         if (this.connector && this.lockfilePath && !this.electronService.fs.existsSync(this.lockfilePath)) {
-          this.setReady(false, 'lockfile removed');
+          this.setReady(false);
         }
         if (!this.loggedMissingLockfile) {
           this.loggedMissingLockfile = true;
@@ -64,7 +66,7 @@ export class ConnectorService {
       if (this.connector && this.connector.url === url && this.lockfilePath === lockfilePath) return;
 
       this.lockfilePath = lockfilePath;
-      await this.verifyAndSetConnection(data, source);
+      await this.verifyAndSetConnection(data);
     } finally {
       this.connecting = false;
     }
@@ -113,7 +115,7 @@ export class ConnectorService {
     if (executablePath) return this.normalizeClientPath(this.electronService.path.dirname(executablePath));
 
     const commandLine = this.execCommand('powershell.exe -NoProfile -Command "(Get-CimInstance Win32_Process -Filter \\"name = \'LeagueClientUx.exe\'\\" | Select-Object -First 1 -ExpandProperty CommandLine)"');
-    const match = commandLine && commandLine.match(/--install-directory=(?:"([^"]+)"|([^ ]+))/);
+    const match = commandLine ? /--install-directory=(?:"([^"]+)"|([^ ]+))/.exec(commandLine) : null;
     if (match) return this.normalizeClientPath(match[1] || match[2]);
 
     return null;
@@ -165,7 +167,7 @@ export class ConnectorService {
     }
   }
 
-  private async verifyAndSetConnection(data: Data, source: string) {
+  private async verifyAndSetConnection(data: Data) {
     const nextConnector = this.buildConnectorOptions(data);
     const requestOptions = JSON.parse(JSON.stringify(nextConnector));
     requestOptions.method = 'GET';
@@ -173,9 +175,9 @@ export class ConnectorService {
     try {
       await this.electronService.request(requestOptions);
       this.connector = nextConnector;
-      this.setReady(true, source);
+      this.setReady(true);
     } catch (err) {
-      this.setReady(false, 'auth failed');
+      this.setReady(false);
       console.error('[LCU] auth failed', err && (err.message || err.error || err));
     }
   }
@@ -191,7 +193,7 @@ export class ConnectorService {
     };
   }
 
-  private setReady(ready: boolean, reason: string) {
+  private setReady(ready: boolean) {
     if (!ready) this.connector = null;
     if (this.ready !== ready) {
       this.ready = ready;

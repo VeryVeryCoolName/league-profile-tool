@@ -25,17 +25,17 @@ export class ChampionPurchaseDateComponent implements OnInit {
   constructor(private lcuConnectionService: LCUConnectionService, private version: VersionService) {
   }
 
-  async ngOnInit() {
+  ngOnInit(): void {
     this.version.apiVersion().subscribe((v: string[]) => {
       this.currentVersion = v[0];
       this.getOwnership();
     }, error => {
       console.error('[Assets] failed to load Data Dragon version', error);
       this.failOwnership('Could not load the current Data Dragon version.');
-    })
+    });
   }
 
-  public sortData(sort: Sort) {
+  public sortData(sort: Sort): void {
     const data = this.championData.slice();
     if (!sort.active || sort.direction === '') {
       this.sortedData = data;
@@ -54,7 +54,7 @@ export class ChampionPurchaseDateComponent implements OnInit {
     });
   }
 
-  public showSkins(champion: Record<string, unknown>) {
+  public showSkins(champion: Record<string, unknown>): void {
     this.showingSkins = true;
     this.championData = [];
     this.championData.push({
@@ -84,7 +84,7 @@ export class ChampionPurchaseDateComponent implements OnInit {
         return;
       }
 
-      this.lcuConnectionService.requestCustomAPI({}, 'GET', `/lol-champions/v1/inventories/${summoner.summonerId}/champions`).then(ownedC => {
+      this.lcuConnectionService.requestCustomAPI({}, 'GET', `/lol-champions/v1/inventories/${String(summoner.summonerId)}/champions`).then(ownedC => {
         const champions = this.parseResponse(ownedC);
         if (!Array.isArray(champions)) {
           this.failOwnership('Could not load champion ownership from LCU.');
@@ -140,6 +140,14 @@ export class ChampionPurchaseDateComponent implements OnInit {
     this.ownedChamps = [];
     this.ownershipLoading = false;
     this.ownershipError = message;
+  }
+
+  public trackByChampion(index: number, champion: Record<string, unknown>): unknown {
+    return champion.alt;
+  }
+
+  public trackByPurchaseRow(index: number, champion: Record<string, unknown>): string {
+    return `${String(champion.name)}-${String(champion.purchasedHidden)}`;
   }
 }
 

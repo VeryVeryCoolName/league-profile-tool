@@ -117,7 +117,7 @@ export class IdentityPreviewService {
     }
   }
 
-  public applyChatRank(queue: string, tier: string, division: string) {
+  public applyChatRank(queue: string, tier: string, division: string): void {
     this.patchState({
       loaded: true,
       chatRankQueue: queue,
@@ -127,7 +127,7 @@ export class IdentityPreviewService {
     });
   }
 
-  public applyChallengeSpoof(level: string, points: number) {
+  public applyChallengeSpoof(level: string, points: number): void {
     this.patchState({
       loaded: true,
       challengeCrystalLevel: level,
@@ -137,7 +137,7 @@ export class IdentityPreviewService {
     });
   }
 
-  public applyRealChallengeRank(level: string, points: number | null) {
+  public applyRealChallengeRank(level: string, points: number | null): void {
     this.patchState({
       loaded: true,
       challengeCrystalLevel: level,
@@ -147,14 +147,14 @@ export class IdentityPreviewService {
     });
   }
 
-  public clearChallengeSpoof() {
+  public clearChallengeSpoof(): void {
     this.patchState({
       challengeSpoofActive: false,
       updatedAt: new Date().toLocaleTimeString()
     });
   }
 
-  public applyProfileIcon(profileIconId: number) {
+  public applyProfileIcon(profileIconId: number): void {
     this.patchState({
       loaded: true,
       profileIconId,
@@ -168,7 +168,7 @@ export class IdentityPreviewService {
     });
   }
 
-  public applyBackgroundSkinId(backgroundSkinId: number) {
+  public applyBackgroundSkinId(backgroundSkinId: number): void {
     this.patchState({
       loaded: true,
       backgroundSkinId,

@@ -10,6 +10,16 @@ import {Subscription} from "rxjs";
 type IconUpdateStatus = 'updated' | 'accepted' | 'failed';
 type IconOwnershipState = 'owned' | 'not-owned' | 'unknown';
 
+interface CustomIconRecord extends Record<string, unknown> {
+  id?: unknown;
+  title?: unknown;
+  src?: string;
+  broken?: boolean;
+  owned?: boolean;
+  ownershipLabel?: string;
+  ownershipState?: IconOwnershipState;
+}
+
 interface IconUpdateResult {
   success: boolean;
   status: IconUpdateStatus;
@@ -27,7 +37,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   private static inventoryPromise: Promise<Set<number> | null> | null = null;
 
   public searchKeyword = '';
-  public allIcons: Array<Record<string, unknown>> = [];
+  public allIcons: CustomIconRecord[] = [];
   public visibleIconLimit = 200;
   public iconsLoading = true;
   public iconsError = '';
@@ -47,17 +57,17 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   ) {
   }
 
-  async ngOnInit() {
+  ngOnInit(): void {
     this.championData.getSummonerIcons().subscribe(icons => {
-      this.allIcons = (icons as Array<Record<string, unknown>>)
+      this.allIcons = (icons as CustomIconRecord[])
         .filter(icon => icon && icon.id !== undefined && icon.id !== null)
         .sort((left, right) => Number(left.id) - Number(right.id))
         .map(icon => {
-          return {
+          return this.withOwnershipMetadata({
             ...icon,
-            src: `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/${icon.id}.jpg`,
+            src: `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/${String(icon.id)}.jpg`,
             broken: false
-          };
+          });
         });
       this.iconsLoading = false;
       this.queueOwnedIconInventoryLoad();
@@ -65,14 +75,14 @@ export class CustomiconComponent implements OnInit, OnDestroy {
       console.error('[Assets] failed to load summoner icons', error);
       this.iconsLoading = false;
       this.iconsError = 'Could not load summoner icons.';
-    })
+    });
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     if (this.connectorSubscription) this.connectorSubscription.unsubscribe();
   }
 
-  public get filteredIcons() {
+  public get filteredIcons(): CustomIconRecord[] {
     const search = (this.searchKeyword || '').toLowerCase();
     let icons = this.allIcons;
     if (search) {
@@ -83,20 +93,20 @@ export class CustomiconComponent implements OnInit, OnDestroy {
       });
     }
     if (this.ownedOnly && this.canFilterOwnedIcons) {
-      icons = icons.filter(icon => this.iconOwnershipState(icon) === 'owned');
+      icons = icons.filter(icon => icon.owned === true);
     }
     return icons;
   }
 
-  public get visibleIcons() {
+  public get visibleIcons(): CustomIconRecord[] {
     return this.filteredIcons.slice(0, this.visibleIconLimit);
   }
 
-  public resetIconLimit() {
+  public resetIconLimit(): void {
     this.visibleIconLimit = 200;
   }
 
-  public toggleOwnedOnly() {
+  public toggleOwnedOnly(): void {
     if (!this.canFilterOwnedIcons) return;
     this.ownedOnly = !this.ownedOnly;
     this.resetIconLimit();
@@ -108,15 +118,15 @@ export class CustomiconComponent implements OnInit, OnDestroy {
       && CustomiconComponent.ownedIconIdsCache.size > 0;
   }
 
-  public loadMoreIcons() {
+  public loadMoreIcons(): void {
     this.visibleIconLimit += 200;
   }
 
-  public onIconError(icon: Record<string, unknown>) {
+  public onIconError(icon: CustomIconRecord): void {
     icon.broken = true;
   }
 
-  public async setIcon(id: unknown) {
+  public async setIcon(id: unknown): Promise<void> {
     const iconId = Number(id);
     if (isNaN(iconId)) {
       this.dialog.open(DialogComponent, {
@@ -155,17 +165,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
     }
   }
 
-  public iconOwnershipState(icon: Record<string, unknown>): IconOwnershipState {
-    const iconId = Number(icon && icon.id);
-    return this.iconOwnershipStateById(iconId);
-  }
-
-  public isOwnedIcon(icon: Record<string, unknown>): boolean {
-    return this.iconOwnershipState(icon) === 'owned';
-  }
-
-  public ownershipLabel(icon: Record<string, unknown>): string {
-    const state = this.iconOwnershipState(icon);
+  private ownershipLabelForState(state: IconOwnershipState): string {
     if (state === 'owned') return 'Owned';
     if (state === 'not-owned') return 'Not owned';
     return 'Unknown';
@@ -217,7 +217,10 @@ export class CustomiconComponent implements OnInit, OnDestroy {
     if (!this.connector.isReady()) {
       if (!this.connectorSubscription) {
         this.connectorSubscription = this.connector.ready$.subscribe(ready => {
-          if (ready) this.loadOwnedIconInventoryOnce();
+          if (!ready) return;
+          this.loadOwnedIconInventoryOnce();
+          this.connectorSubscription.unsubscribe();
+          this.connectorSubscription = null;
         });
       }
       return;
@@ -229,7 +232,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   private async loadOwnedIconInventoryOnce(): Promise<void> {
     this.inventoryLoading = true;
 
-    if (!CustomiconComponent.inventoryPromise) {
+    if (CustomiconComponent.inventoryPromise === null) {
       CustomiconComponent.inventoryPromise = this.fetchOwnedIconInventory();
     }
 
@@ -252,6 +255,21 @@ export class CustomiconComponent implements OnInit, OnDestroy {
     this.inventoryLoading = false;
     this.inventoryUnavailable = !CustomiconComponent.ownedIconIdsCache || CustomiconComponent.ownedIconIdsCache.size === 0;
     if (!this.canFilterOwnedIcons) this.ownedOnly = false;
+    this.applyOwnershipMetadata();
+  }
+
+  private applyOwnershipMetadata(): void {
+    this.allIcons = this.allIcons.map(icon => this.withOwnershipMetadata(icon));
+  }
+
+  private withOwnershipMetadata(icon: CustomIconRecord): CustomIconRecord {
+    const ownershipState = this.iconOwnershipStateById(Number(icon.id));
+    return {
+      ...icon,
+      owned: ownershipState === 'owned',
+      ownershipState,
+      ownershipLabel: this.ownershipLabelForState(ownershipState)
+    };
   }
 
   private extractOwnedIconIds(inventory: Array<Record<string, unknown>>): Set<number> {
@@ -380,7 +398,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
     }
   }
 
-  public trackByIcon(index: number, icon: Record<string, unknown>) {
+  public trackByIcon(index: number, icon: CustomIconRecord): unknown {
     return icon.id;
   }
 

@@ -56,12 +56,12 @@ export class PresenceAutomationService {
     this.eventSubscription = this.lcuEventsService.events$.subscribe(event => this.handleEvent(event));
   }
 
-  public recordStatusPreset(availability: string, statusMessage: string) {
+  public recordStatusPreset(availability: string, statusMessage: string): void {
     this.statusPatch = {availability, statusMessage};
     this.markAction('Status preset captured');
   }
 
-  public recordChatRankPreset(queue: string, tier: string, division: string) {
+  public recordChatRankPreset(queue: string, tier: string, division: string): void {
     this.chatRankPatch = {
       lol: {
         rankedLeagueQueue: queue,
@@ -72,7 +72,7 @@ export class PresenceAutomationService {
     this.markAction('Chat rank preset captured');
   }
 
-  public recordChallengeRankPreset(level: string, points: number) {
+  public recordChallengeRankPreset(level: string, points: number): void {
     this.challengeRankPatch = {
       lol: {
         challengeCrystalLevel: level,
@@ -82,11 +82,11 @@ export class PresenceAutomationService {
     this.markAction('Challenge rank preset captured');
   }
 
-  public setAutoReapply(enabled: boolean) {
+  public setAutoReapply(enabled: boolean): void {
     this.patchState({autoReapply: enabled});
   }
 
-  public suspendAutoReapply(durationMs = 5000) {
+  public suspendAutoReapply(durationMs = 5000): void {
     this.autoReapplySuppressedUntil = Date.now() + durationMs;
   }
 

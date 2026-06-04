@@ -9,11 +9,9 @@ import {APP_WINDOW_TITLE} from "./app-version";
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+  public readonly connected$ = this.connector.ready$;
+
   constructor(public connector: ConnectorService, private titleService: Title) {
     this.titleService.setTitle(APP_WINDOW_TITLE);
-  }
-
-  public isConnected(): boolean {
-    return this.connector.isReady();
   }
 }

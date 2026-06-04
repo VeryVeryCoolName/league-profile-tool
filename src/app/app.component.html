@@ -1,6 +1,9 @@
-<div class="connection-status" [class.connected]="isConnected()">
-  LCU {{isConnected() ? 'Connected' : 'Connecting'}}
-</div>
+<ng-container *ngIf="connected$ | async as connected; else connecting">
+  <div class="connection-status connected">LCU Connected</div>
+</ng-container>
+<ng-template #connecting>
+  <div class="connection-status">LCU Connecting</div>
+</ng-template>
 <mat-tab-group>
   <mat-tab label="Home"><ng-template matTabContent><app-home></app-home></ng-template></mat-tab>
   <mat-tab label="Match Tools"><ng-template matTabContent><app-match-tools></app-match-tools></ng-template></mat-tab>

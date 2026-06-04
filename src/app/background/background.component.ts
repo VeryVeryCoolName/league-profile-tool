@@ -31,7 +31,7 @@ export class BackgroundComponent implements OnInit {
   constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private version: VersionService, private championData: ChampionService, private identityPreviewService: IdentityPreviewService) {
   }
 
-  async ngOnInit() {
+  ngOnInit(): void {
     if (BackgroundComponent.cachedChampionImages.length) {
       this.currentVersion = BackgroundComponent.cachedVersion;
       this.championImages = BackgroundComponent.cachedChampionImages;
@@ -43,7 +43,7 @@ export class BackgroundComponent implements OnInit {
       this.currentVersion = v[0];
       this.championData.getChampionIcons(this.currentVersion).subscribe(championData => {
         try {
-          const championPayload = championData as any;
+          const championPayload = championData;
           const championImages = [];
           const championKeys: Record<string, number> = {};
           for (const champion in championPayload.data) {
@@ -70,14 +70,14 @@ export class BackgroundComponent implements OnInit {
       }, error => {
         console.error('[Assets] failed to load champion list', error);
         this.championsLoading = false;
-      })
+      });
     }, error => {
       console.error('[Assets] failed to load Data Dragon version', error);
       this.championsLoading = false;
-    })
+    });
   }
 
-  public async getSkins(alt: string) {
+  public getSkins(alt: string): void {
     this.skinsImages = [];
     this.showingSkins = true;
     this.skinsLoading = true;
@@ -92,38 +92,39 @@ export class BackgroundComponent implements OnInit {
       return;
     }
     try {
-      this.championData.getSkins(this.currentVersion, alt).subscribe(async champion => {
+      this.championData.getSkins(this.currentVersion, alt).subscribe(champion => {
         if (requestId !== this.skinRequestId) return;
         const skins = champion["data"][alt]["skins"];
         const skinImages = this.buildSkinImages(alt, skins);
         this.skinsTotal = skinImages.length;
-        const loadedSkins = await this.preloadImages(skinImages, requestId);
-        if (requestId !== this.skinRequestId) return;
-        BackgroundComponent.cachedSkins[alt] = loadedSkins;
-        this.skinsImages = loadedSkins;
-        this.skinsLoading = false;
+        this.preloadImages(skinImages, requestId).then(loadedSkins => {
+          if (requestId !== this.skinRequestId) return;
+          BackgroundComponent.cachedSkins[alt] = loadedSkins;
+          this.skinsImages = loadedSkins;
+          this.skinsLoading = false;
+        });
       }, error => {
         console.error('[Assets] failed to load champion skin data', {champion: alt, error});
         this.skinsLoading = false;
-      })
+      });
     } catch (error) {
       console.error(error);
       this.skinsLoading = false;
     }
   }
 
-  public showChampions() {
+  public showChampions(): void {
     this.skinRequestId++;
     this.showingSkins = false;
     this.skinsLoading = false;
     this.skinsImages = [];
   }
 
-  public onImageLoad(image: Record<string, unknown>) {
+  public onImageLoad(image: Record<string, unknown>): void {
     image.loaded = true;
   }
 
-  public onImageError(event: Event, image: Record<string, unknown>) {
+  public onImageError(event: Event, image: Record<string, unknown>): void {
     image.broken = true;
     console.warn('[Assets] failed image load', image);
     const target = event.target as HTMLImageElement;
@@ -247,7 +248,7 @@ export class BackgroundComponent implements OnInit {
     });
   }
 
-  public setBackground(id: string) {
+  public setBackground(id: string): void {
     const body = {
       key: "backgroundSkinId",
       value: parseInt(id)
@@ -260,11 +261,11 @@ export class BackgroundComponent implements OnInit {
     });
   }
 
-  public trackByAlt(index: number, image: Record<string, unknown>) {
+  public trackByAlt(index: number, image: Record<string, unknown>): unknown {
     return image.alt;
   }
 
-  public trackBySkin(index: number, image: Record<string, unknown>) {
+  public trackBySkin(index: number, image: Record<string, unknown>): unknown {
     return image.alt;
   }
 }

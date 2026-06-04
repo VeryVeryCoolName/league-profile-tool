@@ -121,7 +121,12 @@
           "options": {
             "eslintConfig": ".eslintrc.json",
             "lintFilePatterns": [
-              "src/**.ts",
+              "src/app/**/*.component.ts",
+              "src/app/**/*.module.ts",
+              "src/app/**/*.pipe.ts",
+              "src/app/**/*.service.ts",
+              "src/app/app-version.ts",
+              "src/app/core/services/match-tools/matchup-provider.ts",
               "main.ts"
             ]
           }

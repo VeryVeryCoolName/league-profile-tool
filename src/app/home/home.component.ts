@@ -17,8 +17,10 @@ export class HomeComponent implements OnInit {
   constructor(private electronService: ElectronService, private versionService: VersionService) {
   }
 
-  ngOnInit() {
-    setTimeout(() => this.checkNewestVersion(), 0);
+  ngOnInit(): void {
+    setTimeout(() => {
+      void this.checkNewestVersion();
+    }, 0);
   }
 
   private async checkNewestVersion() {
@@ -39,7 +41,7 @@ export class HomeComponent implements OnInit {
     return normalized ? `V.${normalized}` : 'Unavailable';
   }
 
-  public github() {
+  public github(): void {
     const url = 'https://github.com/VeryVeryCoolName/league-profile-tool';
     if (this.electronService.shell) {
       this.electronService.shell.openExternal(url);

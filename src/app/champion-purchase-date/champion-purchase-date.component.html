@@ -15,7 +15,7 @@
   </section>
 
   <div class="champion-grid" *ngIf="!showingSkins && ownedChamps !== null && !ownershipLoading && !ownershipError">
-    <span class="champions" *ngFor="let champion of ownedChamps | champions: searchText">
+    <span class="champions" *ngFor="let champion of ownedChamps | champions: searchText; trackBy: trackByChampion">
         <button mat-stroked-button (click)="showSkins(champion)"><img [src]="champion.iconSrc" alt="{{champion.name}}"/></button>
     </span>
     <p class="empty-state" *ngIf="ownedChamps.length === 0">No owned champions found.</p>
@@ -28,7 +28,7 @@
         <th mat-sort-header="purchased">Purchased</th>
       </tr>
 
-      <tr *ngFor="let champion of sortedData">
+      <tr *ngFor="let champion of sortedData; trackBy: trackByPurchaseRow">
         <td>{{champion.name}}</td>
         <td>{{champion.purchased}}</td>
       </tr>

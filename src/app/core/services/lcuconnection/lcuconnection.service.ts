@@ -84,7 +84,7 @@ export class LCUConnectionService {
       if (!current) return response;
       if (!Object.prototype.hasOwnProperty.call(current, body.key as string)) {
         console.error('[LCU] Summoner profile schema mismatch', current);
-        return `LCU summoner profile response did not include ${body.key}.`;
+        return `LCU summoner profile response did not include ${String(body.key)}.`;
       }
     }
 
@@ -162,7 +162,7 @@ export class LCUConnectionService {
   private verificationFailed(endPoint: string, requestBody: Record<string, unknown>, actual: Record<string, unknown>, expected: Record<string, unknown>): string {
     const message = `LCU update sent, but ${endPoint} did not reflect the requested value.`;
     console.error('[LCU] Verification failed', {endpoint: endPoint, payload: requestBody, expected, actual});
-    return `${message} Payload: ${JSON.stringify(requestBody)} Response: ${JSON.stringify(actual)}`;
+    return `${message} Riot may have overwritten or normalized this field; try again after the client settles.`;
   }
 
   private formatError(err: any): string {
@@ -177,7 +177,8 @@ export class LCUConnectionService {
 
   private summarizePayload(body: Record<string, unknown>): string {
     try {
-      return JSON.stringify(body);
+      const payload = JSON.stringify(body);
+      return payload.length > 260 ? `${payload.slice(0, 260)}...` : payload;
     } catch (err) {
       return '[unserializable payload]';
     }

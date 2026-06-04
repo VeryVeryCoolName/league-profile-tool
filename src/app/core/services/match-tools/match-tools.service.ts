@@ -136,9 +136,9 @@ export class MatchToolsService {
   private lastMatchupKey = '';
   private championNameById: Record<number, string> = {};
   private championMetadataById: Record<number, ChampionMetadata> = {};
-  private championMetadataPromise: Promise<void>;
+  private championMetadataPromise: Promise<void> | null = null;
   private recommendedPositionsByChampionId: Record<number, string[]> = {};
-  private recommendedPositionsPromise: Promise<void>;
+  private recommendedPositionsPromise: Promise<void> | null = null;
   private lastChampSelectSession: any = null;
   private dataDragonVersion = '';
 
@@ -160,7 +160,7 @@ export class MatchToolsService {
     });
   }
 
-  public setAutoAccept(enabled: boolean) {
+  public setAutoAccept(enabled: boolean): void {
     if (!enabled) this.clearAcceptedStatusTimer();
     this.patchState({
       autoAcceptEnabled: enabled,
@@ -170,14 +170,14 @@ export class MatchToolsService {
     });
   }
 
-  public setProvider(providerId: string) {
+  public setProvider(providerId: string): void {
     if (!this.providers.some(provider => provider.id === providerId)) return;
     this.lastMatchupKey = '';
     this.patchState({providerId});
     this.updateMatchup(this.stateSubject.value.champSelect).catch(() => undefined);
   }
 
-  public selectManualOpponent(championId: number) {
+  public selectManualOpponent(championId: number): void {
     const selectedChampionId = this.numberOrNull(championId);
     if (!selectedChampionId) return;
     const current = this.stateSubject.value.champSelect;
@@ -192,7 +192,7 @@ export class MatchToolsService {
     this.applyManualOpponent(selectedChampionId);
   }
 
-  public clearManualOpponent() {
+  public clearManualOpponent(): void {
     const current = this.stateSubject.value.champSelect;
     this.patchState({
       champSelect: {
@@ -391,8 +391,8 @@ export class MatchToolsService {
     const localRole = roleContext.role;
     const visibleEnemies = theirTeam
       .map(member => this.memberChampionId(member))
-      .filter(id => !!id)
-      .map(id => this.championCard(id as number));
+      .filter((id): id is number => !!id)
+      .map(id => this.championCard(id));
     const currentManualOpponent = this.stateSubject.value.champSelect.manualOpponentChampionId;
     const manualOpponentChampionId = visibleEnemies.some(enemy => enemy.championId === currentManualOpponent)
       ? currentManualOpponent
@@ -466,8 +466,8 @@ export class MatchToolsService {
       }
     }
 
-    const visibleEnemyIds = theirTeam.map(member => this.memberChampionId(member)).filter(id => !!id);
-    return this.inferLaneOpponentByScore(visibleEnemyIds as number[], normalizedLocalRole);
+    const visibleEnemyIds = theirTeam.map(member => this.memberChampionId(member)).filter((id): id is number => !!id);
+    return this.inferLaneOpponentByScore(visibleEnemyIds, normalizedLocalRole);
   }
 
   private inferLaneOpponentByScore(championIds: number[], localRole: string): LaneOpponentResult {
@@ -702,7 +702,7 @@ export class MatchToolsService {
 
   private async ensureChampionNames(): Promise<void> {
     if (Object.keys(this.championNameById).length > 0) return;
-    if (!this.championMetadataPromise) {
+    if (this.championMetadataPromise === null) {
       this.championMetadataPromise = this.loadChampionMetadata();
     }
     try {
@@ -742,7 +742,7 @@ export class MatchToolsService {
   private async ensureRecommendedChampionPositions(): Promise<void> {
     if (this.stateSubject.value.champSelect.phase === 'ChampSelect') return;
     if (Object.keys(this.recommendedPositionsByChampionId).length > 0) return;
-    if (!this.recommendedPositionsPromise) {
+    if (this.recommendedPositionsPromise === null) {
       this.recommendedPositionsPromise = this.loadRecommendedChampionPositions();
     }
     await this.recommendedPositionsPromise;

@@ -22,7 +22,7 @@ export class StatusComponent {
   constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private presenceAutomationService: PresenceAutomationService) {
   }
 
-  public setStatus() {
+  public setStatus(): void {
     const body = {
       availability: this.availability,
       statusMessage: this.text

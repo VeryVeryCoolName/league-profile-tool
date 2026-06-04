@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
+import {Observable} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,7 @@ export class VersionService {
   constructor(private http: HttpClient) {
   }
 
-  apiVersion(){
+  apiVersion(): Observable<any> {
     return this.http.get("https://ddragon.leagueoflegends.com/api/versions.json");
   }
 
@@ -27,6 +28,7 @@ export class VersionService {
         const version = this.extractVersion(response);
         if (version) return version;
       } catch (error) {
+        continue;
       }
     }
 
@@ -44,7 +46,7 @@ export class VersionService {
   }
 
   private findVersion(value: string): string {
-    const match = value.match(/v?\.?(\d+\.\d+\.\d+)/i);
+    const match = /v?\.?(\d+\.\d+\.\d+)/i.exec(value);
     return match ? match[1] : '';
   }
 }

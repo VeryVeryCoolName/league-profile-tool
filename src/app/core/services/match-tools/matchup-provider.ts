@@ -36,13 +36,13 @@ export class LolalyticsMatchupProvider implements IMatchupProvider {
   public readonly label = 'Lolalytics';
   private readonly cache = new Map<string, LaneMatchupResult>();
 
-  public async getLaneMatchup(request: ChampionMatchupRequest): Promise<LaneMatchupResult> {
+  public getLaneMatchup(request: ChampionMatchupRequest): Promise<LaneMatchupResult> {
     const cacheKey = [
       request.allyChampionName,
       request.enemyChampionName,
       request.lane
     ].map(value => String(value || '').toLowerCase()).join(':');
-    if (this.cache.has(cacheKey)) return this.cache.get(cacheKey);
+    if (this.cache.has(cacheKey)) return Promise.resolve(this.cache.get(cacheKey));
 
     const result = {
       title: `${request.allyChampionName} vs ${request.enemyChampionName}`,
@@ -53,18 +53,18 @@ export class LolalyticsMatchupProvider implements IMatchupProvider {
       note: ''
     };
     this.cache.set(cacheKey, result);
-    return result;
+    return Promise.resolve(result);
   }
 
-  public async getChampionStats(championId: number, championName: string, lane: string): Promise<ChampionStatsResult> {
-    return {
+  public getChampionStats(championId: number, championName: string, lane: string): Promise<ChampionStatsResult> {
+    return Promise.resolve({
       championId,
       championName,
       lane,
       sourceLabel: this.label,
       sourceUrl: this.buildChampionUrl(championName, lane),
       note: ''
-    };
+    });
   }
 
   private buildChampionUrl(championName: string, lane: string): string {

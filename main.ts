@@ -69,6 +69,10 @@ app.whenReady().then(() => {
   });
 });
 
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
+});
+
 // Quit when all windows are closed.
 app.on("window-all-closed", () => {
   // On OS X it is common for applications and their menu bar

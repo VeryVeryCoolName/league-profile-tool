@@ -22,11 +22,12 @@ export class CustomapiComponent {
   public body = "{\n     \"\":\"\"\n}";
   public response: string;
   public endPoint: string;
+  public requestLoading = false;
 
   constructor(private lcuConnectionService: LCUConnectionService) {
   }
 
-  public applyPreset(endpoint: string) {
+  public applyPreset(endpoint: string): void {
     const preset = this.endpointPresets.find(item => item.endpoint === endpoint);
     if (!preset) return;
     this.method = preset.method;
@@ -35,7 +36,8 @@ export class CustomapiComponent {
     this.body = "{\n     \"\":\"\"\n}";
   }
 
-  public sendRequest() {
+  public sendRequest(): void {
+    if (this.requestLoading) return;
     const endpoint = (this.endPoint || '').trim();
     if (!this.method || !endpoint) {
       this.response = 'Select a method and enter an endpoint.';
@@ -55,9 +57,18 @@ export class CustomapiComponent {
         return;
       }
     }
-    this.lcuConnectionService.requestCustomAPI(body, this.method, endpoint).then(response => {
-      this.response = this.formatResponse(response);
-    });
+    this.requestLoading = true;
+    this.response = 'Sending request...';
+    this.lcuConnectionService.requestCustomAPI(body, this.method, endpoint)
+      .then(response => {
+        this.response = this.formatResponse(response);
+      })
+      .catch(error => {
+        this.response = this.formatResponse(error && (error.message || error));
+      })
+      .finally(() => {
+        this.requestLoading = false;
+      });
   }
 
   private formatResponse(response: any): string {
