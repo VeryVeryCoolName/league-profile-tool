@@ -4,6 +4,7 @@
 /out-tsc
 /app-builds
 /release
+/.angular
 main.js
 src/**/*.js
 !src/karma.conf.js
