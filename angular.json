@@ -24,6 +24,10 @@
               "src/styles.css"
             ],
             "scripts": [],
+            "allowedCommonJsDependencies": [
+              "rxjs",
+              "rxjs/operators"
+            ],
             "customWebpackConfig": {
               "path": "./angular.webpack.js"
             }

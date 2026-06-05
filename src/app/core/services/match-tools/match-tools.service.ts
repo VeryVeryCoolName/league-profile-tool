@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable, Subscription} from 'rxjs';
+import {BehaviorSubject, firstValueFrom, Observable, Subscription} from 'rxjs';
 import {LCUConnectionService} from '../lcuconnection/lcuconnection.service';
 import {LcuEventsService, LcuJsonApiEvent} from '../lcu-events/lcu-events.service';
 import {ChampionService} from '../champion/champion.service';
@@ -714,12 +714,12 @@ export class MatchToolsService {
 
   private async loadChampionMetadata(): Promise<void> {
     if (!this.dataDragonVersion) {
-      const versions = await this.versionService.apiVersion().toPromise() as string[];
+      const versions = await firstValueFrom(this.versionService.apiVersion()) as string[];
       this.dataDragonVersion = versions && versions.length ? versions[0] : '';
     }
     if (!this.dataDragonVersion) return;
 
-    const championPayload: any = await this.championService.getChampionIcons(this.dataDragonVersion).toPromise();
+    const championPayload: any = await firstValueFrom(this.championService.getChampionIcons(this.dataDragonVersion));
     const nextMap: Record<number, string> = {};
     const nextMetadata: Record<number, ChampionMetadata> = {};
     Object.keys(championPayload.data || {}).forEach(championName => {

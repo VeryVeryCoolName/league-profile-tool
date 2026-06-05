@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable} from 'rxjs';
+import {BehaviorSubject, firstValueFrom, Observable} from 'rxjs';
 import {LCUConnectionService} from '../lcuconnection/lcuconnection.service';
 import {VersionService} from '../version/version.service';
 import {ChampionService} from '../champion/champion.service';
@@ -271,7 +271,7 @@ export class IdentityPreviewService {
     await this.ensureVersion();
     if (!this.dataDragonVersion) return;
 
-    const championPayload: any = await this.championService.getChampionIcons(this.dataDragonVersion).toPromise();
+    const championPayload: any = await firstValueFrom(this.championService.getChampionIcons(this.dataDragonVersion));
     const nextMap: Record<number, string> = {};
     Object.keys(championPayload.data || {}).forEach(championId => {
       const champion = championPayload.data[championId];
@@ -295,7 +295,7 @@ export class IdentityPreviewService {
   private async ensureProfileIconMap(): Promise<void> {
     if (Object.keys(this.profileIconNameById).length > 0) return;
 
-    const icons: any = await this.championService.getSummonerIcons().toPromise();
+    const icons: any = await firstValueFrom(this.championService.getSummonerIcons());
     const nextMap: Record<number, string> = {};
     (icons || []).forEach(icon => {
       const id = Number(icon && icon.id);
@@ -307,7 +307,7 @@ export class IdentityPreviewService {
 
   private async ensureVersion(): Promise<void> {
     if (this.dataDragonVersion) return;
-    const versions = await this.versionService.apiVersion().toPromise() as string[];
+    const versions = await firstValueFrom(this.versionService.apiVersion()) as string[];
     this.dataDragonVersion = versions && versions.length ? versions[0] : '';
   }
 
