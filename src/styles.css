@@ -208,6 +208,19 @@ button,
   justify-content: center;
 }
 
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  color: var(--text);
+  background: var(--surface-raised) !important;
+  border: 1px solid var(--line);
+  border-radius: 6px !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35) !important;
+}
+
+.mat-mdc-dialog-container .mdc-dialog__title,
+.mat-mdc-dialog-container .mdc-dialog__content {
+  color: var(--text);
+}
+
 .tool-panel {
   width: 100%;
   padding: 1rem;

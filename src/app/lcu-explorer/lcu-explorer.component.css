@@ -11,6 +11,7 @@ main {
 .mat-card,
 .mat-mdc-card {
   width: 100%;
+  text-align: center;
 }
 
 .mat-card-content p,
@@ -35,10 +36,26 @@ main {
   display: block;
   max-width: none;
   width: 100%;
+  text-align: center;
 }
 
 :host ::ng-deep .explorer-toolbar .mat-mdc-form-field-subscript-wrapper {
   display: none;
+}
+
+:host ::ng-deep .explorer-toolbar .mat-mdc-form-field-infix,
+:host ::ng-deep .explorer-toolbar .mat-mdc-input-element {
+  text-align: center;
+}
+
+:host ::ng-deep .explorer-toolbar .mdc-floating-label {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  transform-origin: center;
+}
+
+:host ::ng-deep .explorer-toolbar .mdc-floating-label--float-above {
+  transform: translateX(-50%) scale(0.75) !important;
 }
 
 .watch-summary {

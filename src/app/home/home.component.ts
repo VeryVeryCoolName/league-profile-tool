@@ -20,7 +20,7 @@ export class HomeComponent implements OnInit {
   ngOnInit(): void {
     setTimeout(() => {
       void this.checkNewestVersion();
-    }, 0);
+    }, 2000);
   }
 
   private async checkNewestVersion() {

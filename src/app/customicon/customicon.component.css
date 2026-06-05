@@ -104,6 +104,21 @@ img {
   width: 100%;
 }
 
+:host ::ng-deep .search-panel .mat-mdc-form-field-infix,
+:host ::ng-deep .search-panel .mat-mdc-input-element {
+  text-align: center;
+}
+
+:host ::ng-deep .search-panel .mdc-floating-label {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  transform-origin: center;
+}
+
+:host ::ng-deep .search-panel .mdc-floating-label--float-above {
+  transform: translateX(-50%) scale(0.75) !important;
+}
+
 .icon-grid {
   display: flex;
   flex-wrap: wrap;

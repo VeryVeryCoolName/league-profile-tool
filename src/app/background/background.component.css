@@ -47,6 +47,21 @@ img {
   text-align: center;
 }
 
+:host ::ng-deep .search-champion .mat-mdc-form-field-infix,
+:host ::ng-deep .search-champion .mat-mdc-input-element {
+  text-align: center;
+}
+
+:host ::ng-deep .search-champion .mdc-floating-label {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  transform-origin: center;
+}
+
+:host ::ng-deep .search-champion .mdc-floating-label--float-above {
+  transform: translateX(-50%) scale(0.75) !important;
+}
+
 .skinSplash {
   width: 100%;
   height: 100%;

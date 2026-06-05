@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
+import {timeout} from "rxjs/operators";
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +25,7 @@ export class VersionService {
   async latestGithubVersion(): Promise<string> {
     for (const url of this.githubVersionUrls) {
       try {
-        const response = await this.http.get(url).toPromise();
+        const response = await this.http.get(url).pipe(timeout(2500)).toPromise();
         const version = this.extractVersion(response);
         if (version) return version;
       } catch (error) {

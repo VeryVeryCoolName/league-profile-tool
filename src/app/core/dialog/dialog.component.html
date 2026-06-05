@@ -1,19 +1,25 @@
 <ng-container *ngIf="data.title; then Custom; else Default"></ng-container>
 <ng-template #Custom>
-  <h1>{{data.title}}</h1>
-  <p>{{data.body}}</p>
+  <h1 mat-dialog-title>{{data.title}}</h1>
+  <div mat-dialog-content>
+    <p>{{data.body}}</p>
+  </div>
 </ng-template>
 <ng-template #Default>
   <ng-container *ngIf="data.body === 'Success'; then Success; else Failure"></ng-container>
 </ng-template>
 <ng-template #Success>
-  <h1>Success</h1>
-  <p>Request made successfully</p>
+  <h1 mat-dialog-title>Success</h1>
+  <div mat-dialog-content>
+    <p>Request made successfully.</p>
+  </div>
 </ng-template>
 <ng-template #Failure>
-  <h1>Error</h1>
-  <p>{{data.body}}</p>
+  <h1 mat-dialog-title>Error</h1>
+  <div mat-dialog-content>
+    <p>{{data.body}}</p>
+  </div>
 </ng-template>
-<div mat-dialog-actions>
+<div mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Close</button>
 </div>
