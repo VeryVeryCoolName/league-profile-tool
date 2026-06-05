@@ -1,4 +1,4 @@
-import * as versionFile from '../../version.json';
+import versionFile from '../../version.json';
 
 export const APP_VERSION = normalizeVersion((versionFile as {version?: string}).version);
 export const APP_VERSION_LABEL = APP_VERSION ? `V.${APP_VERSION}` : 'Unavailable';
