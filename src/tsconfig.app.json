@@ -3,6 +3,8 @@
   "compilerOptions": {
     "outDir": "../out-tsc/app",
     "module": "es2015",
+    "target": "ES2022",
+    "useDefineForClassFields": false,
     "baseUrl": "",
     "types": []
   },

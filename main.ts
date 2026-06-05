@@ -37,7 +37,6 @@ function createWindow(): BrowserWindow {
       nodeIntegration: true,
       allowRunningInsecureContent: (serve),
       contextIsolation: false,  // false if you want to run 2e2 test with Spectron
-      enableRemoteModule: false,
       devTools: false
     },
     autoHideMenuBar: true,
