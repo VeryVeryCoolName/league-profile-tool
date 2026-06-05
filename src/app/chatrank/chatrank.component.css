@@ -36,7 +36,8 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.mat-form-field {
+.mat-form-field,
+.mat-mdc-form-field {
   width: 100%;
 }
 

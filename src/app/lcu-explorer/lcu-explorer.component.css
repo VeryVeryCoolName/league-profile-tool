@@ -8,11 +8,13 @@ main {
   text-align: left;
 }
 
-.mat-card {
+.mat-card,
+.mat-mdc-card {
   width: 100%;
 }
 
-.mat-card-content p {
+.mat-card-content p,
+.mat-mdc-card-content p {
   margin-bottom: 0;
 }
 
@@ -25,13 +27,18 @@ main {
   display: grid;
   grid-template-columns: minmax(14rem, 1fr) auto;
   gap: 1rem;
-  align-items: center;
+  align-items: start;
 }
 
-.mat-form-field {
+.mat-form-field,
+.mat-mdc-form-field {
   display: block;
   max-width: none;
   width: 100%;
+}
+
+:host ::ng-deep .explorer-toolbar .mat-mdc-form-field-subscript-wrapper {
+  display: none;
 }
 
 .watch-summary {
@@ -45,6 +52,7 @@ main {
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
+  padding-top: 0.35rem;
 }
 
 .endpoint-group {
@@ -83,7 +91,8 @@ h2 {
   line-height: 1.25;
 }
 
-.endpoint-title ::ng-deep .mat-button-wrapper {
+.endpoint-title ::ng-deep .mat-button-wrapper,
+.endpoint-title ::ng-deep .mdc-button__label {
   display: flex;
   min-width: 0;
   gap: 0.5rem;

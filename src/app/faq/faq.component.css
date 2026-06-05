@@ -4,7 +4,8 @@ main {
   max-width: 46rem;
 }
 
-.mat-card {
+.mat-card,
+.mat-mdc-card {
   max-width: 40rem;
   margin-left: auto;
   margin-right: auto;
