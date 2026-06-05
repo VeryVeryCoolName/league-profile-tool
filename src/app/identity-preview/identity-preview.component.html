@@ -1,12 +1,18 @@
 <mat-card class="preview-card">
-  <div class="preview-art" *ngIf="backgroundStyle" [style.background-image]="backgroundStyle"></div>
+  @if (backgroundStyle) {
+    <div class="preview-art" [style.background-image]="backgroundStyle"></div>
+  }
   <div class="preview-shade"></div>
 
   <div class="preview-content">
     <header class="preview-header">
       <div class="profile-icon">
-        <img *ngIf="state.profileIconUrl && !iconFailed" [src]="state.profileIconUrl" alt="Profile icon" (error)="iconFailed = true">
-        <span *ngIf="!state.profileIconUrl || iconFailed">{{state.profileIconId || '?'}}</span>
+        @if (state.profileIconUrl && !iconFailed) {
+          <img [src]="state.profileIconUrl" alt="Profile icon" (error)="iconFailed = true">
+        }
+        @if (!state.profileIconUrl || iconFailed) {
+          <span>{{state.profileIconId || '?'}}</span>
+        }
       </div>
 
       <div class="identity-copy">
@@ -32,7 +38,9 @@
         <span>Profile Icon</span>
         <strong class="stacked-value">
           {{profileIconName}}
-          <small *ngIf="state.profileIconId !== undefined && state.profileIconId !== null">({{state.profileIconId}})</small>
+          @if (state.profileIconId !== undefined && state.profileIconId !== null) {
+            <small>({{state.profileIconId}})</small>
+          }
         </strong>
       </div>
       <div>
@@ -41,9 +49,17 @@
       </div>
     </div>
 
-    <p class="preview-note" *ngIf="!state.loaded && !state.loading">Refresh once to preview your current League identity.</p>
-    <p class="preview-note warning" *ngIf="state.challengeSpoofActive">Showing your selected Challenge Rank until the lobby changes.</p>
-    <p class="preview-note error" *ngIf="state.error">{{state.error}}</p>
-    <p class="preview-note" *ngIf="state.updatedAt">Updated {{state.updatedAt}}</p>
+    @if (!state.loaded && !state.loading) {
+      <p class="preview-note">Refresh once to preview your current League identity.</p>
+    }
+    @if (state.challengeSpoofActive) {
+      <p class="preview-note warning">Showing your selected Challenge Rank until the lobby changes.</p>
+    }
+    @if (state.error) {
+      <p class="preview-note error">{{state.error}}</p>
+    }
+    @if (state.updatedAt) {
+      <p class="preview-note">Updated {{state.updatedAt}}</p>
+    }
   </div>
 </mat-card>

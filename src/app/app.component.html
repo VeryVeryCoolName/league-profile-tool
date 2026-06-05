@@ -1,9 +1,8 @@
-<ng-container *ngIf="connected$ | async as connected; else connecting">
+@if (connected$ | async; as connected) {
   <div class="connection-status connected">LCU Connected</div>
-</ng-container>
-<ng-template #connecting>
+} @else {
   <div class="connection-status">LCU Connecting</div>
-</ng-template>
+}
 <mat-tab-group [mat-stretch-tabs]="false">
   <mat-tab label="Home"><ng-template matTabContent><app-home></app-home></ng-template></mat-tab>
   <mat-tab label="Match Tools"><ng-template matTabContent><app-match-tools></app-match-tools></ng-template></mat-tab>

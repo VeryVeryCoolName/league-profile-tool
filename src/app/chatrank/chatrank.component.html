@@ -5,25 +5,31 @@
       <mat-form-field appearance="fill">
         <mat-label>Queue</mat-label>
         <mat-select [(value)]="queue">
-          <mat-option *ngFor="let queue of queues" [value]="queue.value">
-            {{queue.label}}
-          </mat-option>
+          @for (queue of queues; track queue) {
+            <mat-option [value]="queue.value">
+              {{queue.label}}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Rank</mat-label>
         <mat-select [(value)]="rank">
-          <mat-option *ngFor="let rank of ranks" [value]="rank">
-            {{rank}}
-          </mat-option>
+          @for (rank of ranks; track rank) {
+            <mat-option [value]="rank">
+              {{rank}}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Division</mat-label>
         <mat-select [(value)]="division">
-          <mat-option *ngFor="let division of divisions" [value]="division">
-            {{division}}
-          </mat-option>
+          @for (division of divisions; track division) {
+            <mat-option [value]="division">
+              {{division}}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
     </div>
@@ -37,9 +43,11 @@
       <mat-form-field appearance="fill">
         <mat-label>Challenge Level</mat-label>
         <mat-select [(value)]="challengeLevel" (selectionChange)="syncChallengePointsToLevel()">
-          <mat-option *ngFor="let level of challengeLevels" [value]="level">
-            {{level}}
-          </mat-option>
+          @for (level of challengeLevels; track level) {
+            <mat-option [value]="level">
+              {{level}}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="fill">
@@ -62,20 +70,30 @@
       <button (click)="restoreOriginalIdentity()" mat-stroked-button>Restore Original Identity</button>
     </div>
 
-    <div class="event-status" *ngIf="eventState$ | async as eventState">
-      <span [class.connected]="eventState.connected">{{eventState.connected ? 'LCU events connected' : eventState.message}}</span>
-      <span *ngIf="eventState.gameflowPhase">Phase: {{eventState.gameflowPhase}}</span>
-      <span *ngIf="eventState.lastEventUri">Last: {{eventState.lastEventUri}}</span>
-    </div>
+    @if (eventState$ | async; as eventState) {
+      <div class="event-status">
+        <span [class.connected]="eventState.connected">{{eventState.connected ? 'LCU events connected' : eventState.message}}</span>
+        @if (eventState.gameflowPhase) {
+          <span>Phase: {{eventState.gameflowPhase}}</span>
+        }
+        @if (eventState.lastEventUri) {
+          <span>Last: {{eventState.lastEventUri}}</span>
+        }
+      </div>
+    }
 
-    <ng-container *ngIf="automationState$ | async as automationState">
+    @if (automationState$ | async; as automationState) {
       <label class="toggle-row reapply-toggle">
         <input type="checkbox" [checked]="automationState.autoReapply" (change)="toggleAutoReapply($event)">
         Reapply changes after client refresh
       </label>
-      <p class="automation-note" *ngIf="automationState.lastAction">
-        {{automationState.lastAction}} <span *ngIf="automationState.lastActionAt">at {{automationState.lastActionAt}}</span>
+      @if (automationState.lastAction) {
+        <p class="automation-note">
+          {{automationState.lastAction}} @if (automationState.lastActionAt) {
+          <span>at {{automationState.lastActionAt}}</span>
+        }
       </p>
-    </ng-container>
-  </section>
+    }
+  }
+</section>
 </main>
