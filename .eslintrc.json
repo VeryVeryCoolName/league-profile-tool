@@ -44,9 +44,13 @@
         "@typescript-eslint/no-unsafe-call": 0,
         "@typescript-eslint/no-unsafe-member-access": 0,
         "@typescript-eslint/no-unsafe-assignment": 0,
+        "@typescript-eslint/no-unsafe-argument": 0,
         "@typescript-eslint/no-unsafe-return": 0,
         "@typescript-eslint/no-floating-promises": 0,
-        "@typescript-eslint/semi": "error",
+        "@typescript-eslint/no-require-imports": 0,
+        "@typescript-eslint/no-base-to-string": 0,
+        "@typescript-eslint/prefer-promise-reject-errors": 0,
+        "semi": "error",
         "@angular-eslint/use-injectable-provided-in": "error",
         "@angular-eslint/no-attribute-decorator": "error"
       }
