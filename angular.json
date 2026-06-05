@@ -9,7 +9,7 @@
       "projectType": "application",
       "architect": {
         "build": {
-          "builder": "@angular-builders/custom-webpack:browser",
+          "builder": "@angular-devkit/build-angular:browser",
           "options": {
             "outputPath": "dist",
             "index": "src/index.html",
@@ -27,10 +27,7 @@
             "allowedCommonJsDependencies": [
               "rxjs",
               "rxjs/operators"
-            ],
-            "customWebpackConfig": {
-              "path": "./angular.webpack.js"
-            }
+            ]
           },
           "configurations": {
             "dev": {
@@ -84,24 +81,24 @@
           }
         },
         "serve": {
-          "builder": "@angular-builders/custom-webpack:dev-server",
+          "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "angular-electron:build"
+            "buildTarget": "angular-electron:build"
           },
           "configurations": {
             "dev": {
-              "browserTarget": "angular-electron:build:dev"
+              "buildTarget": "angular-electron:build:dev"
             },
             "web": {
-              "browserTarget": "angular-electron:build:web"
+              "buildTarget": "angular-electron:build:web"
             },
             "production": {
-              "browserTarget": "angular-electron:build:production"
+              "buildTarget": "angular-electron:build:production"
             }
           }
         },
         "test": {
-          "builder": "@angular-builders/custom-webpack:karma",
+          "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "main": "src/test.ts",
             "polyfills": "src/polyfills-test.ts",
@@ -114,10 +111,7 @@
             ],
             "assets": [
               "src/assets"
-            ],
-            "customWebpackConfig": {
-              "path": "./angular.webpack.js"
-            }
+            ]
           }
         },
         "lint": {
