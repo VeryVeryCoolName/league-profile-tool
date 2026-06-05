@@ -27,9 +27,10 @@ interface IconUpdateResult {
 }
 
 @Component({
-  selector: 'app-customicon',
-  templateUrl: './customicon.component.html',
-  styleUrls: ['./customicon.component.css']
+    selector: 'app-customicon',
+    templateUrl: './customicon.component.html',
+    styleUrls: ['./customicon.component.css'],
+    standalone: false
 })
 export class CustomiconComponent implements OnInit, OnDestroy {
   private static ownedIconIdsCache: Set<number> | null = null;

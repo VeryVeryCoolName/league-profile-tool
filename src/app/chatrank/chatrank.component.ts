@@ -20,9 +20,10 @@ const CHALLENGE_CRYSTAL_POINT_THRESHOLDS: Record<string, number> = {
 };
 
 @Component({
-  selector: 'app-chatrank',
-  templateUrl: './chatrank.component.html',
-  styleUrls: ['./chatrank.component.css']
+    selector: 'app-chatrank',
+    templateUrl: './chatrank.component.html',
+    styleUrls: ['./chatrank.component.css'],
+    standalone: false
 })
 export class ChatrankComponent implements OnInit {
   public ranks = ["IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "EMERALD", "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"];

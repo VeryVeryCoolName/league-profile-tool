@@ -3,9 +3,10 @@ import {MatchToolsService} from '../core/services/match-tools/match-tools.servic
 import {ElectronService} from '../core/services/electron/electron.service';
 
 @Component({
-  selector: 'app-match-tools',
-  templateUrl: './match-tools.component.html',
-  styleUrls: ['./match-tools.component.css']
+    selector: 'app-match-tools',
+    templateUrl: './match-tools.component.html',
+    styleUrls: ['./match-tools.component.css'],
+    standalone: false
 })
 export class MatchToolsComponent {
   public state$ = this.matchToolsService.state$;

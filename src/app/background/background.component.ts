@@ -7,9 +7,10 @@ import {ChampionService} from "../core/services/champion/champion.service";
 import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
 
 @Component({
-  selector: 'app-background',
-  templateUrl: './background.component.html',
-  styleUrls: ['./background.component.css']
+    selector: 'app-background',
+    templateUrl: './background.component.html',
+    styleUrls: ['./background.component.css'],
+    standalone: false
 })
 export class BackgroundComponent implements OnInit {
   private static cachedVersion = '';

@@ -5,9 +5,10 @@ import {VersionService} from "../core/services/version/version.service";
 
 
 @Component({
-  selector: 'app-champion-purchase-date',
-  templateUrl: './champion-purchase-date.component.html',
-  styleUrls: ['./champion-purchase-date.component.css']
+    selector: 'app-champion-purchase-date',
+    templateUrl: './champion-purchase-date.component.html',
+    styleUrls: ['./champion-purchase-date.component.css'],
+    standalone: false
 })
 export class ChampionPurchaseDateComponent implements OnInit {
   public ownedChamps = null;

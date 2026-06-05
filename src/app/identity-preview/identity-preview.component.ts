@@ -4,9 +4,10 @@ import {IdentityPreviewService, IdentityPreviewState} from '../core/services/ide
 import {ConnectorService} from '../core/services/connector/connector.service';
 
 @Component({
-  selector: 'app-identity-preview',
-  templateUrl: './identity-preview.component.html',
-  styleUrls: ['./identity-preview.component.css']
+    selector: 'app-identity-preview',
+    templateUrl: './identity-preview.component.html',
+    styleUrls: ['./identity-preview.component.css'],
+    standalone: false
 })
 export class IdentityPreviewComponent implements OnDestroy {
   public state: IdentityPreviewState;

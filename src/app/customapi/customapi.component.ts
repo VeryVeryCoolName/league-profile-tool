@@ -2,9 +2,10 @@ import {Component} from '@angular/core';
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 
 @Component({
-  selector: 'app-customapi',
-  templateUrl: './customapi.component.html',
-  styleUrls: ['./customapi.component.css']
+    selector: 'app-customapi',
+    templateUrl: './customapi.component.html',
+    styleUrls: ['./customapi.component.css'],
+    standalone: false
 })
 export class CustomapiComponent {
   public methods = ["GET", "POST", "PUT", "PATCH", "DELETE"];

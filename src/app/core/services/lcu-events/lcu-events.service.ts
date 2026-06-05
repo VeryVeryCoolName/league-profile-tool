@@ -153,7 +153,7 @@ export class LcuEventsService {
       if (this.frameBuffer.length < offset + length) return;
 
       const mask = masked ? this.frameBuffer.slice(maskOffset, maskOffset + 4) : null;
-      let payload = this.frameBuffer.slice(offset, offset + length);
+      let payload: Buffer<ArrayBufferLike> = this.frameBuffer.slice(offset, offset + length);
       this.frameBuffer = this.frameBuffer.slice(offset + length);
 
       if (masked && mask) {

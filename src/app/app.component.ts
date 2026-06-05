@@ -4,9 +4,10 @@ import {Title} from "@angular/platform-browser";
 import {APP_WINDOW_TITLE} from "./app-version";
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.css'],
+    standalone: false
 })
 export class AppComponent {
   public readonly connected$ = this.connector.ready$;

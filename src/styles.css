@@ -48,13 +48,13 @@ mat-tab-header {
 
 .mat-mdc-tab-group,
 .mat-mdc-tab-nav-bar {
-  --mat-tab-header-active-label-text-color: #ffffff;
-  --mat-tab-header-active-focus-label-text-color: #ffffff;
-  --mat-tab-header-active-hover-label-text-color: #ffffff;
-  --mat-tab-header-inactive-label-text-color: #f4f8ff;
-  --mat-tab-header-inactive-focus-label-text-color: #ffffff;
-  --mat-tab-header-inactive-hover-label-text-color: #ffffff;
-  --mdc-tab-indicator-active-indicator-color: var(--accent);
+  --mat-tab-active-label-text-color: #ffffff;
+  --mat-tab-active-focus-label-text-color: #ffffff;
+  --mat-tab-active-hover-label-text-color: #ffffff;
+  --mat-tab-inactive-label-text-color: #f4f8ff;
+  --mat-tab-inactive-focus-label-text-color: #ffffff;
+  --mat-tab-inactive-hover-label-text-color: #ffffff;
+  --mat-tab-active-indicator-color: var(--accent);
 }
 
 .mat-tab-label,
@@ -192,10 +192,10 @@ textarea.mat-input-element {
 .mat-mdc-raised-button.mat-primary,
 .mat-mdc-unelevated-button.mat-primary {
   background-color: var(--accent-strong);
-  --mdc-protected-button-container-color: var(--accent-strong);
-  --mdc-filled-button-container-color: var(--accent-strong);
-  --mdc-protected-button-label-text-color: #ffffff;
-  --mdc-filled-button-label-text-color: #ffffff;
+  --mat-button-protected-container-color: var(--accent-strong);
+  --mat-button-filled-container-color: var(--accent-strong);
+  --mat-button-protected-label-text-color: #ffffff;
+  --mat-button-filled-label-text-color: #ffffff;
 }
 
 .mat-raised-button.mat-primary:hover,

@@ -35,9 +35,10 @@ interface EndpointState {
 }
 
 @Component({
-  selector: 'app-lcu-explorer',
-  templateUrl: './lcu-explorer.component.html',
-  styleUrls: ['./lcu-explorer.component.css']
+    selector: 'app-lcu-explorer',
+    templateUrl: './lcu-explorer.component.html',
+    styleUrls: ['./lcu-explorer.component.css'],
+    standalone: false
 })
 export class LcuExplorerComponent implements OnDestroy {
   public query = '';

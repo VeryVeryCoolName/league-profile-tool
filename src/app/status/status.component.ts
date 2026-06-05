@@ -5,9 +5,10 @@ import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection
 import {PresenceAutomationService} from '../core/services/presence-automation/presence-automation.service';
 
 @Component({
-  selector: 'app-status',
-  templateUrl: './status.component.html',
-  styleUrls: ['./status.component.css']
+    selector: 'app-status',
+    templateUrl: './status.component.html',
+    styleUrls: ['./status.component.css'],
+    standalone: false
 })
 export class StatusComponent {
   public text = '';
