@@ -72,6 +72,16 @@ img {
   text-align: center;
 }
 
+:host ::ng-deep .search-champion .mat-mdc-form-field-infix,
+:host ::ng-deep .search-champion .mat-mdc-input-element {
+  text-align: center;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-text-field-wrapper,
+:host ::ng-deep .search-champion .mat-form-field-flex {
+  background: transparent !important;
+}
+
 .table-wrap {
   max-width: 52rem;
   margin-top: 1rem;

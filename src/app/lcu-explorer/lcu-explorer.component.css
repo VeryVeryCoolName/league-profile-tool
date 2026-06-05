@@ -2,16 +2,28 @@ main {
   display: grid;
   gap: 1rem;
   width: 100%;
-  max-width: 86rem;
+  max-width: 76rem;
   margin: 0 auto;
   padding: 1rem;
   text-align: left;
 }
 
-.mat-card,
-.mat-mdc-card {
+.developer-intro-card {
   width: 100%;
-  text-align: center;
+  padding: 1.15rem 1.25rem;
+  text-align: left;
+}
+
+.developer-intro-card .mat-card-title,
+.developer-intro-card .mat-mdc-card-title {
+  display: block;
+  margin: 0 0 0.5rem !important;
+}
+
+.developer-intro-card .mat-card-content,
+.developer-intro-card .mat-mdc-card-content {
+  display: block;
+  padding: 0 !important;
 }
 
 .mat-card-content p,
@@ -26,7 +38,7 @@ main {
 
 .explorer-toolbar {
   display: grid;
-  grid-template-columns: minmax(14rem, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
   align-items: start;
 }
@@ -36,7 +48,7 @@ main {
   display: block;
   max-width: none;
   width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
 :host ::ng-deep .explorer-toolbar .mat-mdc-form-field-subscript-wrapper {
@@ -45,17 +57,12 @@ main {
 
 :host ::ng-deep .explorer-toolbar .mat-mdc-form-field-infix,
 :host ::ng-deep .explorer-toolbar .mat-mdc-input-element {
-  text-align: center;
+  text-align: left;
 }
 
-:host ::ng-deep .explorer-toolbar .mdc-floating-label {
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  transform-origin: center;
-}
-
-:host ::ng-deep .explorer-toolbar .mdc-floating-label--float-above {
-  transform: translateX(-50%) scale(0.75) !important;
+:host ::ng-deep .explorer-toolbar .mat-mdc-text-field-wrapper,
+:host ::ng-deep .explorer-toolbar .mat-form-field-flex {
+  background: transparent !important;
 }
 
 .watch-summary {
@@ -69,7 +76,7 @@ main {
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
-  padding-top: 0.35rem;
+  padding-top: 0.65rem;
 }
 
 .endpoint-group {
@@ -102,18 +109,30 @@ h2 {
 }
 
 .endpoint-title {
+  width: 100%;
   min-width: 0;
   padding: 0;
-  text-align: left;
-  line-height: 1.25;
-}
-
-.endpoint-title ::ng-deep .mat-button-wrapper,
-.endpoint-title ::ng-deep .mdc-button__label {
   display: flex;
-  min-width: 0;
   gap: 0.5rem;
   align-items: center;
+  justify-content: flex-start;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.endpoint-title:hover .path,
+.endpoint-title:focus-visible .path {
+  color: #dff3ff;
+}
+
+.endpoint-title:focus-visible {
+  outline: 1px solid #6cb6e8;
+  outline-offset: 3px;
 }
 
 .method {
@@ -229,7 +248,7 @@ pre {
   border-radius: 4px;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1100px) {
   .explorer-toolbar {
     grid-template-columns: 1fr;
   }

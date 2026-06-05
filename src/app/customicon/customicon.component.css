@@ -18,7 +18,7 @@ img {
 }
 
 .search-panel {
-  max-width: 46rem;
+  max-width: 72rem;
   margin: 1rem auto;
   padding: 0.85rem 1rem;
   display: flex;
@@ -100,6 +100,7 @@ img {
 
 .mat-form-field,
 .mat-mdc-form-field {
+  flex: 1 1 auto;
   text-align: center;
   width: 100%;
 }
@@ -109,14 +110,9 @@ img {
   text-align: center;
 }
 
-:host ::ng-deep .search-panel .mdc-floating-label {
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  transform-origin: center;
-}
-
-:host ::ng-deep .search-panel .mdc-floating-label--float-above {
-  transform: translateX(-50%) scale(0.75) !important;
+:host ::ng-deep .search-panel .mat-mdc-text-field-wrapper,
+:host ::ng-deep .search-panel .mat-form-field-flex {
+  background: transparent !important;
 }
 
 .icon-grid {

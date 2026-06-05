@@ -1,5 +1,5 @@
 <main>
-  <mat-card>
+  <mat-card class="developer-intro-card">
     <mat-card-title>Developer Tools</mat-card-title>
     <mat-card-content>
       <p>Read-only identity, regalia, challenge, hovercard, and presence inspection.</p>
@@ -33,7 +33,7 @@
              *ngIf="stateFor(endpoint) as state"
              [class.changed]="state.changedFields.length > 0">
       <header class="endpoint-header">
-        <button mat-button class="endpoint-title" (click)="toggleExpanded(endpoint)">
+        <button type="button" class="endpoint-title" (click)="toggleExpanded(endpoint)">
           <span class="method">{{endpoint.method}}</span>
           <span class="path">{{endpoint.path}}</span>
         </button>

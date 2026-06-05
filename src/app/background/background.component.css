@@ -52,14 +52,9 @@ img {
   text-align: center;
 }
 
-:host ::ng-deep .search-champion .mdc-floating-label {
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  transform-origin: center;
-}
-
-:host ::ng-deep .search-champion .mdc-floating-label--float-above {
-  transform: translateX(-50%) scale(0.75) !important;
+:host ::ng-deep .search-champion .mat-mdc-text-field-wrapper,
+:host ::ng-deep .search-champion .mat-form-field-flex {
+  background: transparent !important;
 }
 
 .skinSplash {
