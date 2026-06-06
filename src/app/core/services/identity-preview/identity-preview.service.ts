@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable} from 'rxjs';
+import {BehaviorSubject, firstValueFrom, Observable} from 'rxjs';
 import {LCUConnectionService} from '../lcuconnection/lcuconnection.service';
 import {VersionService} from '../version/version.service';
 import {ChampionService} from '../champion/champion.service';
@@ -84,9 +84,9 @@ export class IdentityPreviewService {
         ? await this.readHovercardProfileIcon(summoner)
         : null;
       const profileIconId = this.firstKnownNumber(chatIconId, hovercardIconId, accountProfileIconId);
-      const profileIconName = await this.resolveProfileIconName(profileIconId);
       const backgroundSkinId = this.numberFrom(profile.backgroundSkinId, current.backgroundSkinId);
-      const background = await this.resolveBackground(backgroundSkinId);
+      const sameProfileIcon = current.profileIconId === profileIconId;
+      const sameBackground = current.backgroundSkinId === backgroundSkinId;
 
       const nextState: Partial<IdentityPreviewState> = {
         loaded: true,
@@ -96,7 +96,7 @@ export class IdentityPreviewService {
         summonerName: this.stringFrom(summoner.gameName, this.stringFrom(summoner.displayName, current.summonerName || 'Summoner')),
         tagLine: this.stringFrom(summoner.tagLine, current.tagLine),
         profileIconId,
-        profileIconName,
+        profileIconName: sameProfileIcon ? current.profileIconName : 'Icon',
         profileIconUrl: this.profileIconUrl(profileIconId),
         chatRankTier: current.challengeSpoofActive ? current.chatRankTier : this.stringFrom(lol.rankedLeagueTier, current.chatRankTier),
         chatRankDivision: current.challengeSpoofActive ? current.chatRankDivision : this.stringFrom(lol.rankedLeagueDivision, current.chatRankDivision),
@@ -104,11 +104,12 @@ export class IdentityPreviewService {
         challengeCrystalLevel: current.challengeSpoofActive ? current.challengeCrystalLevel : this.stringFrom(summaryLevel, this.stringFrom(lol.challengeCrystalLevel, current.challengeCrystalLevel)),
         challengePoints: current.challengeSpoofActive ? current.challengePoints : this.numberFrom(summaryPoints, this.numberFrom(lol.challengePoints, current.challengePoints)),
         backgroundSkinId,
-        backgroundImageUrl: background.url,
-        backgroundLabel: background.label
+        backgroundImageUrl: sameBackground ? current.backgroundImageUrl : '',
+        backgroundLabel: sameBackground ? current.backgroundLabel : (backgroundSkinId ? `Skin ${backgroundSkinId}` : '')
       };
 
       this.patchState(nextState);
+      void this.resolvePreviewDetails(profileIconId, backgroundSkinId);
     } catch (error) {
       this.patchState({
         loading: false,
@@ -184,6 +185,26 @@ export class IdentityPreviewService {
     });
   }
 
+  private async resolvePreviewDetails(profileIconId: number | null, backgroundSkinId: number | null): Promise<void> {
+    try {
+      const [profileIconName, background] = await Promise.all([
+        this.resolveProfileIconName(profileIconId),
+        this.resolveBackground(backgroundSkinId)
+      ]);
+
+      const current = this.stateSubject.value;
+      if (current.profileIconId !== profileIconId || current.backgroundSkinId !== backgroundSkinId) return;
+
+      this.patchState({
+        profileIconName,
+        backgroundImageUrl: background.url,
+        backgroundLabel: background.label
+      });
+    } catch (error) {
+      console.warn('[Preview] metadata unavailable', error);
+    }
+  }
+
   private patchState(patch: Partial<IdentityPreviewState>) {
     this.stateSubject.next({
       ...this.stateSubject.value,
@@ -248,7 +269,7 @@ export class IdentityPreviewService {
     await this.ensureVersion();
     if (!this.dataDragonVersion) return;
 
-    const championPayload: any = await this.championService.getChampionIcons(this.dataDragonVersion).toPromise();
+    const championPayload: any = await firstValueFrom(this.championService.getChampionIcons(this.dataDragonVersion));
     const nextMap: Record<number, string> = {};
     Object.keys(championPayload.data || {}).forEach(championId => {
       const champion = championPayload.data[championId];
@@ -272,7 +293,7 @@ export class IdentityPreviewService {
   private async ensureProfileIconMap(): Promise<void> {
     if (Object.keys(this.profileIconNameById).length > 0) return;
 
-    const icons: any = await this.championService.getSummonerIcons().toPromise();
+    const icons: any = await firstValueFrom(this.championService.getSummonerIcons());
     const nextMap: Record<number, string> = {};
     (icons || []).forEach(icon => {
       const id = Number(icon && icon.id);
@@ -284,7 +305,7 @@ export class IdentityPreviewService {
 
   private async ensureVersion(): Promise<void> {
     if (this.dataDragonVersion) return;
-    const versions = await this.versionService.apiVersion().toPromise() as string[];
+    const versions = await firstValueFrom(this.versionService.apiVersion());
     this.dataDragonVersion = versions && versions.length ? versions[0] : '';
   }
 

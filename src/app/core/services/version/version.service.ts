@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import {HttpClient} from "@angular/common/http";
-import {Observable} from "rxjs";
+import { HttpClient } from '@angular/common/http';
+import {firstValueFrom, Observable, shareReplay} from 'rxjs';
+import {timeout} from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -13,18 +14,31 @@ export class VersionService {
     'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/main/version.json',
     'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/master/version.json'
   ];
+  private readonly dataDragonVersions = this.http
+    .get<string[]>('https://ddragon.leagueoflegends.com/api/versions.json')
+    .pipe(shareReplay({bufferSize: 1, refCount: false}));
+  private latestVersionPromise: Promise<string> | null = null;
 
   constructor(private http: HttpClient) {
   }
 
-  apiVersion(): Observable<any> {
-    return this.http.get("https://ddragon.leagueoflegends.com/api/versions.json");
+  apiVersion(): Observable<string[]> {
+    return this.dataDragonVersions;
   }
 
   async latestGithubVersion(): Promise<string> {
+    if (this.latestVersionPromise !== null) return this.latestVersionPromise;
+    this.latestVersionPromise = this.fetchLatestGithubVersion().catch(error => {
+      this.latestVersionPromise = null;
+      throw error;
+    });
+    return this.latestVersionPromise;
+  }
+
+  private async fetchLatestGithubVersion(): Promise<string> {
     for (const url of this.githubVersionUrls) {
       try {
-        const response = await this.http.get(url).toPromise();
+        const response = await firstValueFrom(this.http.get(url).pipe(timeout(2500)));
         const version = this.extractVersion(response);
         if (version) return version;
       } catch (error) {

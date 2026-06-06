@@ -1,101 +1,119 @@
-<main class="match-tools-page" *ngIf="state$ | async as state">
-  <section class="tool-panel">
-    <div class="panel-header">
-      <div>
-        <h2>Match Tools</h2>
-      </div>
-    </div>
-
-    <div class="tool-grid">
-      <article class="tool-card auto-accept-card">
-        <label class="mode-toggle auto-accept-toggle" [class.active]="state.autoAcceptEnabled">
-          <input type="checkbox" [checked]="state.autoAcceptEnabled" (change)="toggleAutoAccept($event)">
-          <span>Automatically accept queue</span>
-        </label>
-      </article>
-
-      <article class="tool-card">
-        <h3>Matchup Source</h3>
-        <mat-form-field appearance="fill">
-          <mat-label>Provider</mat-label>
-          <mat-select [value]="state.providerId" (selectionChange)="setProvider($event.value)">
-            <mat-option *ngFor="let provider of providers" [value]="provider.id">
-              {{provider.label}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <button mat-stroked-button type="button" *ngIf="state.matchup?.sourceUrl" (click)="openExternal(state.matchup.sourceUrl)">
-          {{state.champSelect.enemyMatchupSource === 'manual' ? 'Open selected matchup' : 'Open detected matchup'}}
-        </button>
-      </article>
-    </div>
-  </section>
-
-  <section class="tool-panel" *ngIf="state.champSelect.inChampSelect; else notInChampSelectPanel">
-    <div class="panel-header compact">
-      <div>
-        <h2>Champion Select</h2>
-        <p>{{state.champSelect.status}}</p>
-      </div>
-      <span class="phase-pill">{{state.champSelect.phase || 'No phase'}}</span>
-    </div>
-
-    <div class="champ-grid">
-      <div class="info-card champion-card primary-champion-card">
-        <div class="champion-meta-line">
-          <span class="role-badge" *ngIf="state.champSelect.role && state.champSelect.role !== 'Unknown'">{{state.champSelect.role}}{{state.champSelect.roleSource === 'recommended' ? '?' : ''}}</span>
-        </div>
-        <strong>{{state.champSelect.playerChampionName || 'No champion selected'}}</strong>
-        <img class="champion-icon main-icon" *ngIf="state.champSelect.playerChampionIconUrl" [src]="state.champSelect.playerChampionIconUrl" [alt]="state.champSelect.playerChampionName">
-      </div>
-      <div class="info-card champion-card primary-champion-card">
-        <span>{{state.champSelect.enemyMatchupSource === 'manual' ? 'Selected Lane Opponent' : (state.champSelect.enemyMatchupFallback ? 'Possible Lane Opponent' : 'Lane Opponent')}}</span>
-        <strong>{{state.champSelect.enemyChampionName || (state.champSelect.possibleLaneOpponents.length > 1 ? 'Multiple candidates' : 'Waiting for lane opponent...')}}</strong>
-        <img class="champion-icon main-icon" *ngIf="state.champSelect.enemyChampionIconUrl" [src]="state.champSelect.enemyChampionIconUrl" [alt]="state.champSelect.enemyChampionName">
-      </div>
-    </div>
-
-    <div class="opponent-note-row">
-      <p class="opponent-note">{{state.champSelect.enemyMatchupLabel}}</p>
-      <button mat-stroked-button type="button" *ngIf="state.champSelect.manualOpponentChampionId" (click)="clearOpponent()">Auto detect</button>
-    </div>
-
-    <div class="candidate-row" *ngIf="state.champSelect.possibleLaneOpponents.length > 1">
-      <span>Possible lane opponents</span>
-      <div class="enemy-list">
-        <button type="button" class="enemy-chip" *ngFor="let candidate of state.champSelect.possibleLaneOpponents" (click)="selectOpponent(candidate.championId)" [class.selected]="state.champSelect.manualOpponentChampionId === candidate.championId || (!state.champSelect.manualOpponentChampionId && state.champSelect.enemyChampionId === candidate.championId)">
-          <span>{{candidate.championName}}</span>
-          <img class="champion-icon small-icon" *ngIf="candidate.iconUrl" [src]="candidate.iconUrl" [alt]="candidate.championName">
-        </button>
-      </div>
-    </div>
-
-    <div class="enemy-row" *ngIf="state.champSelect.visibleEnemies.length">
-      <span>Visible enemies</span>
-      <div class="enemy-list">
-        <button type="button" class="enemy-chip" *ngFor="let enemy of state.champSelect.visibleEnemies" (click)="selectOpponent(enemy.championId)" [class.selected]="state.champSelect.manualOpponentChampionId === enemy.championId || (!state.champSelect.manualOpponentChampionId && state.champSelect.enemyChampionId === enemy.championId)">
-          <span>{{enemy.championName}}</span>
-          <img class="champion-icon small-icon" *ngIf="enemy.iconUrl" [src]="enemy.iconUrl" [alt]="enemy.championName">
-        </button>
-      </div>
-    </div>
-
-    <article class="matchup-card" *ngIf="state.matchup; else matchupWaiting">
-      <div>
-        <span class="matchup-label">{{state.champSelect.enemyMatchupSource === 'manual' ? 'Selected matchup' : (state.champSelect.enemyMatchupFallback ? 'Possible matchup' : 'Lane matchup')}}</span>
-        <h3>{{state.matchup.title}}</h3>
-      </div>
-      <button mat-stroked-button type="button" (click)="openExternal(state.matchup.sourceUrl)">Open Lolalytics</button>
-    </article>
-
-    <ng-template #matchupWaiting>
-      <p class="empty-state">Matchup appears once your champion and a likely enemy champion are known.</p>
-    </ng-template>
-  </section>
-
-  <ng-template #notInChampSelectPanel>
+@if (state$ | async; as state) {
+  <main class="match-tools-page">
     <section class="tool-panel">
-      <p class="not-in-champ-select">Not in champion select</p>
+      <div class="panel-header">
+        <div>
+          <h2>Match Tools</h2>
+        </div>
+      </div>
+      <div class="tool-grid">
+        <article class="tool-card auto-accept-card">
+          <label class="mode-toggle auto-accept-toggle" [class.active]="state.autoAcceptEnabled">
+            <input type="checkbox" [checked]="state.autoAcceptEnabled" (change)="toggleAutoAccept($event)">
+            <span>Automatically accept queue</span>
+          </label>
+        </article>
+        <article class="tool-card">
+          <h3>Matchup Source</h3>
+          <mat-form-field appearance="fill">
+            <mat-label>Provider</mat-label>
+            <mat-select [value]="state.providerId" (selectionChange)="setProvider($event.value)">
+              @for (provider of providers; track provider) {
+                <mat-option [value]="provider.id">
+                  {{provider.label}}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          @if (state.matchup?.sourceUrl) {
+            <button mat-stroked-button type="button" (click)="openExternal(state.matchup.sourceUrl)">
+              {{state.champSelect.enemyMatchupSource === 'manual' ? 'Open selected matchup' : 'Open detected matchup'}}
+            </button>
+          }
+        </article>
+      </div>
     </section>
-  </ng-template>
-</main>
+    @if (state.champSelect.inChampSelect) {
+      <section class="tool-panel">
+        <div class="panel-header compact">
+          <div>
+            <h2>Champion Select</h2>
+            <p>{{state.champSelect.status}}</p>
+          </div>
+          <span class="phase-pill">{{state.champSelect.phase || 'No phase'}}</span>
+        </div>
+        <div class="champ-grid">
+          <div class="info-card champion-card primary-champion-card">
+            <div class="champion-meta-line">
+              @if (state.champSelect.role && state.champSelect.role !== 'Unknown') {
+                <span class="role-badge">{{state.champSelect.role}}{{state.champSelect.roleSource === 'recommended' ? '?' : ''}}</span>
+              }
+            </div>
+            <strong>{{state.champSelect.playerChampionName || 'No champion selected'}}</strong>
+            @if (state.champSelect.playerChampionIconUrl) {
+              <img class="champion-icon main-icon" [src]="state.champSelect.playerChampionIconUrl" [alt]="state.champSelect.playerChampionName">
+            }
+          </div>
+          <div class="info-card champion-card primary-champion-card">
+            <span>{{state.champSelect.enemyMatchupSource === 'manual' ? 'Selected Lane Opponent' : (state.champSelect.enemyMatchupFallback ? 'Possible Lane Opponent' : 'Lane Opponent')}}</span>
+            <strong>{{state.champSelect.enemyChampionName || (state.champSelect.possibleLaneOpponents.length > 1 ? 'Multiple candidates' : 'Waiting for lane opponent...')}}</strong>
+            @if (state.champSelect.enemyChampionIconUrl) {
+              <img class="champion-icon main-icon" [src]="state.champSelect.enemyChampionIconUrl" [alt]="state.champSelect.enemyChampionName">
+            }
+          </div>
+        </div>
+        <div class="opponent-note-row">
+          <p class="opponent-note">{{state.champSelect.enemyMatchupLabel}}</p>
+          @if (state.champSelect.manualOpponentChampionId) {
+            <button mat-stroked-button type="button" (click)="clearOpponent()">Auto detect</button>
+          }
+        </div>
+        @if (state.champSelect.possibleLaneOpponents.length > 1) {
+          <div class="candidate-row">
+            <span>Possible lane opponents</span>
+            <div class="enemy-list">
+              @for (candidate of state.champSelect.possibleLaneOpponents; track candidate) {
+                <button type="button" class="enemy-chip" (click)="selectOpponent(candidate.championId)" [class.selected]="state.champSelect.manualOpponentChampionId === candidate.championId || (!state.champSelect.manualOpponentChampionId && state.champSelect.enemyChampionId === candidate.championId)">
+                  <span>{{candidate.championName}}</span>
+                  @if (candidate.iconUrl) {
+                    <img class="champion-icon small-icon" [src]="candidate.iconUrl" [alt]="candidate.championName">
+                  }
+                </button>
+              }
+            </div>
+          </div>
+        }
+        @if (state.champSelect.visibleEnemies.length) {
+          <div class="enemy-row">
+            <span>Visible enemies</span>
+            <div class="enemy-list">
+              @for (enemy of state.champSelect.visibleEnemies; track enemy) {
+                <button type="button" class="enemy-chip" (click)="selectOpponent(enemy.championId)" [class.selected]="state.champSelect.manualOpponentChampionId === enemy.championId || (!state.champSelect.manualOpponentChampionId && state.champSelect.enemyChampionId === enemy.championId)">
+                  <span>{{enemy.championName}}</span>
+                  @if (enemy.iconUrl) {
+                    <img class="champion-icon small-icon" [src]="enemy.iconUrl" [alt]="enemy.championName">
+                  }
+                </button>
+              }
+            </div>
+          </div>
+        }
+        @if (state.matchup) {
+          <article class="matchup-card">
+            <div>
+              <span class="matchup-label">{{state.champSelect.enemyMatchupSource === 'manual' ? 'Selected matchup' : (state.champSelect.enemyMatchupFallback ? 'Possible matchup' : 'Lane matchup')}}</span>
+              <h3>{{state.matchup.title}}</h3>
+            </div>
+            <button mat-stroked-button type="button" (click)="openExternal(state.matchup.sourceUrl)">Open Lolalytics</button>
+          </article>
+        } @else {
+          <p class="empty-state">Matchup appears once your champion and a likely enemy champion are known.</p>
+        }
+      </section>
+    } @else {
+      <section class="tool-panel">
+        <p class="not-in-champ-select">Not in champion select</p>
+      </section>
+    }
+  </main>
+}

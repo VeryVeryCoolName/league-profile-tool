@@ -1,11 +1,13 @@
-import {Component} from '@angular/core';
+import {Component, ChangeDetectionStrategy} from '@angular/core';
 import {MatchToolsService} from '../core/services/match-tools/match-tools.service';
 import {ElectronService} from '../core/services/electron/electron.service';
 
 @Component({
-  selector: 'app-match-tools',
-  templateUrl: './match-tools.component.html',
-  styleUrls: ['./match-tools.component.css']
+    selector: 'app-match-tools',
+    templateUrl: './match-tools.component.html',
+    styleUrls: ['./match-tools.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class MatchToolsComponent {
   public state$ = this.matchToolsService.state$;

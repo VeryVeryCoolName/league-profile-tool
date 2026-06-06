@@ -2,7 +2,8 @@
   max-width: 50rem;
 }
 
-.mat-form-field {
+.mat-form-field,
+.mat-mdc-form-field {
   display: block;
   width: 100%;
   margin-bottom: 0.8rem;
@@ -12,7 +13,8 @@
   margin-bottom: 0.35rem;
 }
 
-textarea {
+textarea,
+textarea.mat-mdc-input-element {
   min-height: 12rem;
   height: 32vh;
   max-height: 22rem;

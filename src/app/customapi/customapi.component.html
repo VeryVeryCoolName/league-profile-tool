@@ -10,18 +10,22 @@
         <mat-label>Preset</mat-label>
         <mat-select [(value)]="selectedPreset" (selectionChange)="applyPreset($event.value)">
           <mat-option value="">Custom endpoint</mat-option>
-          <mat-option *ngFor="let preset of endpointPresets" [value]="preset.endpoint">
-            {{preset.label}}
-          </mat-option>
+          @for (preset of endpointPresets; track preset) {
+            <mat-option [value]="preset.endpoint">
+              {{preset.label}}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="method-field">
         <mat-label>Method</mat-label>
         <mat-select [(value)]="method">
-          <mat-option *ngFor="let method of methods" [value]="method">
-            {{method}}
-          </mat-option>
+          @for (method of methods; track method) {
+            <mat-option [value]="method">
+              {{method}}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
 

@@ -82,7 +82,7 @@ export class LCUConnectionService {
       const response = await this.makeRequest('GET', {}, endPoint, true);
       const current = this.parseResponse(response);
       if (!current) return response;
-      if (!Object.prototype.hasOwnProperty.call(current, body.key as string)) {
+      if (!Object.prototype.hasOwnProperty.call(current, body.key)) {
         console.error('[LCU] Summoner profile schema mismatch', current);
         return `LCU summoner profile response did not include ${String(body.key)}.`;
       }

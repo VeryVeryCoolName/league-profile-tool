@@ -10,8 +10,9 @@ This project uses a Windows GitHub Actions build to verify and package release a
 3. Run local checks:
    ```powershell
    npm run lint
+   npm run typecheck
    npm run build:prod
-   npm run electron:build
+   npm run electron:package
    ```
 4. Confirm `release/` contains the expected Windows files:
    - `League Profile Tool Setup <version>.exe`
@@ -23,8 +24,8 @@ This project uses a Windows GitHub Actions build to verify and package release a
 6. Push to `main` or `master` and confirm the `Windows Build` workflow passes.
 7. Create and push the release tag, for example:
    ```powershell
-   git tag V3.2.2
-   git push origin V3.2.2
+   git tag V3.3.0
+   git push origin V3.3.0
    ```
 8. Download the `league-profile-tool-windows` workflow artifact from GitHub Actions.
 9. Create a GitHub Release using the same tag and upload the packaged files.
@@ -37,10 +38,11 @@ The workflow runs on Windows and performs:
 ```powershell
 npm ci
 npm run lint
+npm run typecheck
 npm run build:prod
-npm run electron:build
+npm run electron:package
 ```
 
 It uploads packaged files from `release/` as a workflow artifact. The unpacked application folders are intentionally not uploaded.
 
-The CI job uses Node.js 16.20.2 because this app is still on Angular 11 and Electron 12. No dependency upgrades are required for the release workflow.
+The CI job uses Node.js 26.x with Angular 22 and Electron 42.

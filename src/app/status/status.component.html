@@ -8,9 +8,11 @@
     <mat-form-field appearance="fill">
       <mat-label>Status</mat-label>
       <mat-select [(value)]="availability">
-        <mat-option *ngFor="let status of statuses" [value]="status.value">
-          {{status.label}}
-        </mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status.value">
+            {{status.label}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 

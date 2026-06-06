@@ -1,3 +1,4 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CustomiconComponent } from './customicon.component';
@@ -8,7 +9,8 @@ describe('CustomiconComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CustomiconComponent ]
+      declarations: [CustomiconComponent],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
   });

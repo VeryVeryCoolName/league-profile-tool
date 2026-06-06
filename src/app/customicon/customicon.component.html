@@ -24,25 +24,44 @@
     </button>
   </form>
 
-  <p *ngIf="iconsLoading" class="loading-text">Loading icons...</p>
-  <p *ngIf="iconsError" class="loading-text">{{iconsError}}</p>
-  <p *ngIf="inventoryLoading" class="inventory-text">Checking owned icons...</p>
-  <p *ngIf="inventoryUnavailable" class="inventory-text">Owned icon inventory is unavailable or empty. Showing all icons.</p>
-  <p *ngIf="selectionNote" class="selection-note">{{selectionNote}}</p>
-  <div class="icon-grid" *ngIf="!iconsLoading && !iconsError">
-    <span class="icons" *ngFor="let icon of visibleIcons; trackBy: trackByIcon">
-        <button
-          *ngIf="!icon.broken"
-          mat-stroked-button
-          class="icon-button"
-          [class.owned-icon]="icon.owned"
-          [disabled]="updatingIconId !== null"
-          [attr.title]="(icon.title || icon.id) + ' - ' + icon.ownershipLabel"
-          (click)="setIcon(icon.id)">
-          <img [src]="icon.src" [alt]="icon.title || icon.id" loading="lazy" decoding="async" (error)="onIconError(icon)"/>
-          <span *ngIf="icon.owned" class="owned-badge">Owned</span>
-        </button>
-    </span>
-  </div>
-  <button *ngIf="visibleIcons.length < filteredIcons.length" mat-raised-button color="primary" (click)="loadMoreIcons()">Load More</button>
+  @if (iconsLoading) {
+    <p class="loading-text">Loading icons...</p>
+  }
+  @if (iconsError) {
+    <p class="loading-text">{{iconsError}}</p>
+  }
+  @if (inventoryLoading) {
+    <p class="inventory-text">Checking owned icons...</p>
+  }
+  @if (inventoryUnavailable) {
+    <p class="inventory-text">Owned icon inventory is unavailable or empty. Showing all icons.</p>
+  }
+  @if (selectionNote) {
+    <p class="selection-note">{{selectionNote}}</p>
+  }
+  @if (!iconsLoading && !iconsError) {
+    <div class="icon-grid">
+      @for (icon of visibleIcons; track trackByIcon($index, icon)) {
+        <span class="icons">
+          @if (!icon.broken) {
+            <button
+              mat-stroked-button
+              class="icon-button"
+              [class.owned-icon]="icon.owned"
+              [disabled]="updatingIconId !== null"
+              [attr.title]="(icon.title || icon.id) + ' - ' + icon.ownershipLabel"
+              (click)="setIcon(icon.id)">
+              <img [src]="icon.src" [alt]="icon.title || icon.id" loading="lazy" decoding="async" (error)="onIconError(icon)"/>
+              @if (icon.owned) {
+                <span class="owned-badge">Owned</span>
+              }
+            </button>
+          }
+        </span>
+      }
+    </div>
+  }
+  @if (visibleIcons.length < filteredIcons.length) {
+    <button mat-raised-button color="primary" (click)="loadMoreIcons()">Load More</button>
+  }
 </main>

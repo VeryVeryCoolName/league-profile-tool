@@ -2,10 +2,16 @@
   "compilerOptions": {
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "module": "Node16",
+    "moduleResolution": "node16",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es5",
+    "strict": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictPropertyInitialization": false,
+    "skipLibCheck": true,
+    "target": "ES2022",
     "types": [
       "node"
     ],
@@ -15,7 +21,8 @@
     ]
   },
   "files": [
-    "main.ts"
+    "main.ts",
+    "preload.ts"
   ],
   "exclude": [
     "node_modules",

@@ -1,9 +1,7 @@
 import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import {CoreModule} from './core/core.module';
 import {MatTabsModule} from '@angular/material/tabs';
-import {AppRoutingModule} from './app-routing.module';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MatCardModule} from '@angular/material/card';
 import {MatButtonModule} from '@angular/material/button';
@@ -22,31 +20,21 @@ import {MatSortModule} from "@angular/material/sort";
 import {CustomapiComponent} from './customapi/customapi.component';
 import {FaqComponent} from './faq/faq.component';
 import { CustomiconComponent } from './customicon/customicon.component';
-import {ElectronService} from "./core/services";
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi, withXhr } from '@angular/common/http';
 import { LcuExplorerComponent } from './lcu-explorer/lcu-explorer.component';
 import {IdentityPreviewComponent} from './identity-preview/identity-preview.component';
 import {MatchToolsComponent} from './match-tools/match-tools.component';
 
-@NgModule({
-  declarations: [AppComponent, HomeComponent, StatusComponent, DialogComponent, BackgroundComponent, ChampionsPipe, ChatrankComponent, ChampionPurchaseDateComponent, CustomapiComponent, FaqComponent, CustomiconComponent, LcuExplorerComponent, IdentityPreviewComponent, MatchToolsComponent],
-  imports: [
-    BrowserModule,
-    FormsModule,
-    CoreModule,
-    AppRoutingModule,
-    MatTabsModule,
-    BrowserAnimationsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatInputModule,
-    MatDialogModule,
-    MatSelectModule,
-    MatSortModule,
-    HttpClientModule,
-  ],
-  providers: [ElectronService],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [AppComponent, HomeComponent, StatusComponent, DialogComponent, BackgroundComponent, ChampionsPipe, ChatrankComponent, ChampionPurchaseDateComponent, CustomapiComponent, FaqComponent, CustomiconComponent, LcuExplorerComponent, IdentityPreviewComponent, MatchToolsComponent],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        FormsModule,
+        MatTabsModule,
+        BrowserAnimationsModule,
+        MatCardModule,
+        MatButtonModule,
+        MatInputModule,
+        MatDialogModule,
+        MatSelectModule,
+        MatSortModule], providers: [provideHttpClient(withXhr(), withInterceptorsFromDi())] })
 export class AppModule {
 }

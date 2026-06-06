@@ -3,14 +3,15 @@
   "compilerOptions": {
     "outDir": "../out-tsc/app",
     "module": "es2015",
-    "baseUrl": "",
+    "target": "ES2022",
+    "useDefineForClassFields": false,
     "types": []
   },
   "include": [
     "main.ts",
     "polyfills.ts",
     "app/**/*.ts",
-    "environments/environment.ts"
+    "environments/*.ts"
   ],
   "exclude": [
     "**/*.spec.ts"
@@ -18,6 +19,7 @@
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
     "strictInjectionParameters": true,
-    "preserveWhitespaces": true
+    "preserveWhitespaces": true,
+    "strictTemplates": false
   }
 }

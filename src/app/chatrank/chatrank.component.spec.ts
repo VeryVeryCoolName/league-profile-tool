@@ -1,3 +1,4 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ChatrankComponent } from './chatrank.component';
@@ -8,7 +9,8 @@ describe('ChatrankComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ChatrankComponent ]
+      declarations: [ChatrankComponent],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
   });

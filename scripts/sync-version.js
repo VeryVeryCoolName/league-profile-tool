@@ -8,7 +8,9 @@ function readText(relativePath) {
 }
 
 function writeText(relativePath, content) {
-  fs.writeFileSync(path.join(root, relativePath), content);
+  const target = path.join(root, relativePath);
+  if (fs.existsSync(target) && fs.readFileSync(target, 'utf8') === content) return;
+  fs.writeFileSync(target, content);
 }
 
 function readJson(relativePath) {

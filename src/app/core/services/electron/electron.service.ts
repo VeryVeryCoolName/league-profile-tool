@@ -1,15 +1,6 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 
-// If you import a module but never use any of the imported values other than as TypeScript types,
-// the resulting javascript file will look as if you never imported the module at all.
-import { ipcRenderer, webFrame, shell } from 'electron';
-import * as childProcess from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as tls from 'tls';
-import * as crypto from 'crypto';
-
-interface RequestOptions {
+export interface RequestOptions {
   url: string;
   method?: string;
   headers?: Record<string, string>;
@@ -17,81 +8,88 @@ interface RequestOptions {
   rejectUnauthorized?: boolean;
 }
 
+export interface LcuEventConnectionOptions {
+  url: string;
+  authorization?: string;
+}
+
+export interface LeagueProfileToolBridge {
+  request(options: RequestOptions): Promise<string>;
+  findLockfile(targetPaths: string[]): Promise<string>;
+  readLockfile(targetPath: string): Promise<string>;
+  readConfiguredClientPath(): Promise<string>;
+  findLeagueClientPath(): Promise<string>;
+  joinPath(...parts: string[]): string;
+  dirname(targetPath: string): string;
+  openExternal(targetUrl: string): Promise<void>;
+  connectLcuEvents(
+    options: LcuEventConnectionOptions,
+    onEvent: (event: unknown) => void,
+    onState: (state: {connected: boolean; message: string}) => void
+  ): Promise<void>;
+  disconnectLcuEvents(): Promise<void>;
+}
+
+declare global {
+  interface Window {
+    leagueProfileTool?: LeagueProfileToolBridge;
+  }
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ElectronService {
-  ipcRenderer: typeof ipcRenderer;
-  webFrame: typeof webFrame;
-  childProcess: typeof childProcess;
-  fs: typeof fs;
-  path: typeof path;
-  tls: typeof tls;
-  crypto: typeof crypto;
-  shell: typeof shell;
-  request: (options: RequestOptions) => Promise<string>;
-  private http: any;
-  private https: any;
-  get isElectron(): boolean {
-    return !!(window && window.process && window.process.type);
+  private readonly bridge = window.leagueProfileTool;
+
+  public readonly shell = this.bridge ? {
+    openExternal: (targetUrl: string) => this.bridge.openExternal(targetUrl)
+  } : null;
+
+  public get isElectron(): boolean {
+    return this.bridge !== undefined;
   }
 
-  constructor() {
-    if (this.isElectron) {
-      this.ipcRenderer = window.require('electron').ipcRenderer;
-      this.webFrame = window.require('electron').webFrame;
-      this.shell = window.require('electron').shell;
-      this.childProcess = window.require('child_process');
-      this.fs = window.require('fs');
-      this.path = window.require('path');
-      this.tls = window.require('tls');
-      this.crypto = window.require('crypto');
-      this.http = window.require('http');
-      this.https = window.require('https');
-      this.request = (options: RequestOptions) => this.makeRequest(options);
-    }
+  public request(options: RequestOptions): Promise<string> {
+    if (!this.bridge) return Promise.reject(new Error('Electron bridge is unavailable.'));
+    return this.bridge.request(options);
   }
 
-  private makeRequest(options: RequestOptions): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const target = new URL(options.url);
-      const transport = target.protocol === 'http:' ? this.http : this.https;
-      const headers = {...(options.headers || {})};
+  public findLockfile(targetPaths: string[]): Promise<string> {
+    return this.bridge ? this.bridge.findLockfile(targetPaths) : Promise.resolve('');
+  }
 
-      const requestOptions = {
-        protocol: target.protocol,
-        hostname: target.hostname,
-        port: target.port,
-        path: `${target.pathname}${target.search}`,
-        method: options.method || 'GET',
-        headers,
-        rejectUnauthorized: options.rejectUnauthorized !== false
-      };
+  public readLockfile(targetPath: string): Promise<string> {
+    if (!this.bridge) return Promise.reject(new Error('Electron bridge is unavailable.'));
+    return this.bridge.readLockfile(targetPath);
+  }
 
-      const request = transport.request(requestOptions, response => {
-        let body = '';
-        response.setEncoding('utf8');
-        response.on('data', chunk => {
-          body += chunk;
-        });
-        response.on('end', () => {
-          if (response.statusCode >= 200 && response.statusCode < 300) {
-            resolve(body);
-            return;
-          }
+  public readConfiguredClientPath(): Promise<string> {
+    return this.bridge ? this.bridge.readConfiguredClientPath() : Promise.resolve('');
+  }
 
-          const error: any = new Error(`${String(response.statusCode)} ${String(response.statusMessage)}: ${body}`);
-          error.response = {
-            body,
-            statusCode: response.statusCode
-          };
-          reject(error);
-        });
-      });
+  public findLeagueClientPath(): Promise<string> {
+    return this.bridge ? this.bridge.findLeagueClientPath() : Promise.resolve('');
+  }
 
-      request.on('error', reject);
-      if (options.body) request.write(options.body);
-      request.end();
-    });
+  public joinPath(...parts: string[]): string {
+    return this.bridge ? this.bridge.joinPath(...parts) : parts.join('/');
+  }
+
+  public dirname(targetPath: string): string {
+    return this.bridge ? this.bridge.dirname(targetPath) : '';
+  }
+
+  public connectLcuEvents(
+    options: LcuEventConnectionOptions,
+    onEvent: (event: unknown) => void,
+    onState: (state: {connected: boolean; message: string}) => void
+  ): Promise<void> {
+    if (!this.bridge) return Promise.reject(new Error('Electron bridge is unavailable.'));
+    return this.bridge.connectLcuEvents(options, onEvent, onState);
+  }
+
+  public disconnectLcuEvents(): Promise<void> {
+    return this.bridge ? this.bridge.disconnectLcuEvents() : Promise.resolve();
   }
 }

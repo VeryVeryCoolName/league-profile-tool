@@ -1,4 +1,4 @@
-import {Component, OnDestroy} from '@angular/core';
+import {Component, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {ConnectorService} from "../core/services/connector/connector.service";
 import {APP_VERSION} from "../app-version";
@@ -35,9 +35,11 @@ interface EndpointState {
 }
 
 @Component({
-  selector: 'app-lcu-explorer',
-  templateUrl: './lcu-explorer.component.html',
-  styleUrls: ['./lcu-explorer.component.css']
+    selector: 'app-lcu-explorer',
+    templateUrl: './lcu-explorer.component.html',
+    styleUrls: ['./lcu-explorer.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class LcuExplorerComponent implements OnDestroy {
   public query = '';
@@ -244,11 +246,11 @@ export class LcuExplorerComponent implements OnDestroy {
     return status.toLowerCase();
   }
 
-  public trackByGroup(index: number, group: LcuEndpointGroup): string {
+  public trackByGroup(_index: number, group: LcuEndpointGroup): string {
     return group.name;
   }
 
-  public trackByEndpoint(index: number, endpoint: LcuEndpoint): string {
+  public trackByEndpoint(_index: number, endpoint: LcuEndpoint): string {
     return endpoint.path;
   }
 
@@ -400,7 +402,7 @@ export class LcuExplorerComponent implements OnDestroy {
     if (budget.count >= budget.max) return;
 
     if (value !== null && typeof value === 'object') {
-      const keys = Array.isArray(value) ? value.map((item, index) => String(index)) : Object.keys(value);
+      const keys = Array.isArray(value) ? value.map((_item, index) => String(index)) : Object.keys(value);
       if (keys.length === 0) {
         output[path || '(root)'] = Array.isArray(value) ? '[]' : '{}';
         budget.count++;

@@ -1,37 +1,56 @@
 <main class="purchase-date-page">
-  <div *ngIf="ownershipLoading">
-    <mat-card class="state-card">Loading champion purchase dates...</mat-card>
-  </div>
-  <div *ngIf="ownershipError && !ownershipLoading">
-    <mat-card class="state-card">{{ownershipError}}</mat-card>
-  </div>
+  @if (ownershipLoading) {
+    <div>
+      <mat-card class="state-card">Loading champion purchase dates...</mat-card>
+    </div>
+  }
+  @if (ownershipError && !ownershipLoading) {
+    <div>
+      <mat-card class="state-card">{{ownershipError}}</mat-card>
+    </div>
+  }
 
-  <section class="tool-panel search-champion" *ngIf="ownedChamps !== null && !ownershipLoading && !ownershipError">
-    <mat-form-field *ngIf="ownedChamps !== null && !ownershipLoading && !ownershipError && !showingSkins">
-      <mat-label>Search for a champion</mat-label>
-      <input matInput name="search" [(ngModel)]="searchText" placeholder="Ex. Ahri">
-    </mat-form-field>
-    <button (click)="showingSkins = false" *ngIf="showingSkins" mat-flat-button color="primary">Go Back</button>
-  </section>
+  @if (ownedChamps !== null && !ownershipLoading && !ownershipError) {
+    <section class="tool-panel search-champion">
+      @if (ownedChamps !== null && !ownershipLoading && !ownershipError && !showingSkins) {
+        <mat-form-field>
+          <mat-label>Search for a champion</mat-label>
+          <input matInput name="search" [(ngModel)]="searchText" placeholder="Ex. Ahri">
+        </mat-form-field>
+      }
+      @if (showingSkins) {
+        <button (click)="showingSkins = false" mat-flat-button color="primary">Go Back</button>
+      }
+    </section>
+  }
 
-  <div class="champion-grid" *ngIf="!showingSkins && ownedChamps !== null && !ownershipLoading && !ownershipError">
-    <span class="champions" *ngFor="let champion of ownedChamps | champions: searchText; trackBy: trackByChampion">
-        <button mat-stroked-button (click)="showSkins(champion)"><img [src]="champion.iconSrc" alt="{{champion.name}}"/></button>
-    </span>
-    <p class="empty-state" *ngIf="ownedChamps.length === 0">No owned champions found.</p>
-  </div>
+  @if (!showingSkins && ownedChamps !== null && !ownershipLoading && !ownershipError) {
+    <div class="champion-grid">
+      @for (champion of ownedChamps | champions: searchText; track trackByChampion($index, champion)) {
+        <span class="champions">
+          <button mat-stroked-button (click)="showSkins(champion)"><img [src]="champion.iconSrc" alt="{{champion.name}}"/></button>
+        </span>
+      }
+      @if (ownedChamps.length === 0) {
+        <p class="empty-state">No owned champions found.</p>
+      }
+    </div>
+  }
 
-  <div class="table-wrap" *ngIf="showingSkins">
-    <table matSort (matSortChange)="sortData($event)">
-      <tr>
-        <th mat-sort-header="name">Name</th>
-        <th mat-sort-header="purchased">Purchased</th>
-      </tr>
-
-      <tr *ngFor="let champion of sortedData; trackBy: trackByPurchaseRow">
-        <td>{{champion.name}}</td>
-        <td>{{champion.purchased}}</td>
-      </tr>
-    </table>
-  </div>
+  @if (showingSkins) {
+    <div class="table-wrap">
+      <table matSort (matSortChange)="sortData($event)">
+        <tr>
+          <th mat-sort-header="name">Name</th>
+          <th mat-sort-header="purchased">Purchased</th>
+        </tr>
+        @for (champion of sortedData; track trackByPurchaseRow($index, champion)) {
+          <tr>
+            <td>{{champion.name}}</td>
+            <td>{{champion.purchased}}</td>
+          </tr>
+        }
+      </table>
+    </div>
+  }
 </main>

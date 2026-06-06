@@ -1,13 +1,15 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import {Sort} from '@angular/material/sort';
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {VersionService} from "../core/services/version/version.service";
 
 
 @Component({
-  selector: 'app-champion-purchase-date',
-  templateUrl: './champion-purchase-date.component.html',
-  styleUrls: ['./champion-purchase-date.component.css']
+    selector: 'app-champion-purchase-date',
+    templateUrl: './champion-purchase-date.component.html',
+    styleUrls: ['./champion-purchase-date.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class ChampionPurchaseDateComponent implements OnInit {
   public ownedChamps = null;
@@ -142,11 +144,11 @@ export class ChampionPurchaseDateComponent implements OnInit {
     this.ownershipError = message;
   }
 
-  public trackByChampion(index: number, champion: Record<string, unknown>): unknown {
+  public trackByChampion(_index: number, champion: Record<string, unknown>): unknown {
     return champion.alt;
   }
 
-  public trackByPurchaseRow(index: number, champion: Record<string, unknown>): string {
+  public trackByPurchaseRow(_index: number, champion: Record<string, unknown>): string {
     return `${String(champion.name)}-${String(champion.purchasedHidden)}`;
   }
 }

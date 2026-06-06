@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import {MatDialog} from "@angular/material/dialog";
 import {DialogComponent} from "../core/dialog/dialog.component";
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
@@ -20,9 +20,11 @@ const CHALLENGE_CRYSTAL_POINT_THRESHOLDS: Record<string, number> = {
 };
 
 @Component({
-  selector: 'app-chatrank',
-  templateUrl: './chatrank.component.html',
-  styleUrls: ['./chatrank.component.css']
+    selector: 'app-chatrank',
+    templateUrl: './chatrank.component.html',
+    styleUrls: ['./chatrank.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class ChatrankComponent implements OnInit {
   public ranks = ["IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "EMERALD", "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"];

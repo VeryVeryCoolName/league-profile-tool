@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import {DialogComponent} from "../core/dialog/dialog.component";
 import {MatDialog} from "@angular/material/dialog";
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
@@ -7,9 +7,11 @@ import {ChampionService} from "../core/services/champion/champion.service";
 import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
 
 @Component({
-  selector: 'app-background',
-  templateUrl: './background.component.html',
-  styleUrls: ['./background.component.css']
+    selector: 'app-background',
+    templateUrl: './background.component.html',
+    styleUrls: ['./background.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class BackgroundComponent implements OnInit {
   private static cachedVersion = '';
@@ -160,7 +162,7 @@ export class BackgroundComponent implements OnInit {
     return skinImages.sort((left, right) => {
       if (left.num === 0) return -1;
       if (right.num === 0) return 1;
-      return (left.num as number) - (right.num as number);
+      return left.num - right.num;
     }).map((image, index) => {
       return {...image, order: index};
     });
@@ -261,11 +263,11 @@ export class BackgroundComponent implements OnInit {
     });
   }
 
-  public trackByAlt(index: number, image: Record<string, unknown>): unknown {
+  public trackByAlt(_index: number, image: Record<string, unknown>): unknown {
     return image.alt;
   }
 
-  public trackBySkin(index: number, image: Record<string, unknown>): unknown {
+  public trackBySkin(_index: number, image: Record<string, unknown>): unknown {
     return image.alt;
   }
 }

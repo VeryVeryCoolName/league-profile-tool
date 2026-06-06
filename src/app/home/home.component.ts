@@ -1,12 +1,14 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import {ElectronService} from "../core/services";
 import {VersionService} from "../core/services/version/version.service";
 import {APP_VERSION_LABEL} from "../app-version";
 
 @Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+    selector: 'app-home',
+    templateUrl: './home.component.html',
+    styleUrls: ['./home.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class HomeComponent implements OnInit {
   public title = 'LEAGUE PROFILE TOOL';
@@ -20,7 +22,7 @@ export class HomeComponent implements OnInit {
   ngOnInit(): void {
     setTimeout(() => {
       void this.checkNewestVersion();
-    }, 0);
+    }, 2000);
   }
 
   private async checkNewestVersion() {
