@@ -109,9 +109,7 @@ export class IdentityPreviewService {
       };
 
       this.patchState(nextState);
-      setTimeout(() => {
-        void this.resolvePreviewDetails(profileIconId, backgroundSkinId);
-      }, 250);
+      void this.resolvePreviewDetails(profileIconId, backgroundSkinId);
     } catch (error) {
       this.patchState({
         loading: false,
@@ -307,7 +305,7 @@ export class IdentityPreviewService {
 
   private async ensureVersion(): Promise<void> {
     if (this.dataDragonVersion) return;
-    const versions = await firstValueFrom(this.versionService.apiVersion()) as string[];
+    const versions = await firstValueFrom(this.versionService.apiVersion());
     this.dataDragonVersion = versions && versions.length ? versions[0] : '';
   }
 

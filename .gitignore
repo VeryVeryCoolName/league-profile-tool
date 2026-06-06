@@ -6,8 +6,10 @@
 /release
 /.angular
 main.js
+preload.js
 src/**/*.js
 !src/karma.conf.js
+!src/karma-edge-launcher.js
 *.js.map
 
 # dependencies

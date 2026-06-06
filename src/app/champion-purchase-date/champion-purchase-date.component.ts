@@ -144,11 +144,11 @@ export class ChampionPurchaseDateComponent implements OnInit {
     this.ownershipError = message;
   }
 
-  public trackByChampion(index: number, champion: Record<string, unknown>): unknown {
+  public trackByChampion(_index: number, champion: Record<string, unknown>): unknown {
     return champion.alt;
   }
 
-  public trackByPurchaseRow(index: number, champion: Record<string, unknown>): string {
+  public trackByPurchaseRow(_index: number, champion: Record<string, unknown>): string {
     return `${String(champion.name)}-${String(champion.purchasedHidden)}`;
   }
 }

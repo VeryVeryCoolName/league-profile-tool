@@ -11,7 +11,7 @@
     "main.ts",
     "polyfills.ts",
     "app/**/*.ts",
-    "environments/environment.ts"
+    "environments/*.ts"
   ],
   "exclude": [
     "**/*.spec.ts"

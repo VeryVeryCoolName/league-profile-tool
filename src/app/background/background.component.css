@@ -19,14 +19,14 @@ img {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 4.25rem;
+  min-height: 7rem;
   margin-bottom: 1rem;
-  padding: 0.85rem 1rem;
+  padding: 1.25rem 1.5rem;
 }
 
 .search-champion .mat-form-field,
 .search-champion .mat-mdc-form-field {
-  width: min(100%, 28rem);
+  width: min(100%, 48rem);
 }
 
 .asset-grid {
@@ -50,6 +50,16 @@ img {
 :host ::ng-deep .search-champion .mat-mdc-form-field-infix,
 :host ::ng-deep .search-champion .mat-mdc-input-element {
   text-align: center;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-form-field-infix {
+  min-height: 4rem;
+  padding-top: 1.35rem;
+  padding-bottom: 0.75rem;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-input-element {
+  font-size: 1.1rem;
 }
 
 :host ::ng-deep .search-champion .mat-mdc-text-field-wrapper,

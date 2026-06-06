@@ -15,8 +15,14 @@ module.exports = [
       'node_modules/**'
     ]
   },
-  js.configs.recommended,
-  ...tsTypeChecked,
+  {
+    ...js.configs.recommended,
+    files: ['**/*.js']
+  },
+  ...tsTypeChecked.map(config => ({
+    ...config,
+    files: ['**/*.ts']
+  })),
   {
     files: ['**/*.ts'],
     languageOptions: {
@@ -52,7 +58,10 @@ module.exports = [
     },
     rules: {
       '@typescript-eslint/indent': 0,
-      '@typescript-eslint/no-unused-vars': 0,
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        argsIgnorePattern: '^_',
+        caughtErrors: 'none'
+      }],
       '@typescript-eslint/no-empty-function': 0,
       '@typescript-eslint/no-explicit-any': 0,
       '@typescript-eslint/no-var-requires': 0,

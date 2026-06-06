@@ -1,5 +1,7 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { ChampionsPipe } from '../core/pipes/champions/champions.pipe';
 import { BackgroundComponent } from './background.component';
 
 describe('BackgroundComponent', () => {
@@ -8,7 +10,8 @@ describe('BackgroundComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ BackgroundComponent ]
+      declarations: [BackgroundComponent, ChampionsPipe],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
   });

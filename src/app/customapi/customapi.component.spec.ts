@@ -1,3 +1,4 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CustomapiComponent } from './customapi.component';
@@ -8,7 +9,8 @@ describe('CustomapiComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CustomapiComponent ]
+      declarations: [CustomapiComponent],
+      schemas: [NO_ERRORS_SCHEMA]
     })
     .compileComponents();
   });

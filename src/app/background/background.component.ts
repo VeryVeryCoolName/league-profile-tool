@@ -263,11 +263,11 @@ export class BackgroundComponent implements OnInit {
     });
   }
 
-  public trackByAlt(index: number, image: Record<string, unknown>): unknown {
+  public trackByAlt(_index: number, image: Record<string, unknown>): unknown {
     return image.alt;
   }
 
-  public trackBySkin(index: number, image: Record<string, unknown>): unknown {
+  public trackBySkin(_index: number, image: Record<string, unknown>): unknown {
     return image.alt;
   }
 }

@@ -10,7 +10,10 @@ if (AppConfig.production) {
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule, {
-    applicationProviders: [provideZoneChangeDetection()],
+    applicationProviders: [provideZoneChangeDetection({
+      eventCoalescing: true,
+      runCoalescing: true
+    })],
     preserveWhitespaces: false
   })
   .catch(err => console.error(err));

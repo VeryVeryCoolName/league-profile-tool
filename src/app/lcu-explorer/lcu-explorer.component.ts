@@ -246,11 +246,11 @@ export class LcuExplorerComponent implements OnDestroy {
     return status.toLowerCase();
   }
 
-  public trackByGroup(index: number, group: LcuEndpointGroup): string {
+  public trackByGroup(_index: number, group: LcuEndpointGroup): string {
     return group.name;
   }
 
-  public trackByEndpoint(index: number, endpoint: LcuEndpoint): string {
+  public trackByEndpoint(_index: number, endpoint: LcuEndpoint): string {
     return endpoint.path;
   }
 
@@ -402,7 +402,7 @@ export class LcuExplorerComponent implements OnDestroy {
     if (budget.count >= budget.max) return;
 
     if (value !== null && typeof value === 'object') {
-      const keys = Array.isArray(value) ? value.map((item, index) => String(index)) : Object.keys(value);
+      const keys = Array.isArray(value) ? value.map((_item, index) => String(index)) : Object.keys(value);
       if (keys.length === 0) {
         output[path || '(root)'] = Array.isArray(value) ? '[]' : '{}';
         budget.count++;

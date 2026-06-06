@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, firstValueFrom, Observable, Subscription} from 'rxjs';
 import {LCUConnectionService} from '../lcuconnection/lcuconnection.service';
 import {LcuEventsService, LcuJsonApiEvent} from '../lcu-events/lcu-events.service';
@@ -88,7 +88,7 @@ interface RecommendedChampionPositionPayload {
 @Injectable({
   providedIn: 'root'
 })
-export class MatchToolsService {
+export class MatchToolsService implements OnDestroy {
   private readonly defaultChampSelect: ChampSelectViewState = {
     inChampSelect: false,
     phase: '',
@@ -158,6 +158,12 @@ export class MatchToolsService {
       if (justConnected) this.bootstrapCurrentState();
       if (!state.connected) this.resetChampSelect('');
     });
+  }
+
+  ngOnDestroy(): void {
+    this.eventSubscription.unsubscribe();
+    this.eventStateSubscription.unsubscribe();
+    this.clearAcceptedStatusTimer();
   }
 
   public setAutoAccept(enabled: boolean): void {
@@ -714,7 +720,7 @@ export class MatchToolsService {
 
   private async loadChampionMetadata(): Promise<void> {
     if (!this.dataDragonVersion) {
-      const versions = await firstValueFrom(this.versionService.apiVersion()) as string[];
+      const versions = await firstValueFrom(this.versionService.apiVersion());
       this.dataDragonVersion = versions && versions.length ? versions[0] : '';
     }
     if (!this.dataDragonVersion) return;

@@ -40,6 +40,8 @@ export class CustomiconComponent implements OnInit, OnDestroy {
 
   public searchKeyword = '';
   public allIcons: CustomIconRecord[] = [];
+  public filteredIcons: CustomIconRecord[] = [];
+  public visibleIcons: CustomIconRecord[] = [];
   public visibleIconLimit = 200;
   public iconsLoading = true;
   public iconsError = '';
@@ -72,6 +74,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
           });
         });
       this.iconsLoading = false;
+      this.refreshIconView();
       this.queueOwnedIconInventoryLoad();
     }, error => {
       console.error('[Assets] failed to load summoner icons', error);
@@ -84,7 +87,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
     if (this.connectorSubscription) this.connectorSubscription.unsubscribe();
   }
 
-  public get filteredIcons(): CustomIconRecord[] {
+  private refreshIconView(): void {
     const search = (this.searchKeyword || '').toLowerCase();
     let icons = this.allIcons;
     if (search) {
@@ -97,15 +100,13 @@ export class CustomiconComponent implements OnInit, OnDestroy {
     if (this.ownedOnly && this.canFilterOwnedIcons) {
       icons = icons.filter(icon => icon.owned === true);
     }
-    return icons;
-  }
-
-  public get visibleIcons(): CustomIconRecord[] {
-    return this.filteredIcons.slice(0, this.visibleIconLimit);
+    this.filteredIcons = icons;
+    this.visibleIcons = icons.slice(0, this.visibleIconLimit);
   }
 
   public resetIconLimit(): void {
     this.visibleIconLimit = 200;
+    this.refreshIconView();
   }
 
   public toggleOwnedOnly(): void {
@@ -122,6 +123,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
 
   public loadMoreIcons(): void {
     this.visibleIconLimit += 200;
+    this.refreshIconView();
   }
 
   public onIconError(icon: CustomIconRecord): void {
@@ -262,6 +264,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
 
   private applyOwnershipMetadata(): void {
     this.allIcons = this.allIcons.map(icon => this.withOwnershipMetadata(icon));
+    this.refreshIconView();
   }
 
   private withOwnershipMetadata(icon: CustomIconRecord): CustomIconRecord {
@@ -400,7 +403,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
     }
   }
 
-  public trackByIcon(index: number, icon: CustomIconRecord): unknown {
+  public trackByIcon(_index: number, icon: CustomIconRecord): unknown {
     return icon.id;
   }
 

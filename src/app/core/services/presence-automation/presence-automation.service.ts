@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, Observable, Subscription} from 'rxjs';
 import {ConnectorService} from '../connector/connector.service';
 import {LCUConnectionService} from '../lcuconnection/lcuconnection.service';
@@ -22,7 +22,7 @@ export interface PresenceAutomationState {
 @Injectable({
   providedIn: 'root'
 })
-export class PresenceAutomationService {
+export class PresenceAutomationService implements OnDestroy {
   private readonly defaultState: PresenceAutomationState = {
     originalCaptured: false,
     restoring: false,
@@ -54,6 +54,11 @@ export class PresenceAutomationService {
       if (!ready) this.resetRuntimeState('LCU disconnected');
     });
     this.eventSubscription = this.lcuEventsService.events$.subscribe(event => this.handleEvent(event));
+  }
+
+  ngOnDestroy(): void {
+    this.connectorSubscription.unsubscribe();
+    this.eventSubscription.unsubscribe();
   }
 
   public recordStatusPreset(availability: string, statusMessage: string): void {

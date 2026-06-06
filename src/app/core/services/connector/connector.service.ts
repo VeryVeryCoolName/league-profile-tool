@@ -1,31 +1,37 @@
-import { Injectable } from '@angular/core';
+import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, Observable} from 'rxjs';
-import { ElectronService } from "..";
-import {Options} from "./options";
-import {Data} from "./data";
+import {ElectronService, RequestOptions} from '..';
+import {Options} from './options';
+import {Data} from './data';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ConnectorService {
+export class ConnectorService implements OnDestroy {
   private readonly readySubject = new BehaviorSubject<boolean>(false);
   public readonly ready$: Observable<boolean> = this.readySubject.asObservable();
-  connector: Options;
-  private retryTimer: any;
+  public connector: Options | null = null;
+  private retryTimer: ReturnType<typeof setInterval> | null = null;
   private connecting = false;
-  private lockfilePath: string;
+  private lockfilePath = '';
   private ready = false;
-  private installPathCandidates: string[] = [];
+  private readonly installPathCandidates: string[] = [];
   private lastProcessLookup = 0;
   private loggedMissingLockfile = false;
 
   constructor(private electronService: ElectronService) {
     if (!electronService.isElectron) return;
-    setTimeout(() => this.initializeConnector(), 250);
+    setTimeout(() => {
+      void this.initializeConnector();
+    }, 0);
   }
 
-  private initializeConnector() {
-    const configuredPath = this.readConfiguredClientPath();
+  ngOnDestroy(): void {
+    if (this.retryTimer !== null) clearInterval(this.retryTimer);
+  }
+
+  private async initializeConnector(): Promise<void> {
+    const configuredPath = await this.readConfiguredClientPath();
     if (configuredPath) {
       this.addInstallPathCandidate(configuredPath);
     } else {
@@ -34,23 +40,21 @@ export class ConnectorService {
     this.startRetryLoop();
   }
 
-  private startRetryLoop() {
-    this.getCommonInstallPaths().forEach(path => this.addInstallPathCandidate(path));
-    this.tryConnectFromLockfile('startup');
+  private startRetryLoop(): void {
+    this.getCommonInstallPaths().forEach(candidate => this.addInstallPathCandidate(candidate));
+    void this.tryConnectFromLockfile('startup');
     this.retryTimer = setInterval(() => {
       void this.tryConnectFromLockfile('retry');
     }, 3000);
   }
 
-  private async tryConnectFromLockfile(source: string) {
+  private async tryConnectFromLockfile(source: string): Promise<void> {
     if (this.connecting) return;
     this.connecting = true;
     try {
-      const lockfilePath = this.findLockfilePath(source !== 'startup');
+      const lockfilePath = await this.findLockfilePath(source !== 'startup');
       if (!lockfilePath) {
-        if (this.connector && this.lockfilePath && !this.electronService.fs.existsSync(this.lockfilePath)) {
-          this.setReady(false);
-        }
+        if (this.connector && this.lockfilePath) this.setReady(false);
         if (!this.loggedMissingLockfile) {
           this.loggedMissingLockfile = true;
           console.warn(`[LCU] lockfile not found during ${source}; retrying.`);
@@ -59,11 +63,11 @@ export class ConnectorService {
       }
       this.loggedMissingLockfile = false;
 
-      const data = this.parseLockfile(lockfilePath);
+      const data = await this.parseLockfile(lockfilePath);
       if (!data) return;
 
-      const url = `${data.protocol}://${data.address}:${data.port}`;
-      if (this.connector && this.connector.url === url && this.lockfilePath === lockfilePath) return;
+      const connectorUrl = `${data.protocol}://${data.address}:${data.port}`;
+      if (this.connector && this.connector.url === connectorUrl && this.lockfilePath === lockfilePath) return;
 
       this.lockfilePath = lockfilePath;
       await this.verifyAndSetConnection(data);
@@ -72,53 +76,43 @@ export class ConnectorService {
     }
   }
 
-  private findLockfilePath(allowProcessLookup = true): string {
-    if (this.lockfilePath && this.electronService.fs.existsSync(this.lockfilePath)) return this.lockfilePath;
+  private async findLockfilePath(allowProcessLookup = true): Promise<string> {
+    const candidateLockfiles = this.installPathCandidates.map(candidate => {
+      return this.electronService.joinPath(this.normalizeClientPath(candidate), 'lockfile');
+    });
+    if (this.lockfilePath) candidateLockfiles.unshift(this.lockfilePath);
 
-    const candidateLockfilePath = this.findLockfileInCandidates();
-    if (candidateLockfilePath) return candidateLockfilePath;
+    const existing = await this.electronService.findLockfile(candidateLockfiles);
+    if (existing) return existing;
+    if (!allowProcessLookup) return '';
 
-    if (!allowProcessLookup) return null;
-
-    const processPath = this.getLeagueClientPathFromProcess();
-    if (processPath) this.addInstallPathCandidate(processPath);
-
-    return this.findLockfileInCandidates();
-  }
-
-  private findLockfileInCandidates(): string {
-    for (const candidate of this.installPathCandidates) {
-      if (!candidate) continue;
-      const lockfilePath = this.electronService.path.join(this.normalizeClientPath(candidate), 'lockfile');
-      if (this.electronService.fs.existsSync(lockfilePath)) {
-        return lockfilePath;
-      }
+    const processPath = await this.getLeagueClientPathFromProcess();
+    if (processPath) {
+      this.addInstallPathCandidate(processPath);
+      return this.electronService.findLockfile([
+        this.electronService.joinPath(this.normalizeClientPath(processPath), 'lockfile')
+      ]);
     }
-
-    return null;
+    return '';
   }
 
-  private readConfiguredClientPath(): string {
+  private async readConfiguredClientPath(): Promise<string> {
     try {
-      return this.normalizeClientPath(this.electronService.fs.readFileSync("config\\clientPath.txt").toString());
-    } catch (err) {
-      return null;
+      return this.normalizeClientPath(await this.electronService.readConfiguredClientPath());
+    } catch {
+      return '';
     }
   }
 
-  private getLeagueClientPathFromProcess(): string {
+  private async getLeagueClientPathFromProcess(): Promise<string> {
     const now = Date.now();
-    if (now - this.lastProcessLookup < 15000) return null;
+    if (now - this.lastProcessLookup < 15000) return '';
     this.lastProcessLookup = now;
-
-    const executablePath = this.execCommand('powershell.exe -NoProfile -Command "(Get-Process LeagueClientUx -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Path)"');
-    if (executablePath) return this.normalizeClientPath(this.electronService.path.dirname(executablePath));
-
-    const commandLine = this.execCommand('powershell.exe -NoProfile -Command "(Get-CimInstance Win32_Process -Filter \\"name = \'LeagueClientUx.exe\'\\" | Select-Object -First 1 -ExpandProperty CommandLine)"');
-    const match = commandLine ? /--install-directory=(?:"([^"]+)"|([^ ]+))/.exec(commandLine) : null;
-    if (match) return this.normalizeClientPath(match[1] || match[2]);
-
-    return null;
+    try {
+      return this.normalizeClientPath(await this.electronService.findLeagueClientPath());
+    } catch {
+      return '';
+    }
   }
 
   private getCommonInstallPaths(): string[] {
@@ -131,54 +125,48 @@ export class ConnectorService {
     ];
   }
 
-  private addInstallPathCandidate(candidate: string) {
-    const path = this.normalizeClientPath(candidate);
-    if (path && this.installPathCandidates.indexOf(path) < 0) {
-      this.installPathCandidates.push(path);
+  private addInstallPathCandidate(candidate: string): void {
+    const clientPath = this.normalizeClientPath(candidate);
+    if (clientPath && !this.installPathCandidates.includes(clientPath)) {
+      this.installPathCandidates.push(clientPath);
     }
   }
 
-  private execCommand(command: string): string {
+  private async parseLockfile(lockfilePath: string): Promise<Data | null> {
     try {
-      return this.electronService.childProcess.execSync(command, {encoding: 'utf8', windowsHide: true}).trim();
-    } catch (err) {
-      return '';
-    }
-  }
-
-  private parseLockfile(lockfilePath: string): Data {
-    try {
-      const parts = this.electronService.fs.readFileSync(lockfilePath).toString().trim().split(':');
+      const parts = (await this.electronService.readLockfile(lockfilePath)).trim().split(':');
       if (parts.length < 5) {
         console.error('[LCU] invalid lockfile format', lockfilePath);
         return null;
       }
-      const data = {
+      return {
         address: '127.0.0.1',
         username: 'riot',
         port: parseInt(parts[2], 10),
         password: parts[3],
         protocol: parts[4]
       };
-      return data;
-    } catch (err) {
-      console.error('[LCU] failed to parse lockfile', err);
+    } catch (error) {
+      console.error('[LCU] failed to parse lockfile', error);
       return null;
     }
   }
 
-  private async verifyAndSetConnection(data: Data) {
+  private async verifyAndSetConnection(data: Data): Promise<void> {
     const nextConnector = this.buildConnectorOptions(data);
-    const requestOptions = JSON.parse(JSON.stringify(nextConnector));
-    requestOptions.method = 'GET';
-    requestOptions.url += '/lol-summoner/v1/current-summoner';
+    const requestOptions: RequestOptions = {
+      ...nextConnector,
+      headers: {...nextConnector.headers},
+      method: 'GET',
+      url: `${nextConnector.url}/lol-summoner/v1/current-summoner`
+    };
     try {
       await this.electronService.request(requestOptions);
       this.connector = nextConnector;
       this.setReady(true);
-    } catch (err) {
+    } catch (error) {
       this.setReady(false);
-      console.error('[LCU] auth failed', err && (err.message || err.error || err));
+      console.error('[LCU] auth failed', error instanceof Error ? error.message : error);
     }
   }
 
@@ -186,19 +174,18 @@ export class ConnectorService {
     return {
       rejectUnauthorized: false,
       headers: {
-        Accept: "application/json",
-        Authorization: "Basic " + btoa(`${data["username"]}:${data["password"]}`)
+        Accept: 'application/json',
+        Authorization: `Basic ${btoa(`${data.username}:${data.password}`)}`
       },
-      url: `${data["protocol"]}://${data["address"]}:${data["port"]}`
+      url: `${data.protocol}://${data.address}:${data.port}`
     };
   }
 
-  private setReady(ready: boolean) {
+  private setReady(ready: boolean): void {
     if (!ready) this.connector = null;
-    if (this.ready !== ready) {
-      this.ready = ready;
-      this.readySubject.next(ready);
-    }
+    if (this.ready === ready) return;
+    this.ready = ready;
+    this.readySubject.next(ready);
   }
 
   public isReady(): boolean {
@@ -206,9 +193,9 @@ export class ConnectorService {
   }
 
   private normalizeClientPath(clientPath: string): string {
-    const path = clientPath.trim().replace(/^"|"$/g, '');
-    if (!path) return '';
-    if (path.toLowerCase().endsWith('.exe')) return this.electronService.path.dirname(path);
-    return path;
+    const normalized = String(clientPath || '').trim().replace(/^"|"$/g, '');
+    if (!normalized) return '';
+    if (normalized.toLowerCase().endsWith('.exe')) return this.electronService.dirname(normalized);
+    return normalized;
   }
 }
