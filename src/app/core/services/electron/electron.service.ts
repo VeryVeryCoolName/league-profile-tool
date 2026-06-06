@@ -19,6 +19,7 @@ export interface LeagueProfileToolBridge {
   readLockfile(targetPath: string): Promise<string>;
   readConfiguredClientPath(): Promise<string>;
   findLeagueClientPath(): Promise<string>;
+  writeClipboard(text: string): Promise<void>;
   joinPath(...parts: string[]): string;
   dirname(targetPath: string): string;
   openExternal(targetUrl: string): Promise<void>;
@@ -70,6 +71,12 @@ export class ElectronService {
 
   public findLeagueClientPath(): Promise<string> {
     return this.bridge ? this.bridge.findLeagueClientPath() : Promise.resolve('');
+  }
+
+  public writeClipboard(text: string): Promise<void> {
+    if (this.bridge) return this.bridge.writeClipboard(text);
+    if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+    return Promise.reject(new Error('Clipboard access is unavailable.'));
   }
 
   public joinPath(...parts: string[]): string {

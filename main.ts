@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain, shell} from 'electron';
+import {app, BrowserWindow, clipboard, ipcMain, shell} from 'electron';
 import * as childProcess from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
@@ -26,6 +26,9 @@ const appVersion = normalizeVersion(versionInfo.version);
 const appTitleVersion = shortVersion(appVersion);
 const appTitle = appTitleVersion ? `League Profile Tool ${appTitleVersion}` : 'League Profile Tool';
 const serve = process.argv.slice(1).some(value => value === '--serve');
+const REQUEST_TIMEOUT_MS = 20000;
+const MAX_RESPONSE_BYTES = 32 * 1024 * 1024;
+const MAX_EVENT_BUFFER_BYTES = 8 * 1024 * 1024;
 
 let win: BrowserWindow | null = null;
 let eventSocket: LcuEventSocket | null = null;
@@ -63,6 +66,12 @@ function makeRequest(options: RequestOptions): Promise<string> {
 
     const target = new URL(options.url);
     const transport = target.protocol === 'http:' ? http : https;
+    let settled = false;
+    const rejectOnce = (error: Error): void => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    };
     const request = transport.request({
       protocol: target.protocol,
       hostname: target.hostname,
@@ -73,21 +82,35 @@ function makeRequest(options: RequestOptions): Promise<string> {
       rejectUnauthorized: options.rejectUnauthorized !== false
     }, response => {
       let body = '';
+      let responseBytes = 0;
       response.setEncoding('utf8');
       response.on('data', chunk => {
+        responseBytes += Buffer.byteLength(chunk, 'utf8');
+        if (responseBytes > MAX_RESPONSE_BYTES) {
+          const error = new Error('LCU response exceeded the supported size limit.');
+          response.destroy(error);
+          rejectOnce(error);
+          return;
+        }
         body += chunk;
       });
+      response.once('error', rejectOnce);
       response.on('end', () => {
+        if (settled) return;
         const statusCode = response.statusCode || 0;
         if (statusCode >= 200 && statusCode < 300) {
+          settled = true;
           resolve(body);
           return;
         }
-        reject(new Error(`${statusCode} ${String(response.statusMessage || '')}: ${body}`));
+        rejectOnce(new Error(`${statusCode} ${String(response.statusMessage || '')}: ${body}`));
       });
     });
 
-    request.on('error', reject);
+    request.setTimeout(REQUEST_TIMEOUT_MS, () => {
+      request.destroy(new Error('LCU request timed out.'));
+    });
+    request.once('error', rejectOnce);
     if (options.body) request.write(options.body);
     request.end();
   });
@@ -155,6 +178,12 @@ function registerIpcHandlers(): void {
   });
   ipcMain.handle('lpt:read-configured-client-path', () => readConfiguredClientPath());
   ipcMain.handle('lpt:find-league-client-path', () => findLeagueClientPath());
+  ipcMain.handle('lpt:write-clipboard', (_event, text: string) => {
+    if (typeof text !== 'string' || text.length > MAX_RESPONSE_BYTES) {
+      throw new Error('Invalid clipboard content.');
+    }
+    clipboard.writeText(text);
+  });
   ipcMain.handle('lpt:open-external', (_event, targetUrl: string) => {
     const target = new URL(targetUrl);
     if (target.protocol !== 'https:' && target.protocol !== 'http:') {
@@ -164,10 +193,15 @@ function registerIpcHandlers(): void {
   });
   ipcMain.handle('lpt:events-connect', (event, options: EventConnectionOptions) => {
     eventSocket?.close();
+    const sender = event.sender;
     eventSocket = new LcuEventSocket(
       options,
-      payload => event.sender.send('lpt:events-data', payload),
-      state => event.sender.send('lpt:events-state', state)
+      payload => {
+        if (!sender.isDestroyed()) sender.send('lpt:events-data', payload);
+      },
+      state => {
+        if (!sender.isDestroyed()) sender.send('lpt:events-state', state);
+      }
     );
     eventSocket.connect();
   });
@@ -190,7 +224,7 @@ function createWindow(): BrowserWindow {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false,
+      sandbox: true,
       webSecurity: true,
       allowRunningInsecureContent: false,
       devTools: serve
@@ -294,6 +328,10 @@ class LcuEventSocket {
   private receiveData(chunk: Buffer): void {
     if (!this.handshakeComplete) {
       this.handshakeBuffer = Buffer.concat([this.handshakeBuffer, chunk]);
+      if (this.handshakeBuffer.length > MAX_EVENT_BUFFER_BYTES) {
+        this.finish('LCU event handshake exceeded the supported size limit');
+        return;
+      }
       const marker = this.handshakeBuffer.indexOf('\r\n\r\n');
       if (marker < 0) return;
 
@@ -314,6 +352,10 @@ class LcuEventSocket {
 
   private receiveFrames(chunk: Buffer): void {
     this.frameBuffer = Buffer.concat([this.frameBuffer, chunk]);
+    if (this.frameBuffer.length > MAX_EVENT_BUFFER_BYTES) {
+      this.finish('LCU event payload exceeded the supported size limit');
+      return;
+    }
     while (this.frameBuffer.length >= 2) {
       const first = this.frameBuffer[0];
       const second = this.frameBuffer[1];
@@ -332,6 +374,11 @@ class LcuEventSocket {
         const low = this.frameBuffer.readUInt32BE(offset + 4);
         length = high * 4294967296 + low;
         offset += 8;
+      }
+
+      if (!Number.isSafeInteger(length) || length > MAX_EVENT_BUFFER_BYTES) {
+        this.finish('LCU event frame exceeded the supported size limit');
+        return;
       }
 
       const maskOffset = offset;

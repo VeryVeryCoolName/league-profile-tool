@@ -1,6 +1,7 @@
 import {Component, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {ConnectorService} from "../core/services/connector/connector.service";
+import {ElectronService} from "../core/services/electron/electron.service";
 import {APP_VERSION} from "../app-version";
 
 type EndpointStatus = 'Idle' | 'Loading' | 'OK' | '404' | 'Unauthorized' | 'Empty' | 'Error';
@@ -110,7 +111,11 @@ export class LcuExplorerComponent implements OnDestroy {
     'jwt'
   ];
 
-  constructor(private lcuConnectionService: LCUConnectionService, private connectorService: ConnectorService) {
+  constructor(
+    private lcuConnectionService: LCUConnectionService,
+    private connectorService: ConnectorService,
+    private electronService: ElectronService
+  ) {
   }
 
   ngOnDestroy(): void {
@@ -444,19 +449,7 @@ export class LcuExplorerComponent implements OnDestroy {
   }
 
   private copyText(text: string): Promise<void> {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text);
-    }
-
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.opacity = '0';
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-    return Promise.resolve();
+    return this.electronService.writeClipboard(text);
   }
 
   private fileSafeEndpoint(path: string): string {

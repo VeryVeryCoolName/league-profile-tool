@@ -63,6 +63,10 @@ mat-tab-header {
   --mat-tab-inactive-focus-label-text-color: #ffffff;
   --mat-tab-inactive-hover-label-text-color: #ffffff;
   --mat-tab-active-indicator-color: var(--accent);
+  --mat-tab-active-focus-indicator-color: var(--accent);
+  --mat-tab-active-hover-indicator-color: var(--accent);
+  --mat-tab-active-ripple-color: var(--accent);
+  --mat-tab-inactive-ripple-color: var(--accent);
 }
 
 .mat-tab-label,

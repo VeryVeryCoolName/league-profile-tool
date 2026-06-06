@@ -28,7 +28,12 @@
     <div class="champion-grid">
       @for (champion of ownedChamps | champions: searchText; track trackByChampion($index, champion)) {
         <span class="champions">
-          <button mat-stroked-button (click)="showSkins(champion)"><img [src]="champion.iconSrc" alt="{{champion.name}}"/></button>
+          <button
+            mat-stroked-button
+            [attr.aria-label]="'View purchase dates for ' + champion.name"
+            (click)="showSkins(champion)">
+            <img [src]="champion.iconSrc" alt="{{champion.name}}"/>
+          </button>
         </span>
       }
       @if (ownedChamps.length === 0) {

@@ -49,6 +49,7 @@
               class="icon-button"
               [class.owned-icon]="icon.owned"
               [disabled]="updatingIconId !== null"
+              [attr.aria-label]="'Set profile icon to ' + (icon.title || icon.id)"
               [attr.title]="(icon.title || icon.id) + ' - ' + icon.ownershipLabel"
               (click)="setIcon(icon.id)">
               <img [src]="icon.src" [alt]="icon.title || icon.id" loading="lazy" decoding="async" (error)="onIconError(icon)"/>

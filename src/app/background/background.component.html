@@ -19,7 +19,11 @@
       @for (champion of championImages | champions: searchText; track trackByAlt($index, champion)) {
         <span class="champions">
           @if (!champion.broken) {
-            <button class="image-button champion-button" mat-stroked-button (click)="getSkins(champion.alt)">
+            <button
+              class="image-button champion-button"
+              mat-stroked-button
+              [attr.aria-label]="'View backgrounds for ' + champion.alt"
+              (click)="getSkins(champion.alt)">
               @if (!champion.loaded) {
                 <span class="image-placeholder"></span>
               }
@@ -38,7 +42,11 @@
       @for (skin of skinsImages; track trackBySkin($index, skin)) {
         <span class="championSkin">
           @if (!skin.broken) {
-            <button class="image-button skin-button" mat-stroked-button (click)="setBackground(skin.alt)">
+            <button
+              class="image-button skin-button"
+              mat-stroked-button
+              [attr.aria-label]="'Set background to ' + skin.alt"
+              (click)="setBackground(skin.alt)">
               <img class="skinSplash" [class.loaded]="skin.loaded" [src]="skin.src" [alt]="skin.alt" loading="eager" decoding="async" (load)="onImageLoad(skin)" (error)="onImageError($event, skin)"/>
             </button>
           }
