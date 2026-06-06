@@ -4,8 +4,9 @@
   width: min(58rem, calc(100vw - 2rem));
   margin: 1.5rem auto 0;
   text-align: left;
-  background: #202327;
-  border: 1px solid rgba(142, 202, 255, 0.24);
+  background: #1d2227;
+  border: 1px solid rgba(105, 189, 245, 0.22);
+  box-shadow: var(--shadow-md) !important;
 }
 
 .preview-art,
@@ -18,7 +19,7 @@
 .preview-art {
   background-position: center 18%;
   background-size: cover;
-  opacity: 0.35;
+  opacity: 0.42;
 }
 
 .preview-shade {
@@ -29,7 +30,7 @@
   position: relative;
   display: grid;
   gap: 0.95rem;
-  padding: 1rem;
+  padding: 1.25rem;
 }
 
 .preview-header {
@@ -42,8 +43,8 @@
 .profile-icon {
   display: grid;
   place-items: center;
-  width: 4.75rem;
-  height: 4.75rem;
+  width: 5rem;
+  height: 5rem;
   overflow: hidden;
   border: 2px solid #c2a05a;
   border-radius: 50%;
@@ -93,9 +94,9 @@ p {
 .preview-grid div {
   min-width: 0;
   padding: 0.75rem 0.85rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 6px;
+  background: rgba(13, 20, 26, 0.56);
+  border: 1px solid rgba(203, 222, 238, 0.13);
+  border-radius: 7px;
 }
 
 .preview-grid strong {

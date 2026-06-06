@@ -79,8 +79,9 @@ img {
   min-width: 0;
   min-height: 0;
   line-height: 0;
-  background: #17232c;
+  background: #18232b;
   border-color: rgba(255, 255, 255, 0.16);
+  border-radius: 7px !important;
   transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
   --mat-button-outlined-container-height: auto;
 }

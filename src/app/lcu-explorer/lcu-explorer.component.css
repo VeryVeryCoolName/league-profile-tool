@@ -91,10 +91,11 @@ h2 {
 }
 
 .endpoint-card {
-  padding: 0.85rem;
-  background: #333;
-  border: 1px solid #4d4d4d;
-  border-radius: 4px;
+  padding: 1rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
 }
 
 .endpoint-card.changed {
@@ -150,7 +151,7 @@ h2 {
 .status {
   min-width: 6.25rem;
   padding: 0.2rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 999px;
   text-align: center;
   font-size: 0.78rem;
   font-weight: 700;
@@ -243,9 +244,10 @@ pre {
   padding: 1rem;
   white-space: pre-wrap;
   word-break: break-word;
-  background: #111;
+  background: #11161b;
   color: #eee;
-  border-radius: 4px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
 }
 
 @media (max-width: 1100px) {

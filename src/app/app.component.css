@@ -1,14 +1,32 @@
 .connection-status {
-  padding: 0.48rem 0.75rem;
-  color: #ffdede;
-  background: #5a2020;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.82rem;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 1rem;
+  color: #ffd5d8;
+  background: #3a2025;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 0.8rem;
+  font-weight: 700;
   letter-spacing: 0;
 }
 
+.connection-status::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  content: "";
+  border-radius: 50%;
+  background: #ff7d88;
+  box-shadow: 0 0 0 3px rgba(255, 125, 136, 0.12);
+}
+
 .connection-status.connected {
-  color: #e3ffe9;
-  background: #1f5b36;
+  color: #d9ffea;
+  background: #173c2c;
+}
+
+.connection-status.connected::before {
+  background: #5ee39a;
+  box-shadow: 0 0 0 3px rgba(94, 227, 154, 0.13);
 }

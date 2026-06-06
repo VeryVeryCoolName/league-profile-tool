@@ -6,11 +6,11 @@ main {
 
 .rank-panel {
   width: 100%;
-  padding: 1rem;
-  background: #3e3f40;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 6px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.11);
+  padding: 1.25rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
   text-align: left;
 }
 
@@ -50,7 +50,7 @@ h2 {
 }
 
 .automation-panel {
-  background: #38393a;
+  background: var(--surface);
 }
 
 .automation-heading {
@@ -72,7 +72,7 @@ h2 {
   margin-bottom: 0.75rem;
   background: rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
+  border-radius: 7px;
   color: #c7dced;
   font-size: 0.85rem;
 }
@@ -99,7 +99,7 @@ h2 {
   padding: 0.75rem;
   background: rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
+  border-radius: 7px;
 }
 
 .automation-note {

@@ -20,7 +20,7 @@ img {
 .search-panel {
   max-width: 72rem;
   margin: 1rem auto;
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.15rem;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -30,7 +30,7 @@ img {
 .icon-button.mat-mdc-outlined-button {
   margin: 0;
   padding: 0;
-  background: #17232c;
+  background: #18232b;
   border-color: rgba(255, 255, 255, 0.16);
   transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
   --mat-button-outlined-container-height: auto;
@@ -77,7 +77,7 @@ img {
   right: 0.25rem;
   bottom: 0.25rem;
   padding: 0.15rem 0.35rem;
-  border-radius: 4px;
+  border-radius: 5px;
   background: rgba(10, 46, 70, 0.92);
   color: #aee7ff;
   font-size: 0.68rem;

@@ -23,10 +23,10 @@
 .matchup-card,
 .enemy-row,
 .candidate-row {
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  padding: 1.1rem;
+  background: rgba(13, 19, 24, 0.32);
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
 .auto-accept-card {
@@ -79,7 +79,7 @@ h3 {
   padding: 0.65rem 0.75rem;
   background: rgba(13, 34, 52, 0.65);
   border: 1px solid rgba(134, 201, 255, 0.16);
-  border-radius: 6px;
+  border-radius: 7px;
   color: #d9e6ef;
   cursor: pointer;
 }
@@ -202,7 +202,7 @@ h3 {
   appearance: none;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 7px;
   color: inherit;
   font: inherit;
   text-align: center;
