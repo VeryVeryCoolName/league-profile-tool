@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import {DialogComponent} from "../core/dialog/dialog.component";
 import {MatDialog} from "@angular/material/dialog";
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
@@ -30,6 +30,7 @@ interface IconUpdateResult {
     selector: 'app-customicon',
     templateUrl: './customicon.component.html',
     styleUrls: ['./customicon.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class CustomiconComponent implements OnInit, OnDestroy {

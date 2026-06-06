@@ -11,6 +11,10 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
+    "strict": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictPropertyInitialization": false,
     "skipLibCheck": true,
     "target": "es2020",
     "typeRoots": [

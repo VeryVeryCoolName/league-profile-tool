@@ -1,4 +1,4 @@
-import {Component, OnDestroy} from '@angular/core';
+import {Component, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {ConnectorService} from "../core/services/connector/connector.service";
 import {APP_VERSION} from "../app-version";
@@ -38,6 +38,7 @@ interface EndpointState {
     selector: 'app-lcu-explorer',
     templateUrl: './lcu-explorer.component.html',
     styleUrls: ['./lcu-explorer.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class LcuExplorerComponent implements OnDestroy {

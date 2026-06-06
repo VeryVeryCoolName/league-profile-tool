@@ -113,36 +113,6 @@
               "src/assets"
             ]
           }
-        },
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "eslintConfig": ".eslintrc.json",
-            "lintFilePatterns": [
-              "src/app/**/*.component.ts",
-              "src/app/**/*.module.ts",
-              "src/app/**/*.pipe.ts",
-              "src/app/**/*.service.ts",
-              "src/app/app-version.ts",
-              "src/app/core/services/match-tools/matchup-provider.ts",
-              "main.ts"
-            ]
-          }
-        }
-      }
-    },
-    "angular-electron-e2e": {
-      "root": "e2e",
-      "projectType": "application",
-      "architect": {
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "eslintConfig": ".eslintrc.json",
-            "lintFilePatterns": [
-              "e2e/**.ts"
-            ]
-          }
         }
       }
     }

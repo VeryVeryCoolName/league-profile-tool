@@ -1,4 +1,4 @@
-import {Component, OnDestroy} from '@angular/core';
+import {Component, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {IdentityPreviewService, IdentityPreviewState} from '../core/services/identity-preview/identity-preview.service';
 import {ConnectorService} from '../core/services/connector/connector.service';
@@ -7,6 +7,7 @@ import {ConnectorService} from '../core/services/connector/connector.service';
     selector: 'app-identity-preview',
     templateUrl: './identity-preview.component.html',
     styleUrls: ['./identity-preview.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class IdentityPreviewComponent implements OnDestroy {

@@ -23,7 +23,7 @@ import {CustomapiComponent} from './customapi/customapi.component';
 import {FaqComponent} from './faq/faq.component';
 import { CustomiconComponent } from './customicon/customicon.component';
 import {ElectronService} from "./core/services";
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi, withXhr } from '@angular/common/http';
 import { LcuExplorerComponent } from './lcu-explorer/lcu-explorer.component';
 import {IdentityPreviewComponent} from './identity-preview/identity-preview.component';
 import {MatchToolsComponent} from './match-tools/match-tools.component';
@@ -40,6 +40,6 @@ import {MatchToolsComponent} from './match-tools/match-tools.component';
         MatInputModule,
         MatDialogModule,
         MatSelectModule,
-        MatSortModule], providers: [ElectronService, provideHttpClient(withInterceptorsFromDi())] })
+        MatSortModule], providers: [ElectronService, provideHttpClient(withXhr(), withInterceptorsFromDi())] })
 export class AppModule {
 }

@@ -5,7 +5,6 @@
     "module": "es2015",
     "target": "ES2022",
     "useDefineForClassFields": false,
-    "baseUrl": "",
     "types": []
   },
   "include": [
@@ -20,6 +19,7 @@
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
     "strictInjectionParameters": true,
-    "preserveWhitespaces": true
+    "preserveWhitespaces": true,
+    "strictTemplates": false
   }
 }

@@ -2,11 +2,16 @@
   "compilerOptions": {
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "module": "Node16",
+    "moduleResolution": "node16",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "strict": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictPropertyInitialization": false,
     "skipLibCheck": true,
-    "target": "es5",
+    "target": "ES2022",
     "types": [
       "node"
     ],

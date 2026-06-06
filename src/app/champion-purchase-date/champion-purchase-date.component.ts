@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import {Sort} from '@angular/material/sort';
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {VersionService} from "../core/services/version/version.service";
@@ -8,6 +8,7 @@ import {VersionService} from "../core/services/version/version.service";
     selector: 'app-champion-purchase-date',
     templateUrl: './champion-purchase-date.component.html',
     styleUrls: ['./champion-purchase-date.component.css'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class ChampionPurchaseDateComponent implements OnInit {
