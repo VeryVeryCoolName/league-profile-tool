@@ -53,7 +53,9 @@ export class IdentityPreviewService {
   private readonly stateSubject = new BehaviorSubject<IdentityPreviewState>({...this.defaultState});
   private dataDragonVersion = '';
   private championIdByKey: Record<number, string> = {};
+  private championNameByKey: Record<number, string> = {};
   private profileIconNameById: Record<number, string> = {};
+  private refreshPromise: Promise<void> | null = null;
   public readonly state$: Observable<IdentityPreviewState> = this.stateSubject.asObservable();
 
   constructor(
@@ -64,6 +66,14 @@ export class IdentityPreviewService {
   }
 
   public async refreshPreview(): Promise<void> {
+    if (this.refreshPromise !== null) return this.refreshPromise;
+    this.refreshPromise = this.refreshPreviewInternal().finally(() => {
+      this.refreshPromise = null;
+    });
+    return this.refreshPromise;
+  }
+
+  private async refreshPreviewInternal(): Promise<void> {
     const current = this.stateSubject.value;
     this.patchState({loading: true, error: ''});
 
@@ -256,7 +266,7 @@ export class IdentityPreviewService {
 
       return {
         url: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championId}_${skinNumber}.jpg`,
-        label: `${championId} skin ${skinNumber}`
+        label: `${this.championNameByKey[championKey] || championId} skin ${skinNumber}`
       };
     } catch (error) {
       console.warn('[Preview] background metadata unavailable', error);
@@ -271,12 +281,17 @@ export class IdentityPreviewService {
 
     const championPayload: any = await firstValueFrom(this.championService.getChampionIcons(this.dataDragonVersion));
     const nextMap: Record<number, string> = {};
+    const nextNameMap: Record<number, string> = {};
     Object.keys(championPayload.data || {}).forEach(championId => {
       const champion = championPayload.data[championId];
       const key = Number(champion && champion.key);
-      if (!isNaN(key)) nextMap[key] = championId;
+      if (!isNaN(key)) {
+        nextMap[key] = championId;
+        nextNameMap[key] = this.stringFrom(champion && champion.name, championId);
+      }
     });
     this.championIdByKey = nextMap;
+    this.championNameByKey = nextNameMap;
   }
 
   private async resolveProfileIconName(profileIconId: number | null): Promise<string> {

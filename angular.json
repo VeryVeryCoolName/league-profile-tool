@@ -21,7 +21,11 @@
               "src/polyfills.ts"
             ],
             "assets": [
-              "src/assets"
+              {
+                "glob": "icon.ico",
+                "input": "src/assets",
+                "output": "assets"
+              }
             ],
             "styles": [
               "./node_modules/@angular/material/prebuilt-themes/purple-green.css",
@@ -119,7 +123,11 @@
               "src/styles.css"
             ],
             "assets": [
-              "src/assets"
+              {
+                "glob": "icon.ico",
+                "input": "src/assets",
+                "output": "assets"
+              }
             ]
           }
         }

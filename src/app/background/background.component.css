@@ -125,3 +125,8 @@ img {
   text-align: center;
   color: #c7dced;
 }
+
+.load-more-assets {
+  flex-basis: 12rem;
+  margin: 0.75rem auto 0;
+}

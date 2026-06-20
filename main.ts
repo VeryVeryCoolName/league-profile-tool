@@ -29,6 +29,13 @@ const serve = process.argv.slice(1).some(value => value === '--serve');
 const REQUEST_TIMEOUT_MS = 20000;
 const MAX_RESPONSE_BYTES = 32 * 1024 * 1024;
 const MAX_EVENT_BUFFER_BYTES = 8 * 1024 * 1024;
+const ALLOWED_LCU_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+const ALLOWED_EXTERNAL_HOSTS = new Set([
+  'github.com',
+  'www.github.com',
+  'lolalytics.com',
+  'www.lolalytics.com'
+]);
 
 let win: BrowserWindow | null = null;
 let eventSocket: LcuEventSocket | null = null;
@@ -50,8 +57,51 @@ function shortVersion(version: string): string {
 function isLoopbackUrl(value: string): boolean {
   try {
     const target = new URL(value);
+    const hostname = target.hostname.replace(/^\[|\]$/g, '').toLowerCase();
     return (target.protocol === 'http:' || target.protocol === 'https:')
-      && ['127.0.0.1', 'localhost', '::1'].includes(target.hostname);
+      && ['127.0.0.1', 'localhost', '::1'].includes(hostname);
+  } catch {
+    return false;
+  }
+}
+
+function isAllowedLcuPath(pathname: string): boolean {
+  return pathname === '/help'
+    || pathname.startsWith('/lol-')
+    || pathname.startsWith('/plugin-manager/')
+    || pathname.startsWith('/riotclient/');
+}
+
+function hasUnsafeLcuPathEncoding(pathname: string): boolean {
+  return /[\u0000-\u001f\u007f\\]/.test(pathname) || /%(?:2e|2f|5c)/i.test(pathname);
+}
+
+function normalizeRequestMethod(value: string | undefined): string {
+  return String(value || 'GET').trim().toUpperCase();
+}
+
+function headerValue(headers: Record<string, string> | undefined, name: string): string {
+  if (!headers) return '';
+  const key = Object.keys(headers).find(item => item.toLowerCase() === name.toLowerCase());
+  return key ? String(headers[key] || '') : '';
+}
+
+function hasLcuAuthorization(headers: Record<string, string> | undefined): boolean {
+  const authorization = headerValue(headers, 'authorization');
+  const match = /^Basic\s+(.+)$/i.exec(authorization);
+  if (!match) return false;
+
+  try {
+    return Buffer.from(match[1], 'base64').toString('utf8').startsWith('riot:');
+  } catch {
+    return false;
+  }
+}
+
+function isAllowedExternalUrl(value: string): boolean {
+  try {
+    const target = new URL(value);
+    return target.protocol === 'https:' && ALLOWED_EXTERNAL_HOSTS.has(target.hostname.toLowerCase());
   } catch {
     return false;
   }
@@ -65,6 +115,20 @@ function makeRequest(options: RequestOptions): Promise<string> {
     }
 
     const target = new URL(options.url);
+    const method = normalizeRequestMethod(options.method);
+    if (!ALLOWED_LCU_METHODS.has(method)) {
+      reject(new Error('Unsupported LCU request method.'));
+      return;
+    }
+    if (!isAllowedLcuPath(target.pathname) || hasUnsafeLcuPathEncoding(target.pathname)) {
+      reject(new Error('Unsupported LCU request path.'));
+      return;
+    }
+    if (!hasLcuAuthorization(options.headers)) {
+      reject(new Error('LCU authorization is required.'));
+      return;
+    }
+
     const transport = target.protocol === 'http:' ? http : https;
     let settled = false;
     const rejectOnce = (error: Error): void => {
@@ -77,7 +141,7 @@ function makeRequest(options: RequestOptions): Promise<string> {
       hostname: target.hostname,
       port: target.port,
       path: `${target.pathname}${target.search}`,
-      method: options.method || 'GET',
+      method,
       headers: {...(options.headers || {})},
       rejectUnauthorized: options.rejectUnauthorized !== false
     }, response => {
@@ -111,7 +175,7 @@ function makeRequest(options: RequestOptions): Promise<string> {
       request.destroy(new Error('LCU request timed out.'));
     });
     request.once('error', rejectOnce);
-    if (options.body) request.write(options.body);
+    if (method !== 'GET' && options.body) request.write(options.body);
     request.end();
   });
 }
@@ -185,10 +249,10 @@ function registerIpcHandlers(): void {
     clipboard.writeText(text);
   });
   ipcMain.handle('lpt:open-external', (_event, targetUrl: string) => {
-    const target = new URL(targetUrl);
-    if (target.protocol !== 'https:' && target.protocol !== 'http:') {
+    if (!isAllowedExternalUrl(targetUrl)) {
       throw new Error('Unsupported external URL.');
     }
+    const target = new URL(targetUrl);
     return shell.openExternal(target.toString());
   });
   ipcMain.handle('lpt:events-connect', (event, options: EventConnectionOptions) => {
@@ -279,6 +343,10 @@ class LcuEventSocket {
   connect(): void {
     if (!this.options || !isLoopbackUrl(this.options.url)) {
       this.finish('Invalid LCU event URL.');
+      return;
+    }
+    if (!hasLcuAuthorization({Authorization: this.options.authorization || ''})) {
+      this.finish('LCU event authorization is required.');
       return;
     }
 

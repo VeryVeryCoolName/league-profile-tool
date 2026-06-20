@@ -1,16 +1,80 @@
 .status-page {
-  max-width: 50rem;
+  max-width: 64rem;
+}
+
+.status-card {
+  max-width: 58rem;
+  margin: 0 auto;
+  padding: 1.65rem;
 }
 
 .mat-form-field,
 .mat-mdc-form-field {
   display: block;
   width: 100%;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.95rem;
+}
+
+.status-select {
+  margin-bottom: 0.45rem;
+}
+
+.message-container {
+  position: relative;
+  margin-top: 1.25rem;
+  margin-bottom: 0.55rem;
 }
 
 .message-field {
-  margin-bottom: 0.35rem;
+  margin-bottom: 0;
+}
+
+.set-message-button {
+  position: absolute;
+  right: 1rem;
+  bottom: 2.15rem;
+  z-index: 2;
+  min-width: 8.25rem;
+}
+
+.status-feedback {
+  margin: 0.1rem 0 0.85rem;
+  color: var(--success);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.status-feedback.error {
+  color: var(--danger);
+}
+
+.persistent-panel {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(105, 189, 245, 0.16);
+  border-radius: 8px;
+  background: rgba(13, 30, 42, 0.38);
+}
+
+.persistent-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  margin: 0;
+  color: #f2f7fb;
+  font-weight: 700;
+}
+
+.persistent-toggle input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.persistent-note {
+  margin: 0.25rem 0 0;
+  color: #c7dced;
+  font-size: 0.88rem;
 }
 
 textarea,
@@ -18,4 +82,5 @@ textarea.mat-mdc-input-element {
   min-height: 12rem;
   height: 32vh;
   max-height: 22rem;
+  padding-bottom: 3.25rem;
 }

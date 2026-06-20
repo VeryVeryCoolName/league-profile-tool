@@ -42,7 +42,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   public allIcons: CustomIconRecord[] = [];
   public filteredIcons: CustomIconRecord[] = [];
   public visibleIcons: CustomIconRecord[] = [];
-  public visibleIconLimit = 200;
+  public visibleIconLimit = 80;
   public iconsLoading = true;
   public iconsError = '';
   public ownedOnly = false;
@@ -105,7 +105,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   }
 
   public resetIconLimit(): void {
-    this.visibleIconLimit = 200;
+    this.visibleIconLimit = 80;
     this.refreshIconView();
   }
 
@@ -122,7 +122,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   }
 
   public loadMoreIcons(): void {
-    this.visibleIconLimit += 200;
+    this.visibleIconLimit += 80;
     this.refreshIconView();
   }
 

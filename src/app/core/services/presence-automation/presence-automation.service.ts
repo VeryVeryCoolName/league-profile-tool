@@ -15,6 +15,8 @@ export interface PresenceAutomationState {
   originalCaptured: boolean;
   restoring: boolean;
   autoReapply: boolean;
+  persistentInvisible: boolean;
+  persistentInvisibleAvailability: string;
   lastAction: string;
   lastActionAt: string;
 }
@@ -27,10 +29,13 @@ export class PresenceAutomationService implements OnDestroy {
     originalCaptured: false,
     restoring: false,
     autoReapply: false,
+    persistentInvisible: false,
+    persistentInvisibleAvailability: '',
     lastAction: '',
     lastActionAt: ''
   };
 
+  private readonly persistentInvisibleStorageKey = 'league-profile-tool:persistent-invisible';
   private readonly stateSubject = new BehaviorSubject<PresenceAutomationState>({...this.defaultState});
   private connectorSubscription: Subscription;
   private eventSubscription: Subscription;
@@ -38,8 +43,12 @@ export class PresenceAutomationService implements OnDestroy {
   private statusPatch: PresencePatch = null;
   private chatRankPatch: PresencePatch = null;
   private challengeRankPatch: PresencePatch = null;
+  private persistentInvisiblePatch: PresencePatch = null;
+  private persistentInvisibleTimer: ReturnType<typeof setTimeout> | null = null;
   private lastReapplyAt = 0;
   private autoReapplySuppressedUntil = 0;
+  private lastPersistentInvisibleAttemptAt = 0;
+  private persistentInvisibleSuppressedUntil = 0;
 
   public readonly state$: Observable<PresenceAutomationState> = this.stateSubject.asObservable();
 
@@ -49,8 +58,12 @@ export class PresenceAutomationService implements OnDestroy {
     private lcuEventsService: LcuEventsService,
     private identityPreviewService: IdentityPreviewService
   ) {
+    this.loadPersistentInvisiblePreference();
     this.connectorSubscription = this.connector.ready$.subscribe(ready => {
-      if (ready) this.captureOriginalPresence();
+      if (ready) {
+        this.captureOriginalPresence();
+        this.schedulePersistentInvisibleReapply();
+      }
       if (!ready) this.resetRuntimeState('LCU disconnected');
     });
     this.eventSubscription = this.lcuEventsService.events$.subscribe(event => this.handleEvent(event));
@@ -59,10 +72,11 @@ export class PresenceAutomationService implements OnDestroy {
   ngOnDestroy(): void {
     this.connectorSubscription.unsubscribe();
     this.eventSubscription.unsubscribe();
+    this.clearPersistentInvisibleTimer();
   }
 
-  public recordStatusPreset(availability: string, statusMessage: string): void {
-    this.statusPatch = {availability, statusMessage};
+  public recordStatusPreset(patch: PresencePatch): void {
+    this.statusPatch = this.mergePatches(this.statusPatch, patch);
     this.markAction('Status preset captured');
   }
 
@@ -89,6 +103,32 @@ export class PresenceAutomationService implements OnDestroy {
 
   public setAutoReapply(enabled: boolean): void {
     this.patchState({autoReapply: enabled});
+  }
+
+  public setPersistentInvisible(enabled: boolean, patch?: PresencePatch): void {
+    if (!enabled) {
+      this.persistentInvisiblePatch = null;
+      this.persistentInvisibleSuppressedUntil = 0;
+      this.clearPersistentInvisibleTimer();
+      this.clearPersistentInvisiblePreference();
+      this.patchState({persistentInvisible: false, persistentInvisibleAvailability: ''});
+      this.markAction('Persistent invisible disabled');
+      return;
+    }
+
+    const nextPatch = this.normalizePersistentInvisiblePatch(patch);
+    this.persistentInvisiblePatch = nextPatch;
+    this.persistentInvisibleSuppressedUntil = Date.now() + 2500;
+    this.savePersistentInvisiblePreference(nextPatch);
+    this.patchState({
+      persistentInvisible: true,
+      persistentInvisibleAvailability: nextPatch.availability || 'offline'
+    });
+    this.markAction('Persistent invisible enabled');
+  }
+
+  public clearPersistentInvisible(): void {
+    this.setPersistentInvisible(false);
   }
 
   public suspendAutoReapply(durationMs = 5000): void {
@@ -145,8 +185,48 @@ export class PresenceAutomationService implements OnDestroy {
   private handleEvent(event: LcuJsonApiEvent) {
     if (!event || !event.uri) return;
 
+    if (this.shouldWatchForPersistentInvisible(event.uri)) {
+      this.schedulePersistentInvisibleReapply(event);
+    }
+
     if (event.uri === '/lol-chat/v1/me' || event.uri.indexOf('/lol-lobby/') === 0 || event.uri === '/lol-gameflow/v1/gameflow-phase') {
       this.reapplyAfterRefresh(event);
+    }
+  }
+
+  private schedulePersistentInvisibleReapply(event?: LcuJsonApiEvent): void {
+    if (!this.persistentInvisiblePatch) return;
+    if (this.isPersistentInvisibleSuppressed()) return;
+    if (event && event.uri === '/lol-chat/v1/me' && this.matchesPatch(event.data, this.persistentInvisiblePatch)) return;
+
+    this.clearPersistentInvisibleTimer();
+    this.persistentInvisibleTimer = setTimeout(() => {
+      this.persistentInvisibleTimer = null;
+      void this.reapplyPersistentInvisibleIfNeeded(event);
+    }, 900);
+  }
+
+  private async reapplyPersistentInvisibleIfNeeded(event?: LcuJsonApiEvent): Promise<void> {
+    if (!this.persistentInvisiblePatch) return;
+    if (this.isPersistentInvisibleSuppressed()) return;
+
+    const now = Date.now();
+    if (now - this.lastPersistentInvisibleAttemptAt < 4500) return;
+    this.lastPersistentInvisibleAttemptAt = now;
+
+    let current = event && event.uri === '/lol-chat/v1/me' ? event.data : null;
+    if (!this.hasAvailability(current)) {
+      const response = await this.lcuConnectionService.requestCustomAPI({}, 'GET', '/lol-chat/v1/me');
+      current = this.parseResponse(response);
+    }
+    if (!current || this.matchesPatch(current, this.persistentInvisiblePatch)) return;
+
+    const response = await this.writePresence(this.persistentInvisiblePatch);
+    if (response === 'Success') {
+      this.persistentInvisibleSuppressedUntil = Date.now() + 2500;
+      this.markAction('Reapplied invisible status');
+    } else {
+      this.markAction('Could not reapply invisible status');
     }
   }
 
@@ -217,6 +297,10 @@ export class PresenceAutomationService implements OnDestroy {
     return Date.now() < this.autoReapplySuppressedUntil;
   }
 
+  private isPersistentInvisibleSuppressed(): boolean {
+    return Date.now() < this.persistentInvisibleSuppressedUntil;
+  }
+
   private resetRuntimeState(message: string) {
     this.originalPresence = null;
     this.patchState({
@@ -247,5 +331,63 @@ export class PresenceAutomationService implements OnDestroy {
     } catch (error) {
       return null;
     }
+  }
+
+  private normalizePersistentInvisiblePatch(patch?: PresencePatch): PresencePatch {
+    return {
+      ...(this.persistentInvisiblePatch || {}),
+      ...(patch || {}),
+      availability: 'offline'
+    };
+  }
+
+  private shouldWatchForPersistentInvisible(uri: string): boolean {
+    return uri === '/lol-chat/v1/me'
+      || uri === '/lol-gameflow/v1/gameflow-phase'
+      || uri.indexOf('/lol-lobby/') === 0
+      || uri.indexOf('/lol-champ-select/') === 0;
+  }
+
+  private hasAvailability(value: any): boolean {
+    return !!(value && typeof value === 'object' && value.availability !== undefined);
+  }
+
+  private loadPersistentInvisiblePreference(): void {
+    try {
+      const raw = localStorage.getItem(this.persistentInvisibleStorageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !parsed.enabled || !parsed.patch) return;
+      const patch = this.normalizePersistentInvisiblePatch(parsed.patch);
+      this.persistentInvisiblePatch = patch;
+      this.patchState({
+        persistentInvisible: true,
+        persistentInvisibleAvailability: patch.availability || 'offline'
+      });
+    } catch (error) {
+      this.clearPersistentInvisiblePreference();
+    }
+  }
+
+  private savePersistentInvisiblePreference(patch: PresencePatch): void {
+    try {
+      localStorage.setItem(this.persistentInvisibleStorageKey, JSON.stringify({enabled: true, patch}));
+    } catch (error) {
+      // Persistence is best-effort; live reapply still works for this session.
+    }
+  }
+
+  private clearPersistentInvisiblePreference(): void {
+    try {
+      localStorage.removeItem(this.persistentInvisibleStorageKey);
+    } catch (error) {
+      // Ignore storage failures.
+    }
+  }
+
+  private clearPersistentInvisibleTimer(): void {
+    if (this.persistentInvisibleTimer === null) return;
+    clearTimeout(this.persistentInvisibleTimer);
+    this.persistentInvisibleTimer = null;
   }
 }

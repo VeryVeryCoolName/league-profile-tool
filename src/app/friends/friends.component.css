@@ -1,0 +1,376 @@
+.friends-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+  text-align: center;
+}
+
+.friends-content {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.link-panel,
+.search-panel,
+.filter-row,
+.friend-grid {
+  width: 100%;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.badge-row,
+.filter-row,
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.link-panel,
+.search-panel {
+  margin-bottom: 16px;
+  padding: 16px 18px;
+}
+
+.link-panel {
+  text-align: left;
+}
+
+.link-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.link-header h2 {
+  margin: 0 0 4px;
+}
+
+.link-header p,
+.link-message {
+  color: var(--muted);
+}
+
+.link-message {
+  margin: 10px 0 0;
+}
+
+.compact-actions {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.search-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mat-form-field,
+.mat-mdc-form-field {
+  flex: 1 1 auto;
+  width: 100%;
+  text-align: center;
+}
+
+:host ::ng-deep .search-panel .mat-mdc-form-field-infix,
+:host ::ng-deep .search-panel .mat-mdc-input-element {
+  text-align: center;
+}
+
+:host ::ng-deep .search-panel .mat-mdc-text-field-wrapper,
+:host ::ng-deep .search-panel .mat-form-field-flex {
+  background: transparent !important;
+}
+
+.filter-row {
+  justify-content: flex-start;
+  margin-bottom: 16px;
+}
+
+.filter-button {
+  min-height: 38px;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.filter-button.active {
+  border-color: rgba(94, 197, 255, 0.9);
+  background: rgba(26, 68, 96, 0.7);
+  color: #dff6ff;
+}
+
+.filter-button span {
+  display: inline-flex;
+  min-width: 22px;
+  justify-content: center;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+}
+
+.loading-text,
+.action-message {
+  color: #c7dced;
+  margin: 12px auto 16px;
+}
+
+.action-message {
+  max-width: 640px;
+  padding: 11px 14px;
+  border: 1px solid rgba(80, 190, 120, 0.28);
+  border-radius: 6px;
+  background: rgba(19, 55, 33, 0.45);
+  color: #bdf8cf;
+}
+
+.action-message.error,
+.loading-text.error {
+  border-color: rgba(220, 86, 86, 0.35);
+  background: rgba(80, 24, 24, 0.48);
+  color: #ffd2d2;
+}
+
+.friend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.friend-card {
+  min-width: 0;
+  padding: 14px;
+  background: #18232b;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  transform-origin: center;
+  transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease, opacity 220ms ease;
+}
+
+.friend-card:hover {
+  border-color: rgba(142, 202, 255, 0.74);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+.friend-card.offline {
+  opacity: 0.72;
+}
+
+.friend-card.in-lobby {
+  border-color: rgba(94, 197, 255, 0.9);
+  box-shadow: 0 0 0 1px rgba(94, 197, 255, 0.2);
+}
+
+.friend-card.removing {
+  pointer-events: none;
+  opacity: 0.82;
+}
+
+.friend-card.removed {
+  pointer-events: none;
+  animation: friend-card-remove 260ms ease forwards;
+}
+
+.friend-card.action-error {
+  border-color: rgba(220, 86, 86, 0.55);
+}
+
+.friend-card header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.avatar-wrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+}
+
+.avatar-wrap img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #11161b;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.presence-dot {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #18232b;
+  background: #777;
+}
+
+.presence-dot.online {
+  background: #2fd57a;
+}
+
+.presence-dot.offline {
+  background: #73777d;
+}
+
+.presence-dot.busy {
+  background: #d84d4d;
+}
+
+.presence-dot.mobile {
+  background: #4aa3ff;
+}
+
+.friend-title {
+  min-width: 0;
+}
+
+.friend-title h3 {
+  margin: 0;
+  color: #f2fbff;
+  font-size: 16px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.friend-title p {
+  margin: 4px 0 0;
+  color: #a9bdca;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.badge-row {
+  margin-top: 12px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.badge.league {
+  background: rgba(134, 201, 255, 0.16);
+  color: #9dd7ff;
+}
+
+.badge.discord {
+  background: rgba(88, 101, 242, 0.2);
+  color: #c8cdff;
+}
+
+.badge.lobby {
+  background: rgba(80, 190, 120, 0.18);
+  color: #bdf8cf;
+}
+
+.badge.muted {
+  background: rgba(255, 255, 255, 0.09);
+  color: #c7dced;
+}
+
+.friend-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 13px 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  background: rgba(13, 19, 24, 0.28);
+}
+
+.friend-group span {
+  color: #8fa5b4;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.friend-group strong {
+  color: #e8f4ff;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.card-actions {
+  margin-top: 8px;
+}
+
+.card-actions button {
+  min-height: 36px;
+}
+
+.danger-action {
+  color: #ffc8c8;
+  border-color: rgba(220, 86, 86, 0.42);
+}
+
+.action-hint {
+  margin: 8px 0 0;
+  color: #8fa5b4;
+  font-size: 12px;
+}
+
+@keyframes friend-card-remove {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+}
+
+.load-more {
+  margin-bottom: 16px;
+}
+
+.inline-status {
+  align-self: center;
+  color: var(--warning);
+  font-weight: 700;
+}
+
+.inline-status.ok {
+  color: var(--success);
+}
+
+@media (max-width: 720px) {
+  .friends-page {
+    padding: 16px;
+  }
+
+  .search-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-row {
+    justify-content: center;
+  }
+
+  .friend-grid {
+    grid-template-columns: 1fr;
+  }
+}

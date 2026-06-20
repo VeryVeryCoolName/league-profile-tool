@@ -19,10 +19,10 @@ Originally based on the project by [MManoah](https://github.com/MManoah/league-p
 ## Download
 
 ### 64-Bit
-[Download League Profile Tool (64-bit)](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.3.0/LeagueProfileTool.zip)
+[Download League Profile Tool (64-bit)](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.4.0/LeagueProfileTool.zip)
 
 ### 32-Bit
-[Download League Profile Tool (32-bit)](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.3.0/LeagueProfileTool.32-bit.zip)
+[Download League Profile Tool (32-bit)](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.4.0/LeagueProfileTool.32-bit.zip)
 
 After downloading:
 1. Extract the ZIP archive somewhere on your computer

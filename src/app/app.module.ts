@@ -24,8 +24,9 @@ import { provideHttpClient, withInterceptorsFromDi, withXhr } from '@angular/com
 import { LcuExplorerComponent } from './lcu-explorer/lcu-explorer.component';
 import {IdentityPreviewComponent} from './identity-preview/identity-preview.component';
 import {MatchToolsComponent} from './match-tools/match-tools.component';
+import {FriendsComponent} from './friends/friends.component';
 
-@NgModule({ declarations: [AppComponent, HomeComponent, StatusComponent, DialogComponent, BackgroundComponent, ChampionsPipe, ChatrankComponent, ChampionPurchaseDateComponent, CustomapiComponent, FaqComponent, CustomiconComponent, LcuExplorerComponent, IdentityPreviewComponent, MatchToolsComponent],
+@NgModule({ declarations: [AppComponent, HomeComponent, StatusComponent, DialogComponent, BackgroundComponent, ChampionsPipe, ChatrankComponent, ChampionPurchaseDateComponent, CustomapiComponent, FaqComponent, CustomiconComponent, LcuExplorerComponent, IdentityPreviewComponent, MatchToolsComponent, FriendsComponent],
     bootstrap: [AppComponent], imports: [BrowserModule,
         FormsModule,
         MatTabsModule,

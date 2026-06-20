@@ -37,12 +37,21 @@ export class MatchToolsComponent {
   }
 
   public openExternal(url: string): void {
-    if (!url) return;
+    if (!this.isAllowedMatchupUrl(url)) return;
     if (this.electronService.isElectron && this.electronService.shell) {
-      this.electronService.shell.openExternal(url);
+      void this.electronService.shell.openExternal(url);
       return;
     }
 
-    window.open(url, '_blank', 'noopener');
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  private isAllowedMatchupUrl(value: string): boolean {
+    try {
+      const target = new URL(value);
+      return target.protocol === 'https:' && ['lolalytics.com', 'www.lolalytics.com'].includes(target.hostname.toLowerCase());
+    } catch {
+      return false;
+    }
   }
 }

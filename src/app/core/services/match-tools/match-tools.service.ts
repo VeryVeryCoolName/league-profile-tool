@@ -135,6 +135,7 @@ export class MatchToolsService implements OnDestroy {
   private bootstrapInFlight = false;
   private lastMatchupKey = '';
   private championNameById: Record<number, string> = {};
+  private championSlugById: Record<number, string> = {};
   private championMetadataById: Record<number, ChampionMetadata> = {};
   private championMetadataPromise: Promise<void> | null = null;
   private recommendedPositionsByChampionId: Record<number, string[]> = {};
@@ -655,8 +656,10 @@ export class MatchToolsService implements OnDestroy {
     const matchup = await provider.getLaneMatchup({
       allyChampionId,
       allyChampionName: this.championName(allyChampionId),
+      allyChampionSlug: this.championSlug(allyChampionId),
       enemyChampionId: champSelect.enemyChampionId,
       enemyChampionName: champSelect.enemyChampionName,
+      enemyChampionSlug: this.championSlug(champSelect.enemyChampionId),
       lane: champSelect.role
     });
     this.patchState({matchup: matchup && matchup.sourceUrl ? matchup : null});
@@ -727,21 +730,25 @@ export class MatchToolsService implements OnDestroy {
 
     const championPayload: any = await firstValueFrom(this.championService.getChampionIcons(this.dataDragonVersion));
     const nextMap: Record<number, string> = {};
+    const nextSlugMap: Record<number, string> = {};
     const nextMetadata: Record<number, ChampionMetadata> = {};
-    Object.keys(championPayload.data || {}).forEach(championName => {
-      const champion = championPayload.data[championName];
+    Object.keys(championPayload.data || {}).forEach(championAssetId => {
+      const champion = championPayload.data[championAssetId];
       const key = Number(champion && champion.key);
       if (!isNaN(key)) {
-        nextMap[key] = championName;
+        const displayName = this.displayChampionName(champion, championAssetId);
+        nextMap[key] = displayName;
+        nextSlugMap[key] = championAssetId;
         nextMetadata[key] = {
-          name: championName,
-          imageFull: champion && champion.image && champion.image.full ? champion.image.full : `${championName}.png`,
+          name: displayName,
+          imageFull: champion && champion.image && champion.image.full ? champion.image.full : `${championAssetId}.png`,
           tags: Array.isArray(champion && champion.tags) ? champion.tags : [],
           info: champion && champion.info ? champion.info : {}
         };
       }
     });
     this.championNameById = nextMap;
+    this.championSlugById = nextSlugMap;
     this.championMetadataById = nextMetadata;
   }
 
@@ -777,6 +784,11 @@ export class MatchToolsService implements OnDestroy {
     return this.championNameById[championId] || `Champion ${championId}`;
   }
 
+  private championSlug(championId: number | null): string {
+    if (!championId) return '';
+    return this.championSlugById[championId] || this.championName(championId);
+  }
+
   private championCard(championId: number): ChampionCard {
     return {
       championId,
@@ -788,6 +800,10 @@ export class MatchToolsService implements OnDestroy {
   private championIconUrl(championId: number | null): string {
     if (!championId || !this.dataDragonVersion || !this.championMetadataById[championId]) return '';
     return `https://ddragon.leagueoflegends.com/cdn/${this.dataDragonVersion}/img/champion/${this.championMetadataById[championId].imageFull}`;
+  }
+
+  private displayChampionName(champion: any, fallback: string): string {
+    return String(champion && champion.name || fallback || '').trim();
   }
 
   private normalizeRole(role: string): string {

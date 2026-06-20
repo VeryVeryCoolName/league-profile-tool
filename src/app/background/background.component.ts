@@ -23,6 +23,9 @@ export class BackgroundComponent implements OnInit {
   public showingSkins = false;
   public currentVersion: string;
   public championImages = [];
+  public filteredChampionImages = [];
+  public visibleChampionImages = [];
+  public visibleChampionLimit = 80;
   public skinsImages = [];
   public searchText: string;
   public championsLoading = true;
@@ -39,6 +42,7 @@ export class BackgroundComponent implements OnInit {
       this.championImages = BackgroundComponent.cachedChampionImages;
       this.championKeys = BackgroundComponent.cachedChampionKeys;
       this.championsLoading = false;
+      this.refreshChampionView();
       return;
     }
     this.version.apiVersion().subscribe(v => {
@@ -55,16 +59,21 @@ export class BackgroundComponent implements OnInit {
             championImages.push({
               src: src,
               alt: champion,
+              name: this.displayChampionName(championInfo, champion),
               loaded: false,
               broken: false
             });
           }
+          championImages.sort((left, right) => {
+            return String(left.name || left.alt || '').localeCompare(String(right.name || right.alt || ''));
+          });
           BackgroundComponent.cachedVersion = this.currentVersion;
           BackgroundComponent.cachedChampionImages = championImages;
           BackgroundComponent.cachedChampionKeys = championKeys;
           this.championImages = championImages;
           this.championKeys = championKeys;
           this.championsLoading = false;
+          this.refreshChampionView();
         } catch (err) {
           console.error(err);
           this.championsLoading = false;
@@ -122,6 +131,27 @@ export class BackgroundComponent implements OnInit {
     this.skinsImages = [];
   }
 
+  public refreshChampionView(): void {
+    const search = String(this.searchText || '').trim().toLowerCase();
+    this.filteredChampionImages = search
+      ? this.championImages.filter(champion => {
+        return String(champion.name || '').toLowerCase().indexOf(search) >= 0 ||
+          String(champion.alt || '').toLowerCase().indexOf(search) >= 0;
+      })
+      : this.championImages;
+    this.visibleChampionImages = this.filteredChampionImages.slice(0, this.visibleChampionLimit);
+  }
+
+  public resetChampionLimit(): void {
+    this.visibleChampionLimit = 80;
+    this.refreshChampionView();
+  }
+
+  public loadMoreChampions(): void {
+    this.visibleChampionLimit += 80;
+    this.refreshChampionView();
+  }
+
   public onImageLoad(image: Record<string, unknown>): void {
     image.loaded = true;
   }
@@ -136,6 +166,7 @@ export class BackgroundComponent implements OnInit {
   private buildSkinImages(alt: string, skins: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
     const skinImages = [];
     const seenSkinNums = {};
+    const championName = this.championDisplayName(alt);
 
     for (const skin of skins || []) {
       if (!this.isUsableSkin(alt, skin)) continue;
@@ -148,7 +179,7 @@ export class BackgroundComponent implements OnInit {
         src: `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${alt}_${skinNum}.jpg`,
         alt: skin.id,
         num: skinNum,
-        name: skin.name,
+        name: this.displaySkinName(skin.name, championName),
         order: 0,
         loaded: false,
         broken: false
@@ -248,6 +279,21 @@ export class BackgroundComponent implements OnInit {
       };
       preloader.src = image.src as string;
     });
+  }
+
+  private displayChampionName(champion: any, fallback: string): string {
+    return String(champion && champion.name || fallback || '').trim();
+  }
+
+  private championDisplayName(alt: string): string {
+    const champion = this.championImages.find(item => String(item.alt || '') === alt);
+    return String(champion && champion.name || alt || '').trim();
+  }
+
+  private displaySkinName(skinName: unknown, championName: string): string {
+    const name = String(skinName || '').trim();
+    if (!name || name.toLowerCase() === 'default') return `${championName} Default`;
+    return name;
   }
 
   public setBackground(id: string): void {

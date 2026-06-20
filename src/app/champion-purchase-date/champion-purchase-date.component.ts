@@ -60,7 +60,7 @@ export class ChampionPurchaseDateComponent implements OnInit {
     this.showingSkins = true;
     this.championData = [];
     this.championData.push({
-      name: champion.alt,
+      name: champion.name,
       purchased: champion.purchased,
       purchasedHidden: champion.purchasedHidden
     });
@@ -98,6 +98,7 @@ export class ChampionPurchaseDateComponent implements OnInit {
           if (champions[i].ownership.owned) {
             const o = {
               alt: this.getDataDragonAlias(champions[i].alias),
+              name: this.displayChampionName(champions[i], champions[i].alias),
               purchased: new Date(champions[i].purchased).toLocaleString("en-US"),
               purchasedHidden: champions[i].purchased,
               skins: [],
@@ -126,6 +127,10 @@ export class ChampionPurchaseDateComponent implements OnInit {
 
   private getDataDragonAlias(alias: string): string {
     return this.championAliasOverrides[alias] || alias;
+  }
+
+  private displayChampionName(champion: any, fallback: string): string {
+    return String(champion && champion.name || fallback || '').trim();
   }
 
   private parseResponse(response: any): any {

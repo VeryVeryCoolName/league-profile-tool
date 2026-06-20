@@ -11,7 +11,11 @@ export class ChampionsPipe implements PipeTransform {
     }
     // filter items array, items which match and return true will be
     // kept, false will be filtered out
-    return items.filter(item => item.alt.toLowerCase().indexOf(filter.toLowerCase()) !== -1);
+    const search = filter.toLowerCase();
+    return items.filter(item => {
+      return String(item.name || '').toLowerCase().indexOf(search) !== -1 ||
+        String(item.alt || '').toLowerCase().indexOf(search) !== -1;
+    });
   }
 
 }

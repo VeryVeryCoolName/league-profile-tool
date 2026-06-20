@@ -1,8 +1,10 @@
 export interface ChampionMatchupRequest {
   allyChampionId: number;
   allyChampionName: string;
+  allyChampionSlug?: string;
   enemyChampionId: number;
   enemyChampionName: string;
+  enemyChampionSlug?: string;
   lane: string;
 }
 
@@ -49,7 +51,11 @@ export class LolalyticsMatchupProvider implements IMatchupProvider {
       winRate: '',
       difficulty: '',
       sourceLabel: this.label,
-      sourceUrl: this.buildMatchupUrl(request.allyChampionName, request.enemyChampionName, request.lane),
+      sourceUrl: this.buildMatchupUrl(
+        request.allyChampionSlug || request.allyChampionName,
+        request.enemyChampionSlug || request.enemyChampionName,
+        request.lane
+      ),
       note: ''
     };
     this.cache.set(cacheKey, result);

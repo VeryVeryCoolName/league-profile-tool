@@ -8,27 +8,43 @@ import { endpoints } from "./endpoints";
 })
 export class LCUConnectionService {
   private readonly _endpoints = endpoints;
+  private readonly inFlightGetRequests = new Map<string, Promise<any>>();
   constructor(private connector: ConnectorService, private electronService: ElectronService) {
   }
 
   public async requestSend(body: Record<string, unknown>, method: string, endpoint: string): Promise<any> {
+    const requestMethod = this.normalizeMethod(method);
     const endPoint = this._endpoints[endpoint];
-    const requestBody = await this.prepareRequestBody(body, method, endpoint, endPoint);
+    const requestBody = await this.prepareRequestBody(body, requestMethod, endpoint, endPoint);
     if (typeof requestBody === 'string') return requestBody;
-    const response = await this.makeRequest(method, requestBody, endPoint, false);
+    const response = await this.makeRequest(requestMethod, requestBody, endPoint, false);
     if (response !== 'Success') return response;
-    return await this.verifyWrite(body, requestBody, method, endpoint, endPoint);
+    return await this.verifyWrite(body, requestBody, requestMethod, endpoint, endPoint);
   }
 
   public async requestSendNoVerify(body: Record<string, unknown>, method: string, endpoint: string): Promise<any> {
+    const requestMethod = this.normalizeMethod(method);
     const endPoint = this._endpoints[endpoint];
-    const requestBody = await this.prepareRequestBody(body, method, endpoint, endPoint);
+    const requestBody = await this.prepareRequestBody(body, requestMethod, endpoint, endPoint);
     if (typeof requestBody === 'string') return requestBody;
-    return await this.makeRequest(method, requestBody, endPoint, false);
+    return await this.makeRequest(requestMethod, requestBody, endPoint, false);
   }
 
   public async requestCustomAPI(body: Record<string, unknown>, method: string, endpoint: string): Promise<any> {
-    return await this.makeRequest(method, body, endpoint, true);
+    const requestMethod = this.normalizeMethod(method);
+    if (requestMethod === 'GET') {
+      const key = this.normalizeEndpoint(endpoint) || endpoint;
+      const existing = this.inFlightGetRequests.get(key);
+      if (existing !== undefined) return await existing;
+
+      const request = this.makeRequest(requestMethod, body, endpoint, true).finally(() => {
+        this.inFlightGetRequests.delete(key);
+      });
+      this.inFlightGetRequests.set(key, request);
+      return await request;
+    }
+
+    return await this.makeRequest(requestMethod, body, endpoint, true);
   }
 
   private async makeRequest(method: string, body: Record<string, unknown>, endPoint: string, getFull: boolean): Promise<any> {
@@ -37,8 +53,11 @@ export class LCUConnectionService {
       console.error(`[LCU] ${message}`);
       return message;
     }
+    const normalizedEndPoint = this.normalizeEndpoint(endPoint);
+    if (!normalizedEndPoint) return 'Invalid LCU endpoint path.';
+
     const options = JSON.parse(JSON.stringify(this.connector.connector));
-    options.url += endPoint;
+    options.url += normalizedEndPoint;
     options.method = method;
     options.headers = options.headers || {};
     options.headers.Accept = "application/json";
@@ -53,12 +72,34 @@ export class LCUConnectionService {
       })
       .catch(err => {
         const message = this.formatError(err);
-        console.error(`[LCU] ${method} ${endPoint} failed`, message);
+        if (this.shouldLogRequestFailure(method, normalizedEndPoint, message)) {
+          console.error(`[LCU] ${method} ${normalizedEndPoint} failed`, message);
+        }
         if (method !== 'GET') {
-          return `${method} ${endPoint} failed: ${message}. Payload: ${this.summarizePayload(body)}`;
+          return `${method} ${normalizedEndPoint} failed: ${message}. Payload: ${this.summarizePayload(body)}`;
         }
         return message;
       });
+  }
+
+  private normalizeMethod(method: string): string {
+    return String(method || 'GET').trim().toUpperCase();
+  }
+
+  private normalizeEndpoint(endPoint: string): string {
+    const value = String(endPoint || '').trim();
+    if (!value || /[\u0000-\u001f\u007f\s\\]/.test(value) || /%(?:2e|2f|5c)/i.test(value)) return '';
+    if (/^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith('//')) return '';
+    if (!value.startsWith('/') || value.indexOf('#') >= 0) return '';
+    if (
+      value !== '/help' &&
+      !value.startsWith('/lol-') &&
+      !value.startsWith('/plugin-manager/') &&
+      !value.startsWith('/riotclient/')
+    ) {
+      return '';
+    }
+    return value;
   }
 
   private async prepareRequestBody(body: Record<string, unknown>, method: string, endpoint: string, endPoint: string): Promise<any> {
@@ -141,6 +182,13 @@ export class LCUConnectionService {
     });
   }
 
+  private shouldLogRequestFailure(method: string, endPoint: string, message: string): boolean {
+    if (method !== 'GET') return true;
+    if (/404\b|LOBBY_NOT_FOUND|RESOURCE_NOT_FOUND|not found/i.test(message)) return false;
+    if (endPoint.indexOf('/lol-lobby/') === 0 && /RPC_ERROR/i.test(message)) return false;
+    return true;
+  }
+
   private valuesMatch(key: string, actual: unknown, expected: unknown): boolean {
     if (key === 'challengePoints') {
       return String(actual) === String(expected);
@@ -161,7 +209,7 @@ export class LCUConnectionService {
 
   private verificationFailed(endPoint: string, requestBody: Record<string, unknown>, actual: Record<string, unknown>, expected: Record<string, unknown>): string {
     const message = `LCU update sent, but ${endPoint} did not reflect the requested value.`;
-    console.error('[LCU] Verification failed', {endpoint: endPoint, payload: requestBody, expected, actual});
+    console.error('[LCU] Verification failed', this.redact({endpoint: endPoint, payload: requestBody, expected, actual}));
     return `${message} Riot may have overwritten or normalized this field; try again after the client settles.`;
   }
 
@@ -177,11 +225,65 @@ export class LCUConnectionService {
 
   private summarizePayload(body: Record<string, unknown>): string {
     try {
-      const payload = JSON.stringify(body);
+      const payload = JSON.stringify(this.redact(body));
       return payload.length > 260 ? `${payload.slice(0, 260)}...` : payload;
     } catch (err) {
       return '[unserializable payload]';
     }
+  }
+
+  private redact(value: any, key = ''): any {
+    if (this.isSensitiveKey(key)) return '[REDACTED]';
+    if (typeof value === 'string') return this.isSensitiveString(value) ? '[REDACTED]' : value;
+    if (Array.isArray(value)) return value.map(item => this.redact(item, key));
+    if (value && typeof value === 'object') {
+      const output = {};
+      Object.keys(value).forEach(childKey => {
+        output[childKey] = this.redact(value[childKey], childKey);
+      });
+      return output;
+    }
+    return value;
+  }
+
+  private isSensitiveKey(key: string): boolean {
+    const normalized = String(key || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    return [
+      'access',
+      'auth',
+      'authorization',
+      'code',
+      'cookie',
+      'discordid',
+      'displayname',
+      'gamename',
+      'gametag',
+      'idtoken',
+      'invitation',
+      'join',
+      'jwt',
+      'link',
+      'name',
+      'password',
+      'pid',
+      'puuid',
+      'refresh',
+      'secret',
+      'session',
+      'statusmessage',
+      'summoner',
+      'token',
+      'url'
+    ].some(value => normalized.indexOf(value) >= 0) || normalized.endsWith('id') || normalized.endsWith('ids');
+  }
+
+  private isSensitiveString(value: string): boolean {
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    if (/^[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}$/.test(trimmed)) return true;
+    if (/^https?:\/\//i.test(trimmed)) return true;
+    if (/join.?code|access.?token|refresh.?token|id.?token|authorization|cookie/i.test(trimmed)) return true;
+    return /^[A-Za-z0-9_-]{24,}$/.test(trimmed) && /[A-Za-z]/.test(trimmed) && /\d/.test(trimmed);
   }
 
 }

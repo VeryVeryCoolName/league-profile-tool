@@ -33,11 +33,6 @@ export class IdentityPreviewComponent implements OnDestroy {
       this.loadedForCurrentConnection = true;
       this.identityPreviewService.refreshPreview();
     });
-
-    if (this.connector.isReady()) {
-      this.loadedForCurrentConnection = true;
-      this.identityPreviewService.refreshPreview();
-    }
   }
 
   ngOnDestroy(): void {

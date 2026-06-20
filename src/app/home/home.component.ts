@@ -1,4 +1,4 @@
-import {Component, OnInit, ChangeDetectionStrategy} from '@angular/core';
+import {Component, OnDestroy, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import {ElectronService} from "../core/services";
 import {VersionService} from "../core/services/version/version.service";
 import {APP_VERSION_LABEL} from "../app-version";
@@ -10,19 +10,24 @@ import {APP_VERSION_LABEL} from "../app-version";
     changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   public title = 'LEAGUE PROFILE TOOL';
   public currentVersion = APP_VERSION_LABEL;
   public newestVersion = 'Checking...';
   public updateCheckStatus = 'Checking GitHub for updates.';
+  private updateCheckTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private electronService: ElectronService, private versionService: VersionService) {
   }
 
   ngOnInit(): void {
-    setTimeout(() => {
+    this.updateCheckTimer = setTimeout(() => {
       void this.checkNewestVersion();
-    }, 2000);
+    }, 6000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.updateCheckTimer !== null) clearTimeout(this.updateCheckTimer);
   }
 
   private async checkNewestVersion() {
@@ -46,9 +51,9 @@ export class HomeComponent implements OnInit {
   public github(): void {
     const url = 'https://github.com/VeryVeryCoolName/league-profile-tool';
     if (this.electronService.shell) {
-      this.electronService.shell.openExternal(url);
+      void this.electronService.shell.openExternal(url);
       return;
     }
-    window.open(url, '_blank');
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 }

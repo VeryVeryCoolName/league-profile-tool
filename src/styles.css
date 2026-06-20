@@ -137,6 +137,10 @@ mat-tab-header {
   background: rgba(255, 255, 255, 0.055);
   border-radius: 7px 7px 0 0 !important;
   transition: background 150ms ease, box-shadow 150ms ease;
+  --mdc-filled-text-field-active-indicator-color: rgba(105, 189, 245, 0.45);
+  --mdc-filled-text-field-focus-active-indicator-color: var(--accent);
+  --mdc-filled-text-field-caret-color: var(--accent);
+  --mat-form-field-focus-select-arrow-color: var(--accent);
 }
 
 .mat-form-field-appearance-fill.mat-focused .mat-form-field-flex,
@@ -170,6 +174,10 @@ mat-tab-header {
   border: 1px solid var(--line);
   border-radius: 7px !important;
   box-shadow: var(--shadow-md);
+  --mat-option-selected-state-label-text-color: #ffffff;
+  --mat-option-selected-state-layer-color: rgba(105, 189, 245, 0.16);
+  --mat-option-focus-state-layer-color: rgba(105, 189, 245, 0.1);
+  --mat-option-hover-state-layer-color: rgba(105, 189, 245, 0.12);
 }
 
 .mat-option:hover:not(.mat-option-disabled),
@@ -183,6 +191,21 @@ mat-tab-header {
 .mat-primary .mat-option.mat-selected:not(.mat-option-disabled) {
   color: #ffffff;
   background: rgba(142, 202, 255, 0.18);
+}
+
+.mat-mdc-select-panel .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled),
+.app-select-panel .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: rgba(105, 189, 245, 0.18) !important;
+}
+
+.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked::after,
+.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-indeterminate::after {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.mdc-line-ripple::after {
+  border-bottom-color: var(--accent) !important;
 }
 
 textarea.mat-input-element {
@@ -267,6 +290,22 @@ button,
 .mat-mdc-dialog-container .mdc-dialog__title,
 .mat-mdc-dialog-container .mdc-dialog__content {
   color: var(--text);
+}
+
+.blue-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
+  background:
+    linear-gradient(180deg, rgba(24, 116, 173, 0.22), rgba(40, 46, 52, 0.96)),
+    var(--surface-raised) !important;
+  border-color: rgba(105, 189, 245, 0.42);
+  box-shadow: 0 24px 64px rgba(8, 45, 72, 0.62) !important;
+}
+
+.blue-dialog-panel .mat-mdc-dialog-container .mdc-dialog__title {
+  color: #e5f6ff;
+}
+
+.blue-dialog-panel .mat-mdc-dialog-container .mdc-dialog__content {
+  color: #d2e8f8;
 }
 
 .tool-panel {

@@ -1,13 +1,17 @@
 <main class="status-page">
-  <section class="tool-panel">
+  <section class="tool-panel status-card">
     <div class="panel-header">
       <h2>Status</h2>
       <p>Set your chat availability and a short visible message.</p>
     </div>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="fill" class="status-select">
       <mat-label>Status</mat-label>
-      <mat-select [(value)]="availability">
+      <mat-select
+        [(value)]="selectedStatus"
+        panelClass="app-select-panel"
+        [disabled]="availabilitySaving"
+        (selectionChange)="onStatusSelectionChanged()">
         @for (status of statuses; track status) {
           <mat-option [value]="status.value">
             {{status.label}}
@@ -15,16 +19,36 @@
         }
       </mat-select>
     </mat-form-field>
+    @if (statusFeedback) {
+      <p class="status-feedback" [class.error]="statusFeedback.startsWith('Could not')">{{statusFeedback}}</p>
+    }
 
-    <mat-form-field appearance="fill" class="message-field">
-      <mat-label>Status Message</mat-label>
-      <textarea matInput [(ngModel)]="text"></textarea>
-      <mat-hint>Long messages can bug out your chat/friends list.</mat-hint>
-    </mat-form-field>
+    <div class="message-container">
+      <mat-form-field appearance="fill" class="message-field">
+        <mat-label>Status Message</mat-label>
+        <textarea matInput [(ngModel)]="text"></textarea>
+        <mat-hint>Long messages can bug out your chat/friends list.</mat-hint>
+      </mat-form-field>
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        class="set-message-button"
+        (click)="setMessage()"
+        [disabled]="messageSaving">
+        {{messageSaving ? 'Setting...' : 'Set message'}}
+      </button>
+    </div>
+    @if (messageFeedback) {
+      <p class="status-feedback" [class.error]="messageFeedback.startsWith('Could not')">{{messageFeedback}}</p>
+    }
 
-    <div class="panel-actions">
-      <button mat-raised-button color="primary" (click)="setStatus()">Set Status</button>
+    <div class="persistent-panel">
+      <label class="persistent-toggle">
+        <input type="checkbox" [checked]="keepInvisible" (change)="toggleKeepInvisible($event)">
+        <span>Keep invisible</span>
+      </label>
+      <p class="persistent-note">League may reset invisible during queue, champ select, or game start. This option reapplies it automatically.</p>
     </div>
   </section>
 </main>
-

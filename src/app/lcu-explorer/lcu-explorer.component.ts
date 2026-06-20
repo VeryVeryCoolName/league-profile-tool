@@ -80,6 +80,20 @@ export class LcuExplorerComponent implements OnDestroy {
       ]
     },
     {
+      name: 'Discord / Social Integration',
+      endpoints: [
+        {method: 'GET', path: '/lol-chat/v1/discord-link-status', notes: 'Riot/Discord link availability and linked state'},
+        {method: 'GET', path: '/lol-chat/v1/is-discord-integration-enabled', notes: 'Discord integration feature gate'},
+        {method: 'GET', path: '/lol-chat/v1/is-discord-link-available', notes: 'Whether the official Discord link action is available'},
+        {method: 'GET', path: '/lol-chat/v1/is-discord-linked', notes: 'Whether the local Riot account is linked to Discord'},
+        {method: 'GET', path: '/plugin-manager/v1/external-plugins/availability', notes: 'External plugin connection state'},
+        {method: 'GET', path: '/lol-platform-config/v1/namespaces/GameInvites/ServiceEnabled', notes: 'Game invite service feature flag'},
+        {method: 'GET', path: '/lol-platform-config/v1/namespaces/GameInvites/LobbyCreationEnabled', notes: 'Lobby creation through invite flows feature flag'},
+        {method: 'GET', path: '/lol-platform-config/v1/namespaces/Parties/OpenPartyEnable', notes: 'Open party feature flag'},
+        {method: 'GET', path: '/lol-lobby/v2/party-active', notes: 'Whether a party is currently active'}
+      ]
+    },
+    {
       name: 'Summoner / Profile',
       endpoints: [
         {method: 'GET', path: '/lol-summoner/v1/current-summoner', notes: 'Current summoner identity'},
