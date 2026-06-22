@@ -1,0 +1,70 @@
+<main class="custom-icons-page">
+  <mat-card class="note-card">
+    <mat-card-header>
+      <mat-card-title>Note</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Owned icons can update your account icon when Riot accepts them. Any icon can still be applied to your social/profile-card presence and may reset after a client refresh.</p>
+    </mat-card-content>
+  </mat-card>
+
+  <form class="tool-panel search-panel" (submit)="$event.preventDefault()">
+    <mat-form-field>
+      <mat-label>Search by name or ID</mat-label>
+      <input matInput [(ngModel)]="searchKeyword" (ngModelChange)="resetIconLimit()" name="search" placeholder="Ex. Ahri or 0">
+    </mat-form-field>
+    <button
+      mat-stroked-button
+      type="button"
+      class="owned-filter"
+      [class.active]="ownedOnly"
+      [disabled]="!canFilterOwnedIcons"
+      (click)="toggleOwnedOnly()">
+      Owned Only
+    </button>
+  </form>
+
+  @if (iconsLoading) {
+    <p class="loading-text">Loading icons...</p>
+  }
+  @if (iconsError) {
+    <p class="loading-text">{{iconsError}}</p>
+  }
+  @if (inventoryLoading) {
+    <p class="inventory-text">Checking owned icons...</p>
+  }
+  @if (inventoryUnavailable) {
+    <p class="inventory-text">Owned icon inventory is unavailable or empty. Showing all icons.</p>
+  }
+  @if (selectionNote) {
+    <p class="selection-note">{{selectionNote}}</p>
+  }
+  @if (!iconsLoading && !iconsError) {
+    <div class="icon-grid">
+      @for (icon of visibleIcons; track trackByIcon($index, icon)) {
+        <span class="icons">
+          @if (!icon.broken) {
+            <button
+              mat-stroked-button
+              class="icon-button"
+              [class.owned-icon]="icon.owned"
+              [class.selected-icon]="isSelectedIcon(icon)"
+              [disabled]="updatingIconId !== null"
+              [attr.aria-label]="'Set profile icon to ' + (icon.title || icon.id)"
+              [attr.aria-pressed]="isSelectedIcon(icon)"
+              [attr.title]="(icon.title || icon.id) + ' - ' + icon.ownershipLabel"
+              (click)="setIcon(icon.id)">
+              <img [src]="icon.src" [alt]="icon.title || icon.id" loading="lazy" decoding="async" (error)="onIconError(icon)"/>
+              @if (icon.owned) {
+                <span class="owned-badge">Owned</span>
+              }
+            </button>
+          }
+        </span>
+      }
+    </div>
+  }
+  @if (visibleIcons.length < filteredIcons.length) {
+    <button mat-raised-button color="primary" (click)="loadMoreIcons()">Load More</button>
+  }
+</main>

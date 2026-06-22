@@ -1,0 +1,67 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
+.dialog-shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 1.45rem;
+  min-height: 16rem;
+  padding: 2.35rem 2.25rem 1.25rem;
+}
+
+.dialog-shell:focus {
+  outline: none;
+}
+
+h1 {
+  margin: 0;
+  color: #f7fbff;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.dialog-content {
+  min-height: 3.25rem;
+}
+
+p {
+  margin: 0;
+  color: #e1e9ef;
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+button[mat-raised-button],
+button[mat-button] {
+  min-width: 7.25rem;
+}
+
+@media (max-width: 560px) {
+  .dialog-shell {
+    min-height: 12rem;
+    padding: 1.45rem;
+  }
+
+  .dialog-actions {
+    justify-content: stretch;
+  }
+
+  button[mat-raised-button],
+  button[mat-button] {
+    flex: 1 1 auto;
+  }
+}

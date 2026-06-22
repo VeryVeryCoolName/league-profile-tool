@@ -1,0 +1,265 @@
+main {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 1rem;
+  text-align: left;
+}
+
+.developer-intro-card {
+  width: 100%;
+  padding: 1.15rem 1.25rem;
+  text-align: left;
+}
+
+.developer-intro-card .mat-card-title,
+.developer-intro-card .mat-mdc-card-title {
+  display: block;
+  margin: 0 0 0.5rem !important;
+}
+
+.developer-intro-card .mat-card-content,
+.developer-intro-card .mat-mdc-card-content {
+  display: block;
+  padding: 0 !important;
+}
+
+.mat-card-content p,
+.mat-mdc-card-content p {
+  margin-bottom: 0;
+}
+
+.explorer-warning {
+  margin-top: 0.5rem;
+  color: #ffd38d;
+}
+
+.explorer-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+}
+
+.mat-form-field,
+.mat-mdc-form-field {
+  display: block;
+  max-width: none;
+  width: 100%;
+  text-align: left;
+}
+
+:host ::ng-deep .explorer-toolbar .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+:host ::ng-deep .explorer-toolbar .mat-mdc-form-field-infix,
+:host ::ng-deep .explorer-toolbar .mat-mdc-input-element {
+  text-align: left;
+}
+
+:host ::ng-deep .explorer-toolbar .mat-mdc-text-field-wrapper,
+:host ::ng-deep .explorer-toolbar .mat-form-field-flex {
+  background: transparent !important;
+}
+
+.watch-summary {
+  grid-column: 1 / -1;
+  color: #9fd3ff;
+  font-size: 0.9rem;
+}
+
+.export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding-top: 0.65rem;
+}
+
+.endpoint-group {
+  display: grid;
+  gap: 0.75rem;
+}
+
+h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+.endpoint-card {
+  padding: 1rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.endpoint-card.changed {
+  border-color: #d1a846;
+}
+
+.endpoint-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.endpoint-title {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: flex-start;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.endpoint-title:hover .path,
+.endpoint-title:focus-visible .path {
+  color: #dff3ff;
+}
+
+.endpoint-title:focus-visible {
+  outline: 1px solid #6cb6e8;
+  outline-offset: 3px;
+}
+
+.method {
+  flex: 0 0 auto;
+  color: #9fd3ff;
+  font-weight: 700;
+}
+
+.path {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #fff;
+}
+
+.status {
+  min-width: 6.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #111;
+  background: #aaa;
+}
+
+.status.idle,
+.status.loading {
+  color: #fff;
+  background: #666;
+}
+
+.status.ok {
+  background: #78d176;
+}
+
+.status.empty {
+  background: #c9c9c9;
+}
+
+.status.not-found,
+.status.unauthorized,
+.status.error {
+  color: #fff;
+  background: #b84b4b;
+}
+
+.endpoint-notes {
+  margin: 0.35rem 0 0.75rem;
+  color: #d6d6d6;
+  font-size: 0.9rem;
+}
+
+.endpoint-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+}
+
+.endpoint-actions button {
+  min-width: 5.5rem;
+}
+
+.loading,
+.copy-state {
+  color: #c7dced;
+}
+
+.endpoint-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+  color: #c7dced;
+  font-size: 0.85rem;
+}
+
+.change-panel {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  max-height: 14rem;
+  overflow: auto;
+  background: #252525;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+}
+
+.change-panel h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.change-panel code {
+  color: #ffe2a3;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+pre {
+  width: 100%;
+  max-height: min(58vh, 38rem);
+  overflow: auto;
+  margin: 0.75rem 0 0;
+  padding: 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #11161b;
+  color: #eee;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+@media (max-width: 1100px) {
+  .explorer-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .export-actions {
+    justify-content: flex-start;
+  }
+
+  .status {
+    min-width: 0;
+  }
+}

@@ -1,0 +1,71 @@
+<mat-card class="preview-card">
+  @if (backgroundStyle) {
+    <div class="preview-art" [style.background-image]="backgroundStyle"></div>
+  }
+  <div class="preview-shade"></div>
+
+  <div class="preview-content">
+    <header class="preview-header">
+      <div class="profile-icon">
+        @if (state.profileIconUrl && !iconFailed) {
+          <img [src]="state.profileIconUrl" alt="Profile icon" (error)="iconFailed = true">
+        }
+        @if (!state.profileIconUrl || iconFailed) {
+          <span>{{state.profileIconId || '?'}}</span>
+        }
+      </div>
+
+      <div class="identity-copy">
+        <span class="eyebrow">Live Preview</span>
+        <h2>
+          {{state.summonerName || 'Summoner'}}
+          @if (state.tagLine) {
+            <small>#{{state.tagLine}}</small>
+          }
+        </h2>
+        <p class="status-line">{{availabilityText}}</p>
+      </div>
+
+      <button mat-stroked-button (click)="refreshPreview()" [disabled]="state.loading">
+        {{state.loading ? 'Refreshing...' : 'Refresh Preview'}}
+      </button>
+    </header>
+
+    <div class="preview-grid">
+      <div>
+        <span>Chat Rank</span>
+        <strong>{{chatRankText}}</strong>
+      </div>
+      <div>
+        <span>Challenge Rank</span>
+        <strong>{{challengeText}}</strong>
+      </div>
+      <div>
+        <span>Profile Icon</span>
+        <strong class="stacked-value">
+          {{profileIconName}}
+          @if (state.profileIconId !== undefined && state.profileIconId !== null) {
+            <small>({{state.profileIconId}})</small>
+          }
+        </strong>
+      </div>
+      <div>
+        <span>Background</span>
+        <strong>{{state.backgroundLabel || 'Not loaded'}}</strong>
+      </div>
+    </div>
+
+    @if (!state.loaded && !state.loading) {
+      <p class="preview-note">Refresh once to preview your current League identity.</p>
+    }
+    @if (state.challengeSpoofActive) {
+      <p class="preview-note warning">Showing your selected Challenge Rank until the lobby changes.</p>
+    }
+    @if (state.error) {
+      <p class="preview-note error">{{state.error}}</p>
+    }
+    @if (state.updatedAt) {
+      <p class="preview-note">Updated {{state.updatedAt}}</p>
+    }
+  </div>
+</mat-card>

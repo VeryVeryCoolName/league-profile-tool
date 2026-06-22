@@ -1,0 +1,57 @@
+main {
+  text-align: center;
+}
+
+h1 {
+  margin: 0.4rem 0 1.25rem;
+  color: #f7fbff;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.version-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.8rem;
+  max-width: 46rem;
+  margin: 1.25rem auto 0;
+}
+
+.versions {
+  min-width: 0;
+  padding: 0.25rem;
+}
+
+.versions p {
+  margin: 0.35rem 0 0;
+  color: #fff;
+  font-weight: 700;
+}
+
+.versions small {
+  display: block;
+  margin-top: 0.45rem;
+  color: #c7dced;
+}
+
+#linkButtons {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+button {
+  margin: 0.5rem;
+}
+
+.credits {
+  margin: 2.25rem auto 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 720px) {
+  h1 {
+    font-size: 1.8rem;
+  }
+}

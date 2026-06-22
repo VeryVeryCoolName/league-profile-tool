@@ -1,0 +1,113 @@
+.purchase-date-page {
+  max-width: 82rem;
+  text-align: center;
+}
+
+.state-card {
+  max-width: 25rem;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+img {
+  height: 100%;
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.search-champion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 7rem;
+  margin-bottom: 1rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.search-champion .mat-form-field,
+.search-champion .mat-mdc-form-field {
+  width: min(100%, 48rem);
+}
+
+.champion-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.mat-stroked-button,
+.mat-mdc-outlined-button {
+  margin: 0;
+  padding: 0;
+  width: 104px !important;
+  height: 104px !important;
+  min-width: 0;
+  min-height: 0;
+  line-height: 0;
+  background: #18232b;
+  border-color: rgba(255, 255, 255, 0.16);
+  border-radius: 7px !important;
+  transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+  --mat-button-outlined-container-height: auto;
+}
+
+.mat-stroked-button:hover,
+.mat-mdc-outlined-button:hover {
+  border-color: rgba(142, 202, 255, 0.85);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+:host ::ng-deep .mat-mdc-outlined-button .mdc-button__label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+}
+
+.mat-form-field,
+.mat-mdc-form-field {
+  text-align: center;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-form-field-infix,
+:host ::ng-deep .search-champion .mat-mdc-input-element {
+  text-align: center;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-form-field-infix {
+  min-height: 4rem;
+  padding-top: 1.35rem;
+  padding-bottom: 0.75rem;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-input-element {
+  font-size: 1.1rem;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-text-field-wrapper,
+:host ::ng-deep .search-champion .mat-form-field-flex {
+  background: transparent !important;
+}
+
+.table-wrap {
+  max-width: 52rem;
+  margin-top: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+  overflow-x: auto;
+}
+
+table {
+  text-align: left;
+  font-size: 1rem;
+  max-width: 100%;
+}
+
+td {
+  padding-right: 1rem;
+  word-break: break-word;
+}

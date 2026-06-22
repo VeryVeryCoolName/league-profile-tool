@@ -1,0 +1,18 @@
+@if (connected$ | async; as connected) {
+  <div class="connection-status connected">League Client connected</div>
+} @else {
+  <div class="connection-status">Connecting to League Client</div>
+}
+<mat-tab-group class="app-tabs" [mat-stretch-tabs]="false" animationDuration="180ms">
+  <mat-tab label="Home"><ng-template matTabContent><app-home></app-home></ng-template></mat-tab>
+  <mat-tab label="Match Tools"><ng-template matTabContent><app-match-tools></app-match-tools></ng-template></mat-tab>
+  <mat-tab label="Friends"><ng-template matTabContent><app-friends></app-friends></ng-template></mat-tab>
+  <mat-tab label="Status"><ng-template matTabContent><app-status></app-status></ng-template></mat-tab>
+  <mat-tab label="Custom Icons"><ng-template matTabContent><app-customicon></app-customicon></ng-template></mat-tab>
+  <mat-tab label="Background"><ng-template matTabContent><app-background></app-background></ng-template></mat-tab>
+  <mat-tab label="Chat Rank"><ng-template matTabContent><app-chatrank></app-chatrank></ng-template></mat-tab>
+  <mat-tab label="Champion Purchases"><ng-template matTabContent><app-champion-purchase-date></app-champion-purchase-date></ng-template></mat-tab>
+  <mat-tab label="Custom API"><ng-template matTabContent><app-customapi></app-customapi></ng-template></mat-tab>
+  <mat-tab label="Developer Tools"><ng-template matTabContent><app-lcu-explorer></app-lcu-explorer></ng-template></mat-tab>
+  <mat-tab label="FAQ"><ng-template matTabContent><app-faq></app-faq></ng-template></mat-tab>
+</mat-tab-group>

@@ -1,0 +1,199 @@
+.background-page {
+  max-width: 88rem;
+}
+
+img {
+  height: 100%;
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 160ms ease-in;
+}
+
+.loaded {
+  opacity: 1;
+}
+
+.search-champion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 7rem;
+  margin-bottom: 1rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.search-champion.browsing-skins {
+  min-height: 5.3rem;
+  padding: 1rem;
+}
+
+.search-champion .mat-form-field,
+.search-champion .mat-mdc-form-field {
+  width: min(100%, 48rem);
+}
+
+.asset-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  animation: section-soft-in 180ms ease-out both;
+}
+
+.mat-stroked-button,
+.mat-mdc-outlined-button {
+  margin: 0;
+  padding: 0;
+}
+
+.mat-form-field,
+.mat-mdc-form-field {
+  text-align: center;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-form-field-infix,
+:host ::ng-deep .search-champion .mat-mdc-input-element {
+  text-align: center;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-form-field-infix {
+  min-height: 4rem;
+  padding-top: 1.35rem;
+  padding-bottom: 0.75rem;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-input-element {
+  font-size: 1.1rem;
+}
+
+:host ::ng-deep .search-champion .mat-mdc-text-field-wrapper,
+:host ::ng-deep .search-champion .mat-form-field-flex {
+  background: transparent !important;
+}
+
+.skinSplash {
+  width: 100%;
+  height: 100%;
+}
+
+.image-button {
+  position: relative;
+  overflow: hidden;
+  vertical-align: top;
+  min-width: 0;
+  min-height: 0;
+  line-height: 0;
+  background: #18232b;
+  border-color: rgba(255, 255, 255, 0.16);
+  border-radius: 7px !important;
+  transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+  --mat-button-outlined-container-height: auto;
+}
+
+:host ::ng-deep .image-button .mdc-button__label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+}
+
+.image-button:hover {
+  border-color: rgba(142, 202, 255, 0.85);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+.image-button.active {
+  border-color: rgba(94, 227, 154, 0.95) !important;
+  box-shadow: 0 0 0 2px rgba(94, 227, 154, 0.22), 0 0 18px rgba(94, 227, 154, 0.14) !important;
+}
+
+.champion-button {
+  width: 104px !important;
+  height: 104px !important;
+}
+
+.skin-button {
+  width: 191px !important;
+  height: 352px !important;
+  background: #0e1419;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.skin-button img {
+  object-position: center center;
+  transition: transform 180ms ease, filter 180ms ease, opacity 160ms ease-in;
+}
+
+.skin-button:hover img {
+  transform: scale(1.025);
+  filter: saturate(1.05) brightness(1.04);
+}
+
+.skin-name {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  padding: 1.2rem 0.55rem 0.5rem;
+  color: #f4fbff;
+  text-align: center;
+  background: linear-gradient(180deg, transparent, rgba(4, 10, 14, 0.88));
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.15;
+  opacity: 0;
+  transform: translateY(0.35rem);
+  transition: opacity 150ms ease, transform 150ms ease;
+  pointer-events: none;
+}
+
+.skin-button:hover .skin-name,
+.skin-button:focus-visible .skin-name,
+.skin-button.active .skin-name {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.image-placeholder {
+  position: absolute;
+  inset: 1px;
+  background: #1a2630;
+}
+
+.skin-placeholder {
+  background: #17232c;
+}
+
+.loading-text {
+  flex-basis: 100%;
+  margin: 0.75rem 0;
+  text-align: center;
+  color: #c7dced;
+}
+
+@keyframes section-soft-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asset-grid {
+    animation: none;
+  }
+
+  .image-button,
+  .skin-button img,
+  .skin-name {
+    transition: none;
+  }
+}

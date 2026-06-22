@@ -1,0 +1,95 @@
+<main>
+  <mat-card class="developer-intro-card">
+    <mat-card-title>Developer Tools</mat-card-title>
+    <mat-card-content>
+      <p>Read-only identity, regalia, challenge, hovercard, and presence inspection.</p>
+      <p class="explorer-warning">Refresh all and exports can reset temporary Challenge Rank changes.</p>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="explorer-toolbar">
+    <mat-form-field appearance="fill">
+      <mat-label>Search endpoints</mat-label>
+      <input matInput [(ngModel)]="query">
+    </mat-form-field>
+    <div class="export-actions">
+      <button mat-raised-button color="primary" (click)="exportAllResults()">
+        Export All Results
+      </button>
+      <button mat-stroked-button (click)="refreshAllThenExport()" [disabled]="bulkRefreshing">
+        {{bulkRefreshing ? 'Refreshing...' : 'Refresh All Then Export'}}
+      </button>
+    </div>
+    @if (watchedEndpoint) {
+      <div class="watch-summary">
+        Watching {{watchedEndpoint}}
+      </div>
+    }
+  </div>
+
+  @for (group of filteredGroups; track trackByGroup($index, group)) {
+    <section class="endpoint-group">
+      <h2>{{group.name}}</h2>
+      @for (endpoint of group.endpoints; track trackByEndpoint($index, endpoint)) {
+        @if (stateFor(endpoint); as state) {
+          <article class="endpoint-card"
+            [class.changed]="state.changedFields.length > 0">
+            <header class="endpoint-header">
+              <button type="button" class="endpoint-title" (click)="toggleExpanded(endpoint)">
+                <span class="method">{{endpoint.method}}</span>
+                <span class="path">{{endpoint.path}}</span>
+              </button>
+              <span class="status" [ngClass]="statusClass(state.status)">
+                {{state.status}}
+              </span>
+            </header>
+            <p class="endpoint-notes">{{endpoint.notes}}</p>
+            <div class="endpoint-actions">
+              <button mat-raised-button color="primary" (click)="refresh(endpoint)" [disabled]="state.loading">
+                Refresh
+              </button>
+              <button mat-stroked-button (click)="copyResponse(endpoint)" [disabled]="!state.formattedResponse">
+                Copy JSON
+              </button>
+              <button mat-stroked-button (click)="exportResponse(endpoint)" [disabled]="!state.formattedResponse">
+                Export JSON
+              </button>
+              <button mat-stroked-button (click)="toggleWatch(endpoint)" [color]="watchedEndpoint === endpoint.path ? 'accent' : undefined">
+                {{watchedEndpoint === endpoint.path ? 'Stop Watch' : 'Watch'}}
+              </button>
+              <button mat-button (click)="toggleExpanded(endpoint)" [disabled]="!state.formattedResponse">
+                {{state.expanded ? 'Collapse' : 'Expand'}}
+              </button>
+              @if (state.copyState) {
+                <span class="copy-state">{{state.copyState}}</span>
+              }
+              @if (state.loading) {
+                <span class="loading">Loading...</span>
+              }
+            </div>
+            @if (state.lastFetched) {
+              <div class="endpoint-meta">
+                <span>Fetched {{state.lastFetched}}</span>
+                <span>Phase {{state.phaseAtFetch}}</span>
+                @if (state.resolvedPath !== endpoint.path) {
+                  <span>Resolved {{state.resolvedPath}}</span>
+                }
+              </div>
+            }
+            @if (state.changedFields.length > 0) {
+              <div class="change-panel">
+                <h3>Changed Fields</h3>
+                @for (field of state.changedFields; track field) {
+                  <code>{{field}}</code>
+                }
+              </div>
+            }
+            @if (state.expanded && state.formattedResponse) {
+              <pre>{{state.formattedResponse}}</pre>
+            }
+          </article>
+        }
+      }
+    </section>
+  }
+</main>

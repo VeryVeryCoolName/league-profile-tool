@@ -1,0 +1,27 @@
+<main>
+  <h1>{{title}}</h1>
+  <section class="version-grid">
+    <mat-card class="versions">
+      <mat-card-header>
+        <mat-card-title>Current Version</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{currentVersion}}</p>
+      </mat-card-content>
+    </mat-card>
+    <mat-card class="versions">
+      <mat-card-header>
+        <mat-card-title>Newest Version</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{newestVersion}}</p>
+        <small>{{updateCheckStatus}}</small>
+      </mat-card-content>
+    </mat-card>
+  </section>
+  <app-identity-preview></app-identity-preview>
+  <div id="linkButtons">
+    <button mat-raised-button color="primary" type="button" (click)="github()">GitHub</button>
+  </div>
+  <p class="credits">Revived and expanded by VeryVeryCoolName. Originally by MManoah.</p>
+</main>

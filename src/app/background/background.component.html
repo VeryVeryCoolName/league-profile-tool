@@ -1,0 +1,60 @@
+<main class="background-page">
+  <section class="tool-panel search-champion" [class.browsing-skins]="showingSkins">
+    @if (!showingSkins) {
+      <mat-form-field>
+        <mat-label>Search for a champion</mat-label>
+        <input matInput name="search" [(ngModel)]="searchText" (ngModelChange)="resetChampionLimit()" placeholder="Ex. Ahri">
+      </mat-form-field>
+    }
+    @if (showingSkins) {
+      <button (click)="showChampions()" mat-flat-button color="primary">Go Back</button>
+    }
+  </section>
+
+  @if (!showingSkins) {
+    <div class="asset-grid champion-grid">
+      @if (championsLoading) {
+        <p class="loading-text">Loading champions...</p>
+      }
+      @for (champion of visibleChampionImages; track trackByAlt($index, champion)) {
+        <span class="champions">
+          @if (!champion.broken) {
+            <button
+              class="image-button champion-button"
+              [class.active]="isSelectedChampion(champion.alt)"
+              mat-stroked-button
+              [attr.aria-label]="'View backgrounds for ' + champion.name"
+              [attr.aria-pressed]="isSelectedChampion(champion.alt)"
+              (click)="getSkins(champion.alt)">
+              @if (!champion.loaded) {
+                <span class="image-placeholder"></span>
+              }
+              <img [class.loaded]="champion.loaded" [src]="champion.src" [alt]="champion.name" loading="lazy" decoding="async" (load)="onImageLoad(champion)" (error)="onImageError($event, champion)"/>
+            </button>
+          }
+        </span>
+      }
+    </div>
+  }
+  @if (showingSkins) {
+    <div class="asset-grid skin-grid">
+      @for (skin of skinsImages; track trackBySkin($index, skin)) {
+        <span class="championSkin">
+          @if (!skin.broken) {
+            <button
+              class="image-button skin-button"
+              [class.active]="isSelectedSkin(skin.alt)"
+              mat-stroked-button
+              [attr.aria-label]="'Set background to ' + skin.name"
+              [attr.aria-pressed]="isSelectedSkin(skin.alt)"
+              [attr.title]="skin.name"
+              (click)="setBackground(skin.alt)">
+              <img class="skinSplash" [class.loaded]="skin.loaded" [src]="skin.src" [alt]="skin.name" loading="eager" decoding="async" (load)="onImageLoad(skin)" (error)="onImageError($event, skin)"/>
+              <span class="skin-name">{{skin.name}}</span>
+            </button>
+          }
+        </span>
+      }
+    </div>
+  }
+</main>

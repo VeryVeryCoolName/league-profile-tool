@@ -1,0 +1,158 @@
+<main class="friends-page">
+  <div class="friends-content">
+    <header class="friends-page-header">
+      <div>
+        <h1>Friends</h1>
+        <p>Browse your League friends, see who is online, and invite them to your current lobby.</p>
+      </div>
+    </header>
+
+    <section class="tool-panel link-panel">
+      <div class="link-header">
+        <div>
+          <h2>Lobby Link</h2>
+          <p>Generate and copy a shareable link for your current lobby.</p>
+        </div>
+      </div>
+      <div class="panel-actions compact-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="generateLobbyLink()"
+          [disabled]="lobbyLink.loading || lobbyLink.generating || !lobbyState.active">
+          {{lobbyLink.generating ? 'Generating...' : 'Generate Link'}}
+        </button>
+        @if (lobbyLink.copiedAt) {
+          <span class="inline-status ok">Copied {{lobbyLink.copiedAt}}</span>
+        }
+      </div>
+      <p class="link-message">{{lobbyLink.message}}</p>
+    </section>
+
+    <form class="tool-panel search-panel" (submit)="$event.preventDefault()">
+      <mat-form-field>
+        <mat-label>Search friends</mat-label>
+        <input
+          matInput
+          [(ngModel)]="searchKeyword"
+          (ngModelChange)="resetVisibleLimit()"
+          name="friendSearch"
+          placeholder="Name, group, status, Discord">
+      </mat-form-field>
+      <div class="search-actions">
+        <button mat-raised-button color="primary" type="button" (click)="refreshAll()" [disabled]="refreshLoading">
+          {{refreshLoading ? 'Refreshing...' : 'Refresh'}}
+        </button>
+        @if (connected$ | async) {
+          <span class="inline-status ok">League Client connected</span>
+        } @else {
+          <span class="inline-status">Waiting for League Client</span>
+        }
+      </div>
+    </form>
+
+    <div class="filter-row">
+      @for (filter of filterOptions; track filter.id) {
+        <button
+          mat-stroked-button
+          type="button"
+          class="filter-button"
+          [class.active]="activeFilter === filter.id"
+          (click)="setFilter(filter.id)">
+          {{filter.label}}
+          <span>{{filterCount(filter.id)}}</span>
+        </button>
+      }
+    </div>
+
+    @if (actionMessage) {
+      <p class="action-message">{{actionMessage}}</p>
+    }
+    @if (actionError) {
+      <p class="action-message error">{{actionError}}</p>
+    }
+    @if (friendsError) {
+      <p class="loading-text error">{{friendsError}}</p>
+    }
+    @if (refreshLoading && friends.length === 0) {
+      <p class="loading-text">Loading friends...</p>
+    }
+    @if (!refreshLoading && !friendsError && friends.length === 0) {
+      <p class="loading-text">No friends found.</p>
+    }
+    @if (!refreshLoading && friends.length > 0 && filteredFriends.length === 0) {
+      <p class="loading-text">No friends match this filter.</p>
+    }
+
+    <section class="friend-grid">
+      @for (friend of visibleFriends; track trackFriend($index, friend)) {
+        <article
+          class="friend-card"
+          [class.offline]="friend.statusKind === 'offline'"
+          [class.in-lobby]="friend.inCurrentLobby"
+          [class.removing]="friend.actionState === 'unfriending'"
+          [class.removed]="friend.actionState === 'removed'"
+          [class.action-error]="friend.actionState === 'error'">
+          <header>
+            <div class="avatar-wrap">
+              <img [src]="friend.profileIconUrl" [alt]="friend.displayName" loading="lazy" decoding="async">
+              <span class="presence-dot" [ngClass]="friend.statusKind"></span>
+            </div>
+            <div class="friend-title">
+              <h3>{{friend.displayName}}</h3>
+              <p>{{friend.statusText}}</p>
+            </div>
+          </header>
+
+          <div class="badge-row">
+            @if (friend.isLeagueFriend) {
+              <span class="badge league">League</span>
+            }
+            @if (friend.isDiscordLinked) {
+              <span class="badge discord">Discord</span>
+            }
+            @if (friend.inCurrentLobby) {
+              <span class="badge lobby">In Lobby</span>
+            }
+            <span class="badge muted">{{friend.availabilityLabel}}</span>
+          </div>
+
+          <div class="friend-group">
+            <span>Group</span>
+            <strong>{{friend.groupName}}</strong>
+          </div>
+
+          <div class="card-actions">
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="invite(friend)"
+              [disabled]="!!friend.inviteReason || isFriendBusy(friend)"
+              [attr.title]="friend.inviteReason || 'Invite to lobby'">
+              {{friend.actionBusy === 'invite' ? 'Sending...' : 'Invite'}}
+            </button>
+            @if (helpCapabilities.unfriend) {
+              <button
+                mat-stroked-button
+                type="button"
+                class="danger-action"
+                (click)="unfriend(friend)"
+                [disabled]="isUnfriendDisabled(friend)"
+                [attr.title]="friend.unfriendReason || 'Remove friend'">
+                {{unfriendButtonText(friend)}}
+              </button>
+            }
+          </div>
+          @if (friend.inviteReason) {
+            <p class="action-hint">{{friend.inviteReason}}</p>
+          }
+        </article>
+      }
+    </section>
+
+    @if (visibleFriends.length < filteredFriends.length) {
+      <button mat-raised-button color="primary" class="load-more" type="button" (click)="loadMoreFriends()">Load More</button>
+    }
+  </div>
+</main>

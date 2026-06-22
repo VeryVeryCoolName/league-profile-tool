@@ -1,0 +1,99 @@
+<main>
+  <section class="rank-panel">
+    <h2>Chat Rank</h2>
+    <div class="rank-grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Queue</mat-label>
+        <mat-select [(value)]="queue">
+          @for (queue of queues; track queue) {
+            <mat-option [value]="queue.value">
+              {{queue.label}}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Rank</mat-label>
+        <mat-select [(value)]="rank">
+          @for (rank of ranks; track rank) {
+            <mat-option [value]="rank">
+              {{rank}}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Division</mat-label>
+        <mat-select [(value)]="division">
+          @for (division of divisions; track division) {
+            <mat-option [value]="division">
+              {{division}}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <button (click)="chatRank()" mat-raised-button color="primary">Set Rank</button>
+  </section>
+
+  <section class="rank-panel">
+    <h2>Challenge Rank</h2>
+    <p class="rank-source">Temporary presence change; it resets on every lobby change.</p>
+    <div class="rank-grid challenge-grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Challenge Level</mat-label>
+        <mat-select [(value)]="challengeLevel" (selectionChange)="syncChallengePointsToLevel()">
+          @for (level of challengeLevels; track level) {
+            <mat-option [value]="level">
+              {{level}}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Challenge Points</mat-label>
+        <input matInput type="number" min="0" name="challengePoints" [(ngModel)]="challengePoints">
+      </mat-form-field>
+    </div>
+    <div class="challenge-actions">
+      <button (click)="setChallengeRank()" mat-raised-button color="primary">Apply Challenge Rank</button>
+      <button (click)="reloadRealChallengeRank()" mat-stroked-button>Reload Real Challenge Rank</button>
+    </div>
+  </section>
+
+  <section class="rank-panel automation-panel">
+    <div class="automation-heading">
+      <div>
+        <h2>Presence Automation</h2>
+        <p class="rank-source">Optional event-based helpers for restoring or reapplying your last chosen values.</p>
+      </div>
+      <button (click)="restoreOriginalIdentity()" mat-stroked-button>Restore Original Identity</button>
+    </div>
+
+    @if (eventState$ | async; as eventState) {
+      <div class="event-status">
+        <span [class.connected]="eventState.connected">{{eventState.connected ? 'LCU events connected' : eventState.message}}</span>
+        @if (eventState.gameflowPhase) {
+          <span>Phase: {{eventState.gameflowPhase}}</span>
+        }
+        @if (eventState.lastEventUri) {
+          <span>Last: {{eventState.lastEventUri}}</span>
+        }
+      </div>
+    }
+
+    @if (automationState$ | async; as automationState) {
+      <label class="toggle-row reapply-toggle">
+        <input type="checkbox" [checked]="automationState.autoReapply" (change)="toggleAutoReapply($event)">
+        Reapply changes after client refresh
+      </label>
+      @if (automationState.lastAction) {
+        <p class="automation-note">
+          {{automationState.lastAction}} @if (automationState.lastActionAt) {
+          <span>at {{automationState.lastActionAt}}</span>
+        }
+      </p>
+    }
+  }
+</section>
+</main>

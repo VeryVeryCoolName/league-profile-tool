@@ -1,0 +1,61 @@
+<main class="purchase-date-page">
+  @if (ownershipLoading) {
+    <div>
+      <mat-card class="state-card">Loading champion purchase dates...</mat-card>
+    </div>
+  }
+  @if (ownershipError && !ownershipLoading) {
+    <div>
+      <mat-card class="state-card">{{ownershipError}}</mat-card>
+    </div>
+  }
+
+  @if (ownedChamps !== null && !ownershipLoading && !ownershipError) {
+    <section class="tool-panel search-champion">
+      @if (ownedChamps !== null && !ownershipLoading && !ownershipError && !showingSkins) {
+        <mat-form-field>
+          <mat-label>Search for a champion</mat-label>
+          <input matInput name="search" [(ngModel)]="searchText" placeholder="Ex. Ahri">
+        </mat-form-field>
+      }
+      @if (showingSkins) {
+        <button (click)="showingSkins = false" mat-flat-button color="primary">Go Back</button>
+      }
+    </section>
+  }
+
+  @if (!showingSkins && ownedChamps !== null && !ownershipLoading && !ownershipError) {
+    <div class="champion-grid">
+      @for (champion of ownedChamps | champions: searchText; track trackByChampion($index, champion)) {
+        <span class="champions">
+          <button
+            mat-stroked-button
+            [attr.aria-label]="'View purchase dates for ' + champion.name"
+            (click)="showSkins(champion)">
+            <img [src]="champion.iconSrc" alt="{{champion.name}}"/>
+          </button>
+        </span>
+      }
+      @if (ownedChamps.length === 0) {
+        <p class="empty-state">No owned champions found.</p>
+      }
+    </div>
+  }
+
+  @if (showingSkins) {
+    <div class="table-wrap">
+      <table matSort (matSortChange)="sortData($event)">
+        <tr>
+          <th mat-sort-header="name">Name</th>
+          <th mat-sort-header="purchased">Purchased</th>
+        </tr>
+        @for (champion of sortedData; track trackByPurchaseRow($index, champion)) {
+          <tr>
+            <td>{{champion.name}}</td>
+            <td>{{champion.purchased}}</td>
+          </tr>
+        }
+      </table>
+    </div>
+  }
+</main>

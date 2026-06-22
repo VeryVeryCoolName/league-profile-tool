@@ -1,0 +1,54 @@
+<main class="custom-api-page">
+  <section class="tool-panel">
+    <div class="panel-header">
+      <h2>Custom API Call</h2>
+      <p class="warning-text">Non-GET requests write directly to LCU. Use only endpoints you trust.</p>
+    </div>
+
+    <form class="api-form" (submit)="$event.preventDefault()">
+      <mat-form-field appearance="fill" class="preset-field">
+        <mat-label>Preset</mat-label>
+        <mat-select [(value)]="selectedPreset" (selectionChange)="applyPreset($event.value)">
+          <mat-option value="">Custom endpoint</mat-option>
+          @for (preset of endpointPresets; track preset) {
+            <mat-option [value]="preset.endpoint">
+              {{preset.label}}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="method-field">
+        <mat-label>Method</mat-label>
+        <mat-select [(value)]="method">
+          @for (method of methods; track method) {
+            <mat-option [value]="method">
+              {{method}}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="endpoint-field">
+        <mat-label>Endpoint</mat-label>
+        <input matInput [(ngModel)]="endPoint" name="endpoint">
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" [disabled]="requestLoading" (click)="sendRequest()">
+        {{requestLoading ? 'Sending...' : 'Request'}}
+      </button>
+    </form>
+
+    <div class="api-textareas">
+      <mat-form-field class="default" appearance="fill">
+        <mat-label>Body</mat-label>
+        <textarea matInput [(ngModel)]="body" name="body"></textarea>
+      </mat-form-field>
+
+      <mat-form-field class="default" appearance="fill">
+        <mat-label>Response</mat-label>
+        <textarea matInput [(ngModel)]="response" name="response"></textarea>
+      </mat-form-field>
+    </div>
+  </section>
+</main>

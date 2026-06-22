@@ -1,0 +1,44 @@
+.custom-api-page {
+  max-width: 78rem;
+}
+
+.api-form {
+  display: grid;
+  grid-template-columns: minmax(12rem, 16rem) 9rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.preset-field,
+.method-field,
+.endpoint-field,
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.api-textareas {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.35rem;
+}
+
+.default {
+  display: block;
+  width: 100%;
+  font-size: 1rem;
+}
+
+textarea {
+  min-height: 5.5rem;
+  max-height: 18rem;
+}
+
+@media (max-width: 760px) {
+  .api-form {
+    grid-template-columns: 1fr;
+  }
+
+  .api-form button {
+    justify-self: start;
+  }
+}

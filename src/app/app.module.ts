@@ -1,0 +1,44 @@
+import {BrowserModule} from '@angular/platform-browser';
+import {NgModule} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {MatTabsModule} from '@angular/material/tabs';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {MatCardModule} from '@angular/material/card';
+import {MatButtonModule} from '@angular/material/button';
+import {AppComponent} from './app.component';
+import {HomeComponent} from './home/home.component';
+import {StatusComponent} from './status/status.component';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MAT_DIALOG_DEFAULT_OPTIONS, MatDialogModule} from "@angular/material/dialog";
+import {DialogComponent} from './core/dialog/dialog.component';
+import {BackgroundComponent} from './background/background.component';
+import {ChampionsPipe} from './core/pipes/champions/champions.pipe';
+import {ChatrankComponent} from './chatrank/chatrank.component';
+import {ChampionPurchaseDateComponent} from './champion-purchase-date/champion-purchase-date.component';
+import {MatSortModule} from "@angular/material/sort";
+import {CustomapiComponent} from './customapi/customapi.component';
+import {FaqComponent} from './faq/faq.component';
+import { CustomiconComponent } from './customicon/customicon.component';
+import { provideHttpClient, withInterceptorsFromDi, withXhr } from '@angular/common/http';
+import { LcuExplorerComponent } from './lcu-explorer/lcu-explorer.component';
+import {IdentityPreviewComponent} from './identity-preview/identity-preview.component';
+import {MatchToolsComponent} from './match-tools/match-tools.component';
+import {FriendsComponent} from './friends/friends.component';
+
+@NgModule({ declarations: [AppComponent, HomeComponent, StatusComponent, DialogComponent, BackgroundComponent, ChampionsPipe, ChatrankComponent, ChampionPurchaseDateComponent, CustomapiComponent, FaqComponent, CustomiconComponent, LcuExplorerComponent, IdentityPreviewComponent, MatchToolsComponent, FriendsComponent],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        FormsModule,
+        MatTabsModule,
+        BrowserAnimationsModule,
+        MatCardModule,
+        MatButtonModule,
+        MatInputModule,
+        MatDialogModule,
+        MatSelectModule,
+        MatSortModule], providers: [
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
+        {provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: {autoFocus: false, restoreFocus: true}}
+    ] })
+export class AppModule {
+}

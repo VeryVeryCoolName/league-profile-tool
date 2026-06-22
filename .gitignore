@@ -1,0 +1,46 @@
+# compiled output
+/dist
+/tmp
+/out-tsc
+/app-builds
+/release
+/.angular
+main.js
+preload.js
+src/**/*.js
+!src/karma.conf.js
+!src/karma-edge-launcher.js
+*.js.map
+
+# dependencies
+/node_modules
+/build
+
+# IDEs and editors
+.idea/
+.vscode/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+testem.log
+/typings
+/.npm-cache
+
+# e2e
+/e2e/*.js
+!/e2e/protractor.conf.js
+/e2e/*.map
+
+# System Files
+.DS_Store
+Thumbs.db
