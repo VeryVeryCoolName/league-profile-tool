@@ -1,4 +1,5 @@
-import {app, BrowserWindow, clipboard, dialog, ipcMain, shell} from 'electron';
+import {app, BrowserWindow, clipboard, ipcMain, shell} from 'electron';
+import * as childProcess from 'child_process';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as http from 'http';
@@ -27,26 +28,8 @@ const appTitle = appTitleVersion ? `League Profile Tool ${appTitleVersion}` : 'L
 const serve = process.argv.slice(1).some(value => value === '--serve');
 const REQUEST_TIMEOUT_MS = 20000;
 const MAX_RESPONSE_BYTES = 32 * 1024 * 1024;
-const MAX_REQUEST_BODY_BYTES = 2 * 1024 * 1024;
 const MAX_EVENT_BUFFER_BYTES = 8 * 1024 * 1024;
-const SCRIPT_SRC_POLICY = serve ? "script-src 'self' 'unsafe-eval'" : "script-src 'self'";
-const CONNECT_SRC_POLICY = serve
-  ? "connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://ddragon.leagueoflegends.com https://raw.communitydragon.org http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*"
-  : "connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://ddragon.leagueoflegends.com https://raw.communitydragon.org";
-const CONTENT_SECURITY_POLICY = [
-  "default-src 'self'",
-  SCRIPT_SRC_POLICY,
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://ddragon.leagueoflegends.com https://raw.communitydragon.org",
-  CONNECT_SRC_POLICY,
-  "font-src 'self' data:",
-  "object-src 'none'",
-  "frame-src 'none'",
-  "base-uri 'self'",
-  "form-action 'none'"
-].join('; ');
 const ALLOWED_LCU_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-const ALLOWED_LCU_HEADERS = new Set(['accept', 'authorization', 'content-type']);
 const ALLOWED_EXTERNAL_HOSTS = new Set([
   'github.com',
   'www.github.com',
@@ -92,33 +75,6 @@ function isLoopbackUrl(value: string): boolean {
   } catch {
     return false;
   }
-}
-
-function isValidTcpPort(value: string): boolean {
-  if (!/^\d{1,5}$/.test(value)) return false;
-  const port = Number(value);
-  return Number.isInteger(port) && port >= 1 && port <= 65535;
-}
-
-function isSafeHeaderValue(value: unknown): value is string {
-  return typeof value === 'string'
-    && value.length <= 8192
-    && !/[\u0000-\u001f\u007f]/.test(value);
-}
-
-function sanitizeLcuHeaders(headers: Record<string, string> | undefined): Record<string, string> {
-  if (!headers || typeof headers !== 'object' || Array.isArray(headers)) return {};
-
-  const output: Record<string, string> = {};
-  for (const [name, value] of Object.entries(headers)) {
-    const normalizedName = String(name || '').trim().toLowerCase();
-    if (!ALLOWED_LCU_HEADERS.has(normalizedName) || !isSafeHeaderValue(value)) continue;
-
-    if (normalizedName === 'accept') output.Accept = value;
-    if (normalizedName === 'authorization') output.Authorization = value;
-    if (normalizedName === 'content-type') output['Content-Type'] = value;
-  }
-  return output;
 }
 
 function isAllowedLcuPath(pathname: string): boolean {
@@ -171,10 +127,6 @@ function makeRequest(options: RequestOptions): Promise<string> {
     }
 
     const target = new URL(options.url);
-    if (!isValidTcpPort(target.port)) {
-      reject(new Error('LCU request port is invalid.'));
-      return;
-    }
     const method = normalizeRequestMethod(options.method);
     if (!ALLOWED_LCU_METHODS.has(method)) {
       reject(new Error('Unsupported LCU request method.'));
@@ -188,17 +140,8 @@ function makeRequest(options: RequestOptions): Promise<string> {
       reject(new Error('LCU authorization is required.'));
       return;
     }
-    if (options.body !== undefined && typeof options.body !== 'string') {
-      reject(new Error('LCU request body is invalid.'));
-      return;
-    }
-    if (options.body && Buffer.byteLength(options.body, 'utf8') > MAX_REQUEST_BODY_BYTES) {
-      reject(new Error('LCU request body exceeded the supported size limit.'));
-      return;
-    }
 
     const transport = target.protocol === 'http:' ? http : https;
-    const headers = sanitizeLcuHeaders(options.headers);
     let settled = false;
     const rejectOnce = (error: Error): void => {
       if (settled) return;
@@ -211,7 +154,7 @@ function makeRequest(options: RequestOptions): Promise<string> {
       port: target.port,
       path: `${target.pathname}${target.search}`,
       method,
-      headers,
+      headers: {...(options.headers || {})},
       rejectUnauthorized: options.rejectUnauthorized !== false
     }, response => {
       let body = '';
@@ -249,6 +192,31 @@ function makeRequest(options: RequestOptions): Promise<string> {
   });
 }
 
+function findLeagueClientPath(): string {
+  const commands = [
+    '(Get-Process LeagueClientUx -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Path)',
+    '(Get-CimInstance Win32_Process -Filter "name = \'LeagueClientUx.exe\'" | Select-Object -First 1 -ExpandProperty CommandLine)'
+  ];
+
+  for (const command of commands) {
+    try {
+      const output = childProcess.execFileSync(
+        'powershell.exe',
+        ['-NoProfile', '-NonInteractive', '-Command', command],
+        {encoding: 'utf8', windowsHide: true, timeout: 5000}
+      ).trim();
+      if (!output) continue;
+      if (output.toLowerCase().endsWith('.exe')) return path.dirname(output);
+
+      const match = /--install-directory=(?:"([^"]+)"|([^ ]+))/.exec(output);
+      if (match) return match[1] || match[2];
+    } catch {
+      // League is either closed or not discoverable through this method.
+    }
+  }
+  return '';
+}
+
 function readConfiguredClientPath(): string {
   const candidates = [
     path.join(process.cwd(), 'config', 'clientPath.txt'),
@@ -259,95 +227,10 @@ function readConfiguredClientPath(): string {
     try {
       if (fs.existsSync(candidate)) return fs.readFileSync(candidate, 'utf8').trim();
     } catch {
+      // Try the next supported config location.
     }
   }
   return '';
-}
-
-function savedClientPathFile(): string {
-  return path.join(app.getPath('userData'), 'clientPath.txt');
-}
-
-function writableConfigClientPathFile(): string {
-  return path.join(process.cwd(), 'config', 'clientPath.txt');
-}
-
-function readSavedClientPath(): string {
-  try {
-    return fs.readFileSync(savedClientPathFile(), 'utf8').trim();
-  } catch {
-    return '';
-  }
-}
-
-function readKnownClientPath(): string {
-  return readConfiguredClientPath() || readSavedClientPath();
-}
-
-function normalizeClientPath(clientPath: string): string {
-  const normalized = String(clientPath || '').trim().replace(/^"|"$/g, '');
-  if (!normalized) return '';
-  if (normalized.toLowerCase().endsWith('.exe')) return path.dirname(normalized);
-  return normalized;
-}
-
-function commonLeagueInstallPaths(): string[] {
-  return [
-    'C:\\Riot Games\\League of Legends',
-    'D:\\Riot Games\\League of Legends',
-    'F:\\Riot Games\\League of Legends',
-    'C:\\Program Files\\Riot Games\\League of Legends',
-    'C:\\Program Files (x86)\\Riot Games\\League of Legends'
-  ];
-}
-
-function normalizedPathKey(targetPath: string): string {
-  try {
-    return path.resolve(targetPath).toLowerCase();
-  } catch {
-    return '';
-  }
-}
-
-function isLeagueClientDirectory(clientPath: string): boolean {
-  try {
-    const normalized = normalizeClientPath(clientPath);
-    return normalized.length > 0
-      && normalized.length < 4096
-      && (
-        fs.existsSync(path.join(normalized, 'LeagueClient.exe'))
-        || fs.existsSync(path.join(normalized, 'LeagueClientUx.exe'))
-        || fs.existsSync(path.join(normalized, 'lockfile'))
-      );
-  } catch {
-    return false;
-  }
-}
-
-function writeSavedClientPath(clientPath: string): string {
-  const normalized = normalizeClientPath(clientPath);
-  if (!isLeagueClientDirectory(normalized)) {
-    throw new Error('Selected folder does not look like a League of Legends install.');
-  }
-
-  fs.mkdirSync(path.dirname(savedClientPathFile()), {recursive: true});
-  fs.writeFileSync(savedClientPathFile(), normalized, 'utf8');
-  try {
-    const configPath = writableConfigClientPathFile();
-    fs.mkdirSync(path.dirname(configPath), {recursive: true});
-    fs.writeFileSync(configPath, normalized, 'utf8');
-  } catch {
-  }
-  return normalized;
-}
-
-function allowedClientPathKeys(): Set<string> {
-  const paths = [readConfiguredClientPath(), readSavedClientPath(), ...commonLeagueInstallPaths()]
-    .map(candidate => normalizeClientPath(candidate))
-    .filter(Boolean)
-    .map(candidate => normalizedPathKey(candidate))
-    .filter(Boolean);
-  return new Set(paths);
 }
 
 function isLockfilePath(targetPath: string): boolean {
@@ -356,37 +239,21 @@ function isLockfilePath(targetPath: string): boolean {
     && path.basename(targetPath).toLowerCase() === 'lockfile';
 }
 
-function isAllowedLockfilePath(targetPath: string): boolean {
-  if (!isLockfilePath(targetPath)) return false;
-  const parentPath = normalizedPathKey(path.dirname(targetPath));
-  return !!parentPath && allowedClientPathKeys().has(parentPath);
-}
-
 function registerIpcHandlers(): void {
   ipcMain.handle('lpt:request', (_event, options: RequestOptions) => makeRequest(options));
   ipcMain.handle('lpt:find-lockfile', (_event, targetPaths: string[]) => {
     if (!Array.isArray(targetPaths) || targetPaths.length > 32) return '';
     return targetPaths.find(targetPath => {
-      return isAllowedLockfilePath(targetPath) && fs.existsSync(targetPath);
+      return isLockfilePath(targetPath) && fs.existsSync(targetPath);
     }) || '';
   });
   ipcMain.handle('lpt:read-lockfile', (_event, targetPath: string) => {
-    if (!isAllowedLockfilePath(targetPath)) throw new Error('Invalid lockfile path.');
+    if (!isLockfilePath(targetPath)) throw new Error('Invalid lockfile path.');
     if (fs.statSync(targetPath).size > 2048) throw new Error('Invalid lockfile size.');
     return fs.readFileSync(targetPath, 'utf8');
   });
-  ipcMain.handle('lpt:read-configured-client-path', () => readKnownClientPath());
-  ipcMain.handle('lpt:choose-client-path', async () => {
-    if (!win) return '';
-
-    const result = await dialog.showOpenDialog(win, {
-      title: 'Select League of Legends folder',
-      properties: ['openDirectory']
-    });
-    if (result.canceled || !result.filePaths[0]) return '';
-
-    return writeSavedClientPath(result.filePaths[0]);
-  });
+  ipcMain.handle('lpt:read-configured-client-path', () => readConfiguredClientPath());
+  ipcMain.handle('lpt:find-league-client-path', () => findLeagueClientPath());
   ipcMain.handle('lpt:write-clipboard', (_event, text: string) => {
     if (typeof text !== 'string' || text.length > MAX_RESPONSE_BYTES) {
       throw new Error('Invalid clipboard content.');
@@ -443,23 +310,6 @@ function createWindow(): BrowserWindow {
   });
 
   win.webContents.setWindowOpenHandler(() => ({action: 'deny'}));
-  win.webContents.on('will-attach-webview', event => {
-    event.preventDefault();
-  });
-  win.webContents.session.setPermissionRequestHandler((_webContents, _permission, callback) => {
-    callback(false);
-  });
-  win.webContents.session.setPermissionCheckHandler(() => false);
-  win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [CONTENT_SECURITY_POLICY],
-        'X-Content-Type-Options': ['nosniff'],
-        'Referrer-Policy': ['no-referrer']
-      }
-    });
-  });
   win.webContents.on('will-navigate', event => {
     event.preventDefault();
   });
@@ -514,10 +364,6 @@ class LcuEventSocket {
 
     try {
       const target = new URL(this.options.url);
-      if (target.protocol !== 'https:' || !isValidTcpPort(target.port)) {
-        this.finish('Invalid LCU event endpoint.');
-        return;
-      }
       this.emitState({connected: false, message: 'Connecting to LCU events'});
       this.socket = tls.connect({
         host: target.hostname,
@@ -640,6 +486,7 @@ class LcuEventSocket {
         this.emitEvent(message[2]);
       }
     } catch {
+      // Ignore malformed/non-JSON event frames.
     }
   }
 
@@ -679,10 +526,21 @@ class LcuEventSocket {
   }
 }
 
-void app.whenReady().then(() => {
-  registerIpcHandlers();
-  createWindow();
-});
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (!win) return;
+    if (win.isMinimized()) win.restore();
+    win.focus();
+  });
+
+  void app.whenReady().then(() => {
+    registerIpcHandlers();
+    createWindow();
+  });
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

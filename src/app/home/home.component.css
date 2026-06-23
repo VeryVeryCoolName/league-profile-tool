@@ -5,7 +5,7 @@ main {
 h1 {
   margin: 0.4rem 0 1.25rem;
   color: #f7fbff;
-  font-size: 2.75rem;
+  font-size: clamp(2rem, 4vw, 2.75rem);
   line-height: 1.15;
   font-weight: 700;
 }

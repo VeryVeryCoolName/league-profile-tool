@@ -1,15 +1,16 @@
-<section class="dialog-shell" tabindex="-1" [class.success]="dialogKind === 'success'" [class.error]="dialogKind === 'error'" [class.confirm]="dialogKind === 'confirm'" [class.info]="dialogKind === 'info'">
-  <div class="dialog-copy">
-    <h1>{{displayTitle}}</h1>
+<section class="dialog-shell" tabindex="-1" [class.success]="dialogKind === 'success'" [class.error]="dialogKind === 'error'" [class.confirm]="dialogKind === 'confirm'">
+  <h1>{{displayTitle}}</h1>
+
+  <div class="dialog-content">
     <p>{{displayBody}}</p>
   </div>
 
   <div class="dialog-actions">
     @if (isConfirmation) {
-      <button mat-button class="secondary-action" type="button" [mat-dialog-close]="false">{{secondaryLabel}}</button>
-      <button mat-raised-button color="primary" class="primary-action" [class.destructive]="isDestructiveConfirmation" type="button" [mat-dialog-close]="true">{{primaryLabel}}</button>
+      <button mat-button type="button" [mat-dialog-close]="false">{{data.cancelLabel || 'Cancel'}}</button>
+      <button mat-raised-button color="primary" type="button" [mat-dialog-close]="true">{{data.confirmLabel}}</button>
     } @else {
-      <button mat-raised-button color="primary" class="primary-action" type="button" mat-dialog-close>{{primaryLabel}}</button>
+      <button mat-raised-button color="primary" type="button" mat-dialog-close>Close</button>
     }
   </div>
 </section>

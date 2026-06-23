@@ -18,7 +18,7 @@ export interface LeagueProfileToolBridge {
   findLockfile(targetPaths: string[]): Promise<string>;
   readLockfile(targetPath: string): Promise<string>;
   readConfiguredClientPath(): Promise<string>;
-  chooseClientPath(): Promise<string>;
+  findLeagueClientPath(): Promise<string>;
   writeClipboard(text: string): Promise<void>;
   joinPath(...parts: string[]): string;
   dirname(targetPath: string): string;
@@ -69,8 +69,8 @@ export class ElectronService {
     return this.bridge ? this.bridge.readConfiguredClientPath() : Promise.resolve('');
   }
 
-  public chooseClientPath(): Promise<string> {
-    return this.bridge ? this.bridge.chooseClientPath() : Promise.resolve('');
+  public findLeagueClientPath(): Promise<string> {
+    return this.bridge ? this.bridge.findLeagueClientPath() : Promise.resolve('');
   }
 
   public writeClipboard(text: string): Promise<void> {

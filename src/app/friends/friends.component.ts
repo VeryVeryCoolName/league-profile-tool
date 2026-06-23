@@ -928,6 +928,7 @@ export class FriendsComponent implements OnDestroy {
       await this.electronService.writeClipboard(value);
       return;
     } catch (error) {
+      // Browser-only fallback for dev-web sessions.
     }
 
     const textArea = document.createElement('textarea');

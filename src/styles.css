@@ -1,6 +1,7 @@
+/* Global Styles */
 :root {
   color-scheme: dark;
-  --app-bg: #111820;
+  --app-bg: #171a1e;
   --surface: #21262b;
   --surface-raised: #282e34;
   --surface-soft: #1d2227;
@@ -22,7 +23,9 @@
 html,
 body {
   min-height: 100%;
-  background: var(--app-bg);
+  background:
+    linear-gradient(180deg, rgba(20, 45, 63, 0.24) 0, rgba(23, 26, 30, 0) 18rem),
+    linear-gradient(180deg, #171a1e 0, #11161b 100%);
   color: var(--text);
 }
 
@@ -31,26 +34,11 @@ body {
 }
 
 body {
-  min-height: 100vh;
-  overflow-x: hidden;
   margin: 0;
   font-family: "Segoe UI Variable", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
   line-height: 1.45;
-  scrollbar-color: #4b5964 var(--app-bg);
-}
-
-app-root,
-.app-tabs,
-.mat-mdc-tab-body-wrapper,
-.mat-mdc-tab-body,
-.mat-mdc-tab-body-content {
-  background: var(--app-bg);
-}
-
-app-root {
-  display: block;
-  min-height: 100vh;
+  scrollbar-color: #4b5964 #171a1e;
 }
 
 main {
@@ -295,33 +283,33 @@ button,
 
 .cdk-overlay-backdrop {
   background: rgba(2, 8, 13, 0);
-  transition: opacity 170ms ease-out, background-color 170ms ease-out;
+  transition: opacity 150ms ease-out, background-color 150ms ease-out;
 }
 
 .cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
-  background: rgba(2, 8, 13, 0.48);
+  background: rgba(2, 8, 13, 0.62);
 }
 
 .cdk-overlay-pane:has(app-dialog) {
-  width: min(34rem, calc(100vw - 2rem)) !important;
-  max-width: min(34rem, calc(100vw - 2rem)) !important;
+  width: min(48rem, calc(100vw - 3rem)) !important;
+  max-width: min(48rem, calc(100vw - 3rem)) !important;
 }
 
 .mat-mdc-dialog-container {
-  animation: app-dialog-container-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  transform-origin: center;
+  animation: app-dialog-container-in 190ms cubic-bezier(0.16, 1, 0.3, 1) both;
   will-change: opacity, transform;
 }
 
 .mat-mdc-dialog-container .mdc-dialog__surface {
   color: var(--text);
-  background: rgba(33, 38, 43, 0.98) !important;
-  border: 1px solid rgba(203, 222, 238, 0.16);
+  background:
+    linear-gradient(180deg, rgba(105, 189, 245, 0.08), rgba(40, 46, 52, 0.98)),
+    var(--surface-raised) !important;
+  border: 1px solid rgba(105, 189, 245, 0.28);
   border-radius: 8px !important;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42) !important;
   width: 100% !important;
   overflow: hidden !important;
-  transform: translateZ(0);
 }
 
 .mat-mdc-dialog-container .mdc-dialog__title,
@@ -454,7 +442,7 @@ tbody tr:hover {
 @keyframes app-dialog-container-in {
   0% {
     opacity: 0;
-    transform: translate3d(0, 0.35rem, 0) scale(0.992);
+    transform: translate3d(0, 0.55rem, 0) scale(0.985);
   }
 
   100% {

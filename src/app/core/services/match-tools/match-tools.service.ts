@@ -130,8 +130,8 @@ export class MatchToolsService implements OnDestroy {
   private readonly autoAcceptRetryCooldownMs = 2500;
   private eventSubscription: Subscription;
   private eventStateSubscription: Subscription;
-  private acceptedStatusTimer: ReturnType<typeof setTimeout> | null = null;
-  private autoAcceptTimer: ReturnType<typeof setTimeout> | null = null;
+  private acceptedStatusTimer: any;
+  private autoAcceptTimer: any;
   private accepting = false;
   private acceptedResponseSuppressUntil = 0;
   private lastAutoAcceptAttemptAt = 0;

@@ -148,13 +148,13 @@ export class LCUConnectionService {
 
   private parseResponse(response: any): Record<string, unknown> {
     if (typeof response === 'string') {
-    try {
-      return JSON.parse(response);
-    } catch (err) {
-      console.error('[LCU] Failed to parse response');
-      return null;
+      try {
+        return JSON.parse(response);
+      } catch (err) {
+        console.error('[LCU] Failed to parse response', response);
+        return null;
+      }
     }
-  }
     return response || {};
   }
 

@@ -15,42 +15,12 @@
 }
 
 .connection-status::before {
-  flex: 0 0 auto;
   width: 0.5rem;
   height: 0.5rem;
   content: "";
   border-radius: 50%;
   background: #ff7d88;
   box-shadow: 0 0 0 3px rgba(255, 125, 136, 0.12);
-}
-
-.connection-status span:first-of-type {
-  flex: 0 0 auto;
-}
-
-.connection-status button {
-  min-width: 0;
-  height: 1.75rem;
-  padding: 0 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 4px;
-  color: #eaf6ff;
-  background: rgba(32, 126, 184, 0.58);
-  font-size: 0.75rem;
-  line-height: 1.75rem;
-}
-
-.connection-status button:disabled {
-  color: rgba(234, 246, 255, 0.58);
-  background: rgba(32, 126, 184, 0.24);
-}
-
-.connection-error {
-  min-width: 0;
-  overflow: hidden;
-  color: #ffd5d8;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .connection-status.connected {

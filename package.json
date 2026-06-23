@@ -1,6 +1,6 @@
 {
   "name": "league-profile-tool",
-  "version": "3.4.3",
+  "version": "3.4.2",
   "description": "Tool that interacts with the Riot LCU",
   "homepage": "https://github.com/VeryVeryCoolName/league-profile-tool",
   "author": "Manoah",
@@ -33,9 +33,8 @@
     "dist": "electron-builder"
   },
   "build": {
-    "appId": "com.veryverycoolname.leagueprofiletool",
+    "appId": "com.league.app",
     "productName": "League Profile Tool",
-    "asar": true,
     "mac": {
       "category": "Utility"
     },
@@ -51,10 +50,6 @@
       "buildResources": "dist"
     },
     "win": {
-      "requestedExecutionLevel": "asInvoker",
-      "signtoolOptions": {
-        "publisherName": "VeryVeryCoolName"
-      },
       "target": [
         {
           "target": "nsis",
@@ -87,7 +82,6 @@
     "@angular/material": "22.0.2",
     "@angular/platform-browser": "22.0.2",
     "@angular/platform-browser-dynamic": "22.0.2",
-    "@electron-internal/extract-zip": "1.0.3",
     "@types/jasmine": "6.0.0",
     "@types/node": "22.19.19",
     "@typescript-eslint/eslint-plugin": "8.60.1",
