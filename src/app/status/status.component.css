@@ -84,3 +84,16 @@ textarea.mat-mdc-input-element {
   max-height: 22rem;
   padding-bottom: 3.25rem;
 }
+
+@media (max-width: 720px) {
+  .set-message-button {
+    position: static;
+    width: 100%;
+    margin-top: 0.75rem;
+  }
+
+  textarea,
+  textarea.mat-mdc-input-element {
+    padding-bottom: 0.75rem;
+  }
+}

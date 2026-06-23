@@ -1,7 +1,15 @@
 @if (connected$ | async; as connected) {
-  <div class="connection-status connected">League Client connected</div>
+  <div class="connection-status connected" role="status" aria-live="polite">League Client connected</div>
 } @else {
-  <div class="connection-status">Connecting to League Client</div>
+  <div class="connection-status" role="status" aria-live="polite">
+    <span>Connecting to League Client</span>
+    <button mat-button type="button" (click)="chooseClientPath()" [disabled]="choosingClientPath">
+      {{choosingClientPath ? 'Choosing...' : 'Choose League folder'}}
+    </button>
+    @if (clientPathError) {
+      <span class="connection-error">{{clientPathError}}</span>
+    }
+  </div>
 }
 <mat-tab-group class="app-tabs" [mat-stretch-tabs]="false" animationDuration="180ms">
   <mat-tab label="Home"><ng-template matTabContent><app-home></app-home></ng-template></mat-tab>

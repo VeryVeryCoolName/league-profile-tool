@@ -1,7 +1,7 @@
 .preview-card {
   position: relative;
   overflow: hidden;
-  width: min(58rem, calc(100vw - 2rem));
+  width: min(62rem, calc(100vw - 2rem));
   margin: 1.5rem auto 0;
   text-align: left;
   background: #1d2227;
@@ -30,7 +30,7 @@
   position: relative;
   display: grid;
   gap: 0.95rem;
-  padding: 1.25rem;
+  padding: 1.35rem;
 }
 
 .preview-header {

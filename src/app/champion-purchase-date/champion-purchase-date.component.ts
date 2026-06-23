@@ -75,54 +75,57 @@ export class ChampionPurchaseDateComponent implements OnInit {
     this.sortedData = this.championData.slice();
   }
 
-  private getOwnership() {
+  private async getOwnership(): Promise<void> {
     this.ownedChamps = [];
     this.ownershipLoading = true;
     this.ownershipError = '';
-    this.lcuConnectionService.requestCustomAPI({}, 'GET', '/lol-summoner/v1/current-summoner').then(response => {
+    try {
+      const response = await this.lcuConnectionService.requestCustomAPI({}, 'GET', '/lol-summoner/v1/current-summoner');
       const summoner = this.parseResponse(response);
       if (!summoner || !summoner.summonerId) {
         this.failOwnership('Could not load the current summoner from LCU.');
         return;
       }
 
-      this.lcuConnectionService.requestCustomAPI({}, 'GET', `/lol-champions/v1/inventories/${String(summoner.summonerId)}/champions`).then(ownedC => {
-        const champions = this.parseResponse(ownedC);
-        if (!Array.isArray(champions)) {
-          this.failOwnership('Could not load champion ownership from LCU.');
-          return;
-        }
+      const ownedC = await this.lcuConnectionService.requestCustomAPI({}, 'GET', `/lol-champions/v1/inventories/${String(summoner.summonerId)}/champions`);
+      const champions = this.parseResponse(ownedC);
+      if (!Array.isArray(champions)) {
+        this.failOwnership('Could not load champion ownership from LCU.');
+        return;
+      }
 
-        const ownedChamps = [];
-        for (let i = 0; i < champions.length; i++) {
-          if (champions[i].ownership.owned) {
-            const o = {
-              alt: this.getDataDragonAlias(champions[i].alias),
-              name: this.displayChampionName(champions[i], champions[i].alias),
-              purchased: new Date(champions[i].purchased).toLocaleString("en-US"),
-              purchasedHidden: champions[i].purchased,
-              skins: [],
-              iconSrc: ''
-            };
-            o.iconSrc = `https://ddragon.leagueoflegends.com/cdn/${this.currentVersion}/img/champion/${o.alt}.png`;
-            for (let j = 1; j < champions[i].skins.length; j++) {
-              if (champions[i].skins[j].ownership.owned) {
-                o.skins.push({
-                  name: champions[i].skins[j].name,
-                  purchased: new Date(champions[i].skins[j].ownership.rental.purchaseDate).toLocaleString("en-US"),
-                  purchasedHidden: champions[i].skins[j].ownership.rental.purchaseDate
-                });
-              }
+      const ownedChamps = [];
+      for (let i = 0; i < champions.length; i++) {
+        if (champions[i].ownership.owned) {
+          const o = {
+            alt: this.getDataDragonAlias(champions[i].alias),
+            name: this.displayChampionName(champions[i], champions[i].alias),
+            purchased: new Date(champions[i].purchased).toLocaleString("en-US"),
+            purchasedHidden: champions[i].purchased,
+            skins: [],
+            iconSrc: ''
+          };
+          o.iconSrc = `https://ddragon.leagueoflegends.com/cdn/${this.currentVersion}/img/champion/${o.alt}.png`;
+          for (let j = 1; j < champions[i].skins.length; j++) {
+            if (champions[i].skins[j].ownership.owned) {
+              o.skins.push({
+                name: champions[i].skins[j].name,
+                purchased: new Date(champions[i].skins[j].ownership.rental.purchaseDate).toLocaleString("en-US"),
+                purchasedHidden: champions[i].skins[j].ownership.rental.purchaseDate
+              });
             }
-            ownedChamps.push(o);
           }
+          ownedChamps.push(o);
         }
-        this.ownedChamps = ownedChamps.sort((a, b) => {
-          return compare(a.purchasedHidden, b.purchasedHidden, true);
-        });
-        this.ownershipLoading = false;
+      }
+      this.ownedChamps = ownedChamps.sort((a, b) => {
+        return compare(a.purchasedHidden, b.purchasedHidden, true);
       });
-    });
+      this.ownershipLoading = false;
+    } catch (error) {
+      console.error('[LCU] failed to load champion ownership', error);
+      this.failOwnership('Could not load champion ownership from LCU.');
+    }
   }
 
   private getDataDragonAlias(alias: string): string {

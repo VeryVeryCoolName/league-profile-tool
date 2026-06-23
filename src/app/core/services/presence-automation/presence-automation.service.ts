@@ -377,7 +377,6 @@ export class PresenceAutomationService implements OnDestroy {
     try {
       localStorage.setItem(this.persistentInvisibleStorageKey, JSON.stringify({enabled: true, patch}));
     } catch (error) {
-      // Persistence is best-effort; live reapply still works for this session.
     }
   }
 
@@ -385,7 +384,6 @@ export class PresenceAutomationService implements OnDestroy {
     try {
       localStorage.removeItem(this.persistentInvisibleStorageKey);
     } catch (error) {
-      // Ignore storage failures.
     }
   }
 

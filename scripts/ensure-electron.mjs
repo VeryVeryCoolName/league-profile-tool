@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -24,6 +23,7 @@ const electronPackage = require(path.join(electronRoot, 'package.json'));
 const checksums = require(path.join(electronRoot, 'checksums.json'));
 const downloaderPath = electronRequire.resolve('@electron/get');
 const { downloadArtifact } = await import(pathToFileURL(downloaderPath).href);
+const { default: extractZip } = await import('@electron-internal/extract-zip');
 const archivePath = await downloadArtifact({
   version: electronPackage.version,
   artifactName: 'electron',
@@ -36,22 +36,7 @@ const distPath = path.join(electronRoot, 'dist');
 fs.rmSync(distPath, { recursive: true, force: true });
 fs.mkdirSync(distPath, { recursive: true });
 
-if (process.platform !== 'win32') {
-  throw new Error('The Electron runtime fallback currently supports Windows only.');
-}
-
-execFileSync(
-  'powershell.exe',
-  [
-    '-NoProfile',
-    '-NonInteractive',
-    '-Command',
-    '& { param($archive, $destination) Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force }',
-    archivePath,
-    distPath
-  ],
-  { stdio: 'inherit' }
-);
+await extractZip(archivePath, {dir: distPath});
 fs.writeFileSync(markerPath, executableName);
 
 console.log(`Electron ${electronPackage.version} runtime installed.`);

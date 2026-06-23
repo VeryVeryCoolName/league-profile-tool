@@ -57,7 +57,7 @@
           <mat-form-field appearance="fill">
             <mat-label>Provider</mat-label>
             <mat-select [value]="state.providerId" (selectionChange)="setProvider($event.value)">
-              @for (provider of providers; track provider) {
+              @for (provider of providers; track provider.id) {
                 <mat-option [value]="provider.id">
                   {{provider.label}}
                 </mat-option>
@@ -111,7 +111,7 @@
           <div class="candidate-row">
             <span>Possible lane opponents</span>
             <div class="enemy-list">
-              @for (candidate of state.champSelect.possibleLaneOpponents; track candidate) {
+              @for (candidate of state.champSelect.possibleLaneOpponents; track candidate.championId) {
                 <button type="button" class="enemy-chip" (click)="selectOpponent(candidate.championId)" [class.selected]="state.champSelect.manualOpponentChampionId === candidate.championId || (!state.champSelect.manualOpponentChampionId && state.champSelect.enemyChampionId === candidate.championId)">
                   <span>{{candidate.championName}}</span>
                   @if (candidate.iconUrl) {
@@ -126,7 +126,7 @@
           <div class="enemy-row">
             <span>Visible enemies</span>
             <div class="enemy-list">
-              @for (enemy of state.champSelect.visibleEnemies; track enemy) {
+              @for (enemy of state.champSelect.visibleEnemies; track enemy.championId) {
                 <button type="button" class="enemy-chip" (click)="selectOpponent(enemy.championId)" [class.selected]="state.champSelect.manualOpponentChampionId === enemy.championId || (!state.champSelect.manualOpponentChampionId && state.champSelect.enemyChampionId === enemy.championId)">
                   <span>{{enemy.championName}}</span>
                   @if (enemy.iconUrl) {
@@ -152,7 +152,6 @@
     } @else {
       <section class="tool-panel idle-panel">
         <div class="idle-state">
-          <span class="idle-mark"></span>
           <strong>Not in champion select</strong>
           <small>Waiting for a draft session</small>
         </div>
