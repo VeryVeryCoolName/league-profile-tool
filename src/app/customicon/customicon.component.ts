@@ -51,7 +51,8 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   public selectionNote = '';
   public updatingIconId: number | null = null;
   public selectedIconId: number | null = null;
-  private connectorSubscription: Subscription;
+  private connectorSubscription: Subscription | null = null;
+  private iconSubscription: Subscription | null = null;
   private previewSubscription: Subscription;
 
   constructor(
@@ -67,7 +68,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.championData.getSummonerIcons().subscribe(icons => {
+    this.iconSubscription = this.championData.getSummonerIcons().subscribe(icons => {
       this.allIcons = (icons as CustomIconRecord[])
         .filter(icon => icon && icon.id !== undefined && icon.id !== null)
         .sort((left, right) => Number(left.id) - Number(right.id))
@@ -90,6 +91,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.connectorSubscription) this.connectorSubscription.unsubscribe();
+    if (this.iconSubscription) this.iconSubscription.unsubscribe();
     if (this.previewSubscription) this.previewSubscription.unsubscribe();
   }
 
@@ -252,9 +254,17 @@ export class CustomiconComponent implements OnInit, OnDestroy {
       CustomiconComponent.inventoryPromise = this.fetchOwnedIconInventory();
     }
 
-    CustomiconComponent.ownedIconIdsCache = await CustomiconComponent.inventoryPromise;
-    CustomiconComponent.inventoryLoaded = true;
-    this.syncInventoryUiState();
+    try {
+      CustomiconComponent.ownedIconIdsCache = await CustomiconComponent.inventoryPromise;
+      CustomiconComponent.inventoryLoaded = true;
+    } catch (error) {
+      console.error('[LCU] failed to load owned icon inventory', error);
+      CustomiconComponent.inventoryPromise = null;
+      CustomiconComponent.ownedIconIdsCache = null;
+      CustomiconComponent.inventoryLoaded = false;
+    } finally {
+      this.syncInventoryUiState();
+    }
   }
 
   private async fetchOwnedIconInventory(): Promise<Set<number> | null> {

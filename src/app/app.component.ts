@@ -12,8 +12,26 @@ import {APP_WINDOW_TITLE} from "./app-version";
 })
 export class AppComponent {
   public readonly connected$ = this.connector.ready$;
+  public choosingClientPath = false;
+  public clientPathError = '';
 
   constructor(public connector: ConnectorService, private titleService: Title) {
     this.titleService.setTitle(APP_WINDOW_TITLE);
+  }
+
+  public async chooseClientPath(): Promise<void> {
+    if (this.choosingClientPath) return;
+
+    this.choosingClientPath = true;
+    this.clientPathError = '';
+    try {
+      await this.connector.chooseClientPath();
+    } catch (error) {
+      this.clientPathError = error instanceof Error
+        ? error.message
+        : 'Selected folder does not look like a League of Legends install.';
+    } finally {
+      this.choosingClientPath = false;
+    }
   }
 }

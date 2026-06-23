@@ -16,7 +16,6 @@ export class ConnectorService implements OnDestroy {
   private lockfilePath = '';
   private ready = false;
   private readonly installPathCandidates: string[] = [];
-  private lastProcessLookup = 0;
   private loggedMissingLockfile = false;
 
   constructor(private electronService: ElectronService) {
@@ -35,7 +34,7 @@ export class ConnectorService implements OnDestroy {
     if (configuredPath) {
       this.addInstallPathCandidate(configuredPath);
     } else {
-      console.warn('[LCU] config/clientPath.txt unavailable; falling back to dynamic lockfile discovery.');
+      console.warn('[LCU] config/clientPath.txt unavailable; checking common League install paths.');
     }
     this.startRetryLoop();
   }
@@ -52,7 +51,7 @@ export class ConnectorService implements OnDestroy {
     if (this.connecting) return;
     this.connecting = true;
     try {
-      const lockfilePath = await this.findLockfilePath(source !== 'startup');
+      const lockfilePath = await this.findLockfilePath();
       if (!lockfilePath) {
         if (this.connector && this.lockfilePath) this.setReady(false);
         if (!this.loggedMissingLockfile) {
@@ -76,40 +75,20 @@ export class ConnectorService implements OnDestroy {
     }
   }
 
-  private async findLockfilePath(allowProcessLookup = true): Promise<string> {
+  private async findLockfilePath(): Promise<string> {
     const candidateLockfiles = this.installPathCandidates.map(candidate => {
       return this.electronService.joinPath(this.normalizeClientPath(candidate), 'lockfile');
-    });
+    }).filter(Boolean);
     if (this.lockfilePath) candidateLockfiles.unshift(this.lockfilePath);
 
-    const existing = await this.electronService.findLockfile(candidateLockfiles);
+    const existing = await this.electronService.findLockfile(Array.from(new Set(candidateLockfiles)));
     if (existing) return existing;
-    if (!allowProcessLookup) return '';
-
-    const processPath = await this.getLeagueClientPathFromProcess();
-    if (processPath) {
-      this.addInstallPathCandidate(processPath);
-      return this.electronService.findLockfile([
-        this.electronService.joinPath(this.normalizeClientPath(processPath), 'lockfile')
-      ]);
-    }
     return '';
   }
 
   private async readConfiguredClientPath(): Promise<string> {
     try {
       return this.normalizeClientPath(await this.electronService.readConfiguredClientPath());
-    } catch {
-      return '';
-    }
-  }
-
-  private async getLeagueClientPathFromProcess(): Promise<string> {
-    const now = Date.now();
-    if (now - this.lastProcessLookup < 15000) return '';
-    this.lastProcessLookup = now;
-    try {
-      return this.normalizeClientPath(await this.electronService.findLeagueClientPath());
     } catch {
       return '';
     }
@@ -190,6 +169,17 @@ export class ConnectorService implements OnDestroy {
 
   public isReady(): boolean {
     return this.ready;
+  }
+
+  public async chooseClientPath(): Promise<string> {
+    const selectedPath = this.normalizeClientPath(await this.electronService.chooseClientPath());
+    if (!selectedPath) return '';
+
+    this.addInstallPathCandidate(selectedPath);
+    this.lockfilePath = '';
+    this.loggedMissingLockfile = false;
+    await this.tryConnectFromLockfile('manual selection');
+    return selectedPath;
   }
 
   private normalizeClientPath(clientPath: string): string {

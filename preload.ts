@@ -19,6 +19,13 @@ type LcuEventStateCallback = (state: {connected: boolean; message: string}) => v
 let eventListener: ((_event: Electron.IpcRendererEvent, payload: unknown) => void) | null = null;
 let stateListener: ((_event: Electron.IpcRendererEvent, state: {connected: boolean; message: string}) => void) | null = null;
 
+function clearLcuEventListeners(): void {
+  if (eventListener) ipcRenderer.removeListener('lpt:events-data', eventListener);
+  if (stateListener) ipcRenderer.removeListener('lpt:events-state', stateListener);
+  eventListener = null;
+  stateListener = null;
+}
+
 function joinPathParts(...parts: string[]): string {
   const values = parts.map(part => String(part || '')).filter(Boolean);
   if (values.length === 0) return '';
@@ -44,7 +51,7 @@ contextBridge.exposeInMainWorld('leagueProfileTool', {
   findLockfile: (targetPaths: string[]): Promise<string> => ipcRenderer.invoke('lpt:find-lockfile', targetPaths),
   readLockfile: (targetPath: string): Promise<string> => ipcRenderer.invoke('lpt:read-lockfile', targetPath),
   readConfiguredClientPath: (): Promise<string> => ipcRenderer.invoke('lpt:read-configured-client-path'),
-  findLeagueClientPath: (): Promise<string> => ipcRenderer.invoke('lpt:find-league-client-path'),
+  chooseClientPath: (): Promise<string> => ipcRenderer.invoke('lpt:choose-client-path'),
   writeClipboard: (text: string): Promise<void> => ipcRenderer.invoke('lpt:write-clipboard', text),
   joinPath: (...parts: string[]): string => joinPathParts(...parts),
   dirname: (targetPath: string): string => parentPath(targetPath),
@@ -54,13 +61,20 @@ contextBridge.exposeInMainWorld('leagueProfileTool', {
     onEvent: LcuEventCallback,
     onState: LcuEventStateCallback
   ): Promise<void> => {
-    if (eventListener) ipcRenderer.removeListener('lpt:events-data', eventListener);
-    if (stateListener) ipcRenderer.removeListener('lpt:events-state', stateListener);
+    clearLcuEventListeners();
     eventListener = (_event, payload) => onEvent(payload);
     stateListener = (_event, state) => onState(state);
     ipcRenderer.on('lpt:events-data', eventListener);
     ipcRenderer.on('lpt:events-state', stateListener);
-    await ipcRenderer.invoke('lpt:events-connect', options);
+    try {
+      await ipcRenderer.invoke('lpt:events-connect', options);
+    } catch (error) {
+      clearLcuEventListeners();
+      throw error;
+    }
   },
-  disconnectLcuEvents: (): Promise<void> => ipcRenderer.invoke('lpt:events-disconnect')
+  disconnectLcuEvents: async (): Promise<void> => {
+    clearLcuEventListeners();
+    await ipcRenderer.invoke('lpt:events-disconnect');
+  }
 });

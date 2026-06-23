@@ -110,9 +110,10 @@ export class LcuExplorerComponent implements OnDestroy {
     }
   ];
 
-  private watchTimer: any = null;
+  private watchTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly copyStateTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private identityContext: Record<string, string> = {};
-  private identityContextPromise: Promise<Record<string, string>> = null;
+  private identityContextPromise: Promise<Record<string, string>> | null = null;
   private readonly watchIntervalMs = 5000;
   private readonly sensitiveExportKeys = [
     'idtoken',
@@ -134,6 +135,8 @@ export class LcuExplorerComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopWatch();
+    this.copyStateTimers.forEach(timer => clearTimeout(timer));
+    this.copyStateTimers.clear();
   }
 
   public get filteredGroups(): LcuEndpointGroup[] {
@@ -223,10 +226,16 @@ export class LcuExplorerComponent implements OnDestroy {
 
     this.copyText(text)
       .then(() => {
+        this.clearCopyStateTimer(endpoint.path);
         state.copyState = 'Copied';
-        setTimeout(() => state.copyState = '', 1500);
+        const timer = setTimeout(() => {
+          state.copyState = '';
+          this.copyStateTimers.delete(endpoint.path);
+        }, 1500);
+        this.copyStateTimers.set(endpoint.path, timer);
       })
       .catch(() => {
+        this.clearCopyStateTimer(endpoint.path);
         state.copyState = 'Copy failed';
       });
   }
@@ -297,11 +306,17 @@ export class LcuExplorerComponent implements OnDestroy {
   }
 
   private stopWatch() {
-    if (this.watchTimer) {
-      clearInterval(this.watchTimer);
-      this.watchTimer = null;
-    }
+    if (this.watchTimer === null) return;
+    clearInterval(this.watchTimer);
+    this.watchTimer = null;
     this.watchedEndpoint = '';
+  }
+
+  private clearCopyStateTimer(path: string): void {
+    const timer = this.copyStateTimers.get(path);
+    if (!timer) return;
+    clearTimeout(timer);
+    this.copyStateTimers.delete(path);
   }
 
   private async resolveEndpointPath(path: string): Promise<string> {
@@ -526,10 +541,16 @@ export class LcuExplorerComponent implements OnDestroy {
   private downloadJson(payload: Record<string, unknown>, filename: string) {
     const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json;charset=utf-8'});
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+    const objectUrl = URL.createObjectURL(blob);
+    link.href = objectUrl;
     link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(link.href);
+    setTimeout(() => {
+      URL.revokeObjectURL(objectUrl);
+      link.remove();
+    }, 0);
   }
 
   private exportFilename(): string {
