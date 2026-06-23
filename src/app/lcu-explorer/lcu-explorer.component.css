@@ -1,9 +1,10 @@
 main {
   display: grid;
   gap: 1rem;
-  width: 100%;
+  width: min(100%, 76rem);
   max-width: 76rem;
   margin: 0 auto;
+  margin-inline: auto;
   padding: 1rem;
   text-align: left;
 }

@@ -1,5 +1,7 @@
 .purchase-date-page {
+  width: min(100%, 82rem);
   max-width: 82rem;
+  margin-inline: auto;
   text-align: center;
 }
 

@@ -2,9 +2,9 @@
   <div class="connection-status connected" role="status" aria-live="polite">League Client connected</div>
 } @else {
   <div class="connection-status" role="status" aria-live="polite">
-    <span>Connecting to League Client</span>
+    <span>Select the League folder while the client is open</span>
     <button mat-button type="button" (click)="chooseClientPath()" [disabled]="choosingClientPath">
-      {{choosingClientPath ? 'Choosing...' : 'Choose League folder'}}
+      {{choosingClientPath ? 'Choosing...' : 'Select League folder'}}
     </button>
     @if (clientPathError) {
       <span class="connection-error">{{clientPathError}}</span>

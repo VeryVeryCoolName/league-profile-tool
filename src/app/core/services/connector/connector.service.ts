@@ -33,14 +33,12 @@ export class ConnectorService implements OnDestroy {
     const configuredPath = await this.readConfiguredClientPath();
     if (configuredPath) {
       this.addInstallPathCandidate(configuredPath);
-    } else {
-      console.warn('[LCU] config/clientPath.txt unavailable; checking common League install paths.');
+      this.startRetryLoop();
     }
-    this.startRetryLoop();
   }
 
   private startRetryLoop(): void {
-    this.getCommonInstallPaths().forEach(candidate => this.addInstallPathCandidate(candidate));
+    if (this.retryTimer !== null || this.installPathCandidates.length === 0) return;
     void this.tryConnectFromLockfile('startup');
     this.retryTimer = setInterval(() => {
       void this.tryConnectFromLockfile('retry');
@@ -92,16 +90,6 @@ export class ConnectorService implements OnDestroy {
     } catch {
       return '';
     }
-  }
-
-  private getCommonInstallPaths(): string[] {
-    return [
-      'C:\\Riot Games\\League of Legends',
-      'D:\\Riot Games\\League of Legends',
-      'F:\\Riot Games\\League of Legends',
-      'C:\\Program Files\\Riot Games\\League of Legends',
-      'C:\\Program Files (x86)\\Riot Games\\League of Legends'
-    ];
   }
 
   private addInstallPathCandidate(candidate: string): void {
@@ -178,6 +166,7 @@ export class ConnectorService implements OnDestroy {
     this.addInstallPathCandidate(selectedPath);
     this.lockfilePath = '';
     this.loggedMissingLockfile = false;
+    this.startRetryLoop();
     await this.tryConnectFromLockfile('manual selection');
     return selectedPath;
   }

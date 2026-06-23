@@ -138,8 +138,10 @@ export class ChampionPurchaseDateComponent implements OnInit {
 
   private parseResponse(response: any): any {
     if (typeof response !== 'string') return response;
+    const trimmed = response.trim();
+    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return null;
     try {
-      return JSON.parse(response);
+      return JSON.parse(trimmed);
     } catch (err) {
       console.error('[LCU] failed to parse champion ownership response', response);
       return null;

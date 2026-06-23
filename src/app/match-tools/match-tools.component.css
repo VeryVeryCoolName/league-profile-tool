@@ -1,7 +1,9 @@
 .match-tools-page {
   display: grid;
   gap: 1.15rem;
+  width: min(100%, 78rem);
   max-width: 78rem;
+  margin-inline: auto;
 }
 
 .match-overview,

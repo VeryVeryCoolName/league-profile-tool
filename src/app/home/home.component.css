@@ -1,4 +1,6 @@
 main {
+  width: min(100%, 82rem);
+  margin-inline: auto;
   text-align: center;
 }
 

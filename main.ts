@@ -291,16 +291,6 @@ function normalizeClientPath(clientPath: string): string {
   return normalized;
 }
 
-function commonLeagueInstallPaths(): string[] {
-  return [
-    'C:\\Riot Games\\League of Legends',
-    'D:\\Riot Games\\League of Legends',
-    'F:\\Riot Games\\League of Legends',
-    'C:\\Program Files\\Riot Games\\League of Legends',
-    'C:\\Program Files (x86)\\Riot Games\\League of Legends'
-  ];
-}
-
 function normalizedPathKey(targetPath: string): string {
   try {
     return path.resolve(targetPath).toLowerCase();
@@ -327,7 +317,7 @@ function isLeagueClientDirectory(clientPath: string): boolean {
 function writeSavedClientPath(clientPath: string): string {
   const normalized = normalizeClientPath(clientPath);
   if (!isLeagueClientDirectory(normalized)) {
-    throw new Error('Selected folder does not look like a League of Legends install.');
+    throw new Error('Select the League folder while the client is open.');
   }
 
   fs.mkdirSync(path.dirname(savedClientPathFile()), {recursive: true});
@@ -342,7 +332,7 @@ function writeSavedClientPath(clientPath: string): string {
 }
 
 function allowedClientPathKeys(): Set<string> {
-  const paths = [readConfiguredClientPath(), readSavedClientPath(), ...commonLeagueInstallPaths()]
+  const paths = [readConfiguredClientPath(), readSavedClientPath()]
     .map(candidate => normalizeClientPath(candidate))
     .filter(Boolean)
     .map(candidate => normalizedPathKey(candidate))

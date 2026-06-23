@@ -29,7 +29,7 @@ export class AppComponent {
     } catch (error) {
       this.clientPathError = error instanceof Error
         ? error.message
-        : 'Selected folder does not look like a League of Legends install.';
+        : 'Select the League folder while the client is open.';
     } finally {
       this.choosingClientPath = false;
     }

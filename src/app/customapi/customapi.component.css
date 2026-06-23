@@ -1,5 +1,7 @@
 .custom-api-page {
+  width: min(100%, 78rem);
   max-width: 78rem;
+  margin-inline: auto;
 }
 
 .api-form {

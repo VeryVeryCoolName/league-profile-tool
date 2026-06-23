@@ -49,9 +49,7 @@ export class LCUConnectionService {
 
   private async makeRequest(method: string, body: Record<string, unknown>, endPoint: string, getFull: boolean): Promise<any> {
     if (!this.connector.connector) {
-      const message = 'LCU connection is not ready yet.';
-      console.error(`[LCU] ${message}`);
-      return message;
+      return 'LCU connection is not ready yet.';
     }
     const normalizedEndPoint = this.normalizeEndpoint(endPoint);
     if (!normalizedEndPoint) return 'Invalid LCU endpoint path.';
@@ -148,13 +146,15 @@ export class LCUConnectionService {
 
   private parseResponse(response: any): Record<string, unknown> {
     if (typeof response === 'string') {
-    try {
-      return JSON.parse(response);
-    } catch (err) {
-      console.error('[LCU] Failed to parse response');
-      return null;
+      const trimmed = response.trim();
+      if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return null;
+      try {
+        return JSON.parse(trimmed);
+      } catch (err) {
+        console.error('[LCU] Failed to parse response');
+        return null;
+      }
     }
-  }
     return response || {};
   }
 

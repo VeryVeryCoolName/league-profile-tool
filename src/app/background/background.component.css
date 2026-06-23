@@ -1,5 +1,7 @@
 .background-page {
+  width: min(100%, 88rem);
   max-width: 88rem;
+  margin-inline: auto;
 }
 
 img {

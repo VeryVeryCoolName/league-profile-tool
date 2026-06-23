@@ -1,5 +1,7 @@
 .status-page {
+  width: min(100%, 64rem);
   max-width: 64rem;
+  margin-inline: auto;
 }
 
 .status-card {
