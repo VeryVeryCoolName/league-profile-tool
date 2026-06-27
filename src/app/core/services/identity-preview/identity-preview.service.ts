@@ -1,8 +1,10 @@
-import {Injectable} from '@angular/core';
-import {BehaviorSubject, firstValueFrom, Observable} from 'rxjs';
+import {Injectable, OnDestroy} from '@angular/core';
+import {BehaviorSubject, firstValueFrom, Observable, Subscription} from 'rxjs';
 import {LCUConnectionService} from '../lcuconnection/lcuconnection.service';
 import {VersionService} from '../version/version.service';
 import {ChampionService} from '../champion/champion.service';
+import {ConnectorService} from '../connector/connector.service';
+import {LcuEventsService, LcuJsonApiEvent} from '../lcu-events/lcu-events.service';
 
 export interface IdentityPreviewState {
   loaded: boolean;
@@ -30,7 +32,7 @@ export interface IdentityPreviewState {
 @Injectable({
   providedIn: 'root'
 })
-export class IdentityPreviewService {
+export class IdentityPreviewService implements OnDestroy {
   private readonly defaultState: IdentityPreviewState = {
     loaded: false,
     loading: false,
@@ -60,13 +62,33 @@ export class IdentityPreviewService {
   private championNameByKey: Record<number, string> = {};
   private profileIconNameById: Record<number, string> = {};
   private refreshPromise: Promise<void> | null = null;
+  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastIdentityKey = '';
+  private readonly connectorSubscription: Subscription;
+  private readonly eventsSubscription: Subscription;
   public readonly state$: Observable<IdentityPreviewState> = this.stateSubject.asObservable();
 
   constructor(
     private lcuConnectionService: LCUConnectionService,
     private versionService: VersionService,
-    private championService: ChampionService
+    private championService: ChampionService,
+    private connector: ConnectorService,
+    private lcuEvents: LcuEventsService
   ) {
+    this.connectorSubscription = this.connector.ready$.subscribe(ready => {
+      if (ready) {
+        this.scheduleRefresh();
+      } else {
+        this.resetPreview();
+      }
+    });
+    this.eventsSubscription = this.lcuEvents.events$.subscribe(event => this.handleLcuEvent(event));
+  }
+
+  ngOnDestroy(): void {
+    this.connectorSubscription.unsubscribe();
+    this.eventsSubscription.unsubscribe();
+    if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
   }
 
   public async refreshPreview(): Promise<void> {
@@ -82,47 +104,55 @@ export class IdentityPreviewService {
     this.patchState({loading: true, error: ''});
 
     try {
-      const [summoner, profile, chat, challengeSummary] = await Promise.all([
+      const [summoner, profile, chat] = await Promise.all([
         this.readObject('/lol-summoner/v1/current-summoner'),
         this.readObject('/lol-summoner/v1/current-summoner/summoner-profile'),
-        this.readObject('/lol-chat/v1/me'),
-        current.challengeSpoofActive ? Promise.resolve(null) : this.readObject('/lol-challenges/v1/summary-player-data/local-player')
+        this.readObject('/lol-chat/v1/me')
       ]);
 
+      const identityKey = this.identityKey(summoner);
+      const accountChanged = !!identityKey && !!this.lastIdentityKey && identityKey !== this.lastIdentityKey;
+      const fallbackState = accountChanged ? this.defaultState : current;
+      if (identityKey) this.lastIdentityKey = identityKey;
+
+      const challengeSummary = fallbackState.challengeSpoofActive
+        ? null
+        : await this.readObject('/lol-challenges/v1/summary-player-data/local-player');
       const lol = chat && chat.lol ? chat.lol as Record<string, unknown> : {};
       const availability = this.stringFrom(chat && chat.availability, '');
       const summaryLevel = this.stringFrom(challengeSummary && challengeSummary.overallChallengeLevel, '');
       const summaryPoints = this.numberFrom(challengeSummary && challengeSummary.totalChallengeScore, null);
-      const accountProfileIconId = this.numberFrom(summoner.profileIconId, current.profileIconId);
+      const accountProfileIconId = this.numberFrom(summoner.profileIconId, fallbackState.profileIconId);
       const chatIconId = this.numberFrom(chat && chat.icon, null);
       const hovercardIconId = chatIconId === null
         ? await this.readHovercardProfileIcon(summoner)
         : null;
       const profileIconId = this.firstKnownNumber(chatIconId, hovercardIconId, accountProfileIconId);
-      const backgroundSkinId = this.numberFrom(profile.backgroundSkinId, current.backgroundSkinId);
-      const sameProfileIcon = current.profileIconId === profileIconId;
-      const sameBackground = current.backgroundSkinId === backgroundSkinId;
+      const backgroundSkinId = this.numberFrom(profile.backgroundSkinId, fallbackState.backgroundSkinId);
+      const sameProfileIcon = fallbackState.profileIconId === profileIconId;
+      const sameBackground = fallbackState.backgroundSkinId === backgroundSkinId;
 
       const nextState: Partial<IdentityPreviewState> = {
         loaded: true,
         loading: false,
         error: '',
         updatedAt: new Date().toLocaleTimeString(),
-        summonerName: this.stringFrom(summoner.gameName, this.stringFrom(summoner.displayName, current.summonerName || 'Summoner')),
-        tagLine: this.stringFrom(summoner.tagLine, current.tagLine),
+        summonerName: this.stringFrom(summoner.gameName, this.stringFrom(summoner.displayName, fallbackState.summonerName || 'Summoner')),
+        tagLine: this.stringFrom(summoner.tagLine, fallbackState.tagLine),
         profileIconId,
-        profileIconName: sameProfileIcon ? current.profileIconName : 'Icon',
+        profileIconName: sameProfileIcon ? fallbackState.profileIconName : 'Icon',
         profileIconUrl: this.profileIconUrl(profileIconId),
-        availabilityLabel: this.availabilityLabel(availability, current.availabilityLabel),
-        statusMessage: this.stringFrom(chat && chat.statusMessage, current.statusMessage),
-        chatRankTier: current.challengeSpoofActive ? current.chatRankTier : this.stringFrom(lol.rankedLeagueTier, current.chatRankTier),
-        chatRankDivision: current.challengeSpoofActive ? current.chatRankDivision : this.stringFrom(lol.rankedLeagueDivision, current.chatRankDivision),
-        chatRankQueue: current.challengeSpoofActive ? current.chatRankQueue : this.stringFrom(lol.rankedLeagueQueue, current.chatRankQueue),
-        challengeCrystalLevel: current.challengeSpoofActive ? current.challengeCrystalLevel : this.stringFrom(summaryLevel, this.stringFrom(lol.challengeCrystalLevel, current.challengeCrystalLevel)),
-        challengePoints: current.challengeSpoofActive ? current.challengePoints : this.numberFrom(summaryPoints, this.numberFrom(lol.challengePoints, current.challengePoints)),
+        availabilityLabel: this.availabilityLabel(availability, fallbackState.availabilityLabel),
+        statusMessage: this.stringFrom(chat && chat.statusMessage, fallbackState.statusMessage),
+        chatRankTier: fallbackState.challengeSpoofActive ? fallbackState.chatRankTier : this.stringFrom(lol.rankedLeagueTier, fallbackState.chatRankTier),
+        chatRankDivision: fallbackState.challengeSpoofActive ? fallbackState.chatRankDivision : this.stringFrom(lol.rankedLeagueDivision, fallbackState.chatRankDivision),
+        chatRankQueue: fallbackState.challengeSpoofActive ? fallbackState.chatRankQueue : this.stringFrom(lol.rankedLeagueQueue, fallbackState.chatRankQueue),
+        challengeCrystalLevel: fallbackState.challengeSpoofActive ? fallbackState.challengeCrystalLevel : this.stringFrom(summaryLevel, this.stringFrom(lol.challengeCrystalLevel, fallbackState.challengeCrystalLevel)),
+        challengePoints: fallbackState.challengeSpoofActive ? fallbackState.challengePoints : this.numberFrom(summaryPoints, this.numberFrom(lol.challengePoints, fallbackState.challengePoints)),
+        challengeSpoofActive: fallbackState.challengeSpoofActive,
         backgroundSkinId,
-        backgroundImageUrl: sameBackground ? current.backgroundImageUrl : '',
-        backgroundLabel: sameBackground ? current.backgroundLabel : (backgroundSkinId ? `Skin ${backgroundSkinId}` : '')
+        backgroundImageUrl: sameBackground ? fallbackState.backgroundImageUrl : '',
+        backgroundLabel: sameBackground ? fallbackState.backgroundLabel : (backgroundSkinId ? `Skin ${backgroundSkinId}` : '')
       };
 
       this.patchState(nextState);
@@ -218,6 +248,11 @@ export class IdentityPreviewService {
     });
   }
 
+  public resetPreview(): void {
+    this.lastIdentityKey = '';
+    this.patchState({...this.defaultState});
+  }
+
   private async resolvePreviewDetails(profileIconId: number | null, backgroundSkinId: number | null): Promise<void> {
     try {
       const [profileIconName, background] = await Promise.all([
@@ -247,6 +282,26 @@ export class IdentityPreviewService {
     const changed = (Object.keys(patch) as Array<keyof IdentityPreviewState>).some(key => current[key] !== next[key]);
     if (!changed) return;
     this.stateSubject.next(next);
+  }
+
+  private handleLcuEvent(event: LcuJsonApiEvent): void {
+    const uri = String(event && event.uri || '').toLowerCase();
+    if (
+      uri.indexOf('/lol-summoner/v1/current-summoner') === 0 ||
+      uri.indexOf('/lol-chat/v1/me') === 0 ||
+      uri.indexOf('/lol-login/v1/session') === 0
+    ) {
+      this.scheduleRefresh();
+    }
+  }
+
+  private scheduleRefresh(): void {
+    if (!this.connector.isReady()) return;
+    if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
+    this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = null;
+      void this.refreshPreview();
+    }, 350);
   }
 
   private async readObject(path: string): Promise<Record<string, unknown>> {
@@ -280,6 +335,21 @@ export class IdentityPreviewService {
     }
   }
 
+  private identityKey(summoner: Record<string, unknown>): string {
+    const puuid = this.stringFrom(summoner && summoner.puuid, '');
+    if (puuid) return `puuid:${puuid}`;
+
+    const summonerId = this.stringFrom(summoner && summoner.summonerId, '');
+    if (summonerId) return `summoner:${summonerId}`;
+
+    const accountId = this.stringFrom(summoner && summoner.accountId, '');
+    if (accountId) return `account:${accountId}`;
+
+    const name = this.stringFrom(summoner && summoner.gameName, this.stringFrom(summoner && summoner.displayName, ''));
+    const tagLine = this.stringFrom(summoner && summoner.tagLine, '');
+    return name ? `name:${name}#${tagLine}` : '';
+  }
+
   private async resolveBackground(backgroundSkinId: number | null): Promise<{url: string; label: string}> {
     if (!backgroundSkinId && backgroundSkinId !== 0) return {url: '', label: ''};
     if (backgroundSkinId === 0) return {url: '', label: 'Default'};
@@ -291,10 +361,12 @@ export class IdentityPreviewService {
       const championId = this.championIdByKey[championKey];
       if (!championId) return {url: '', label: `Skin ${backgroundSkinId}`};
       const championName = this.championNameByKey[championKey] || championId;
-      const skinName = await this.resolveBackgroundSkinName(backgroundSkinId, championName);
+      const catalogSkin = await this.resolveCatalogSkin(backgroundSkinId);
+      const skinName = this.catalogSkinName(catalogSkin, championName);
+      const catalogUrl = this.communityDragonAssetUrl(catalogSkin && (catalogSkin.splashPath || catalogSkin.loadScreenPath));
 
       return {
-        url: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championId}_${skinNumber}.jpg`,
+        url: catalogUrl || `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championId}_${skinNumber}.jpg`,
         label: skinName || `${championName} skin ${skinNumber}`
       };
     } catch (error) {
@@ -303,19 +375,42 @@ export class IdentityPreviewService {
     }
   }
 
-  private async resolveBackgroundSkinName(backgroundSkinId: number, championName: string): Promise<string> {
+  private async resolveCatalogSkin(backgroundSkinId: number): Promise<Record<string, any> | null> {
     try {
-      const skinCatalog: any = await firstValueFrom(this.championService.getSkinCatalog());
+      const skinCatalog = await firstValueFrom(this.championService.getSkinCatalog());
       const skin = skinCatalog && skinCatalog[String(backgroundSkinId)];
-      if (!skin) return '';
+      if (skin) return skin;
 
-      const rawName = this.stringFrom(skin.name, '');
-      if (skin.isBase || !rawName || rawName === championName) return `${championName} Default`;
-      return rawName;
+      for (const catalogSkin of Object.values(skinCatalog || {})) {
+        const tiers = catalogSkin && catalogSkin.questSkinInfo && Array.isArray(catalogSkin.questSkinInfo.tiers)
+          ? catalogSkin.questSkinInfo.tiers
+          : [];
+        const tier = tiers.find(item => Number(item && item.id) === backgroundSkinId);
+        if (tier) return tier;
+      }
+
+      return null;
     } catch (error) {
-      console.warn('[Preview] background skin name unavailable', error);
-      return '';
+      console.warn('[Preview] background skin metadata unavailable', error);
+      return null;
     }
+  }
+
+  private catalogSkinName(skin: Record<string, any> | null, championName: string): string {
+    if (!skin) return '';
+    const rawName = this.stringFrom(skin.name, '');
+    if (skin.isBase || !rawName || rawName === championName) return `${championName} Default`;
+    return rawName;
+  }
+
+  private communityDragonAssetUrl(path: unknown): string {
+    const assetPath = String(path || '').trim();
+    if (!assetPath) return '';
+    const normalizedPath = assetPath
+      .replace(/^\/lol-game-data\/assets\//i, '')
+      .replace(/^\//, '')
+      .toLowerCase();
+    return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/${normalizedPath}`;
   }
 
   private async ensureChampionMap(): Promise<void> {

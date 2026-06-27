@@ -14,6 +14,7 @@ export class ConnectorService implements OnDestroy {
   private retryTimer: ReturnType<typeof setInterval> | null = null;
   private connecting = false;
   private lockfilePath = '';
+  private lockfileSignature = '';
   private ready = false;
   private readonly installPathCandidates: string[] = [];
   private loggedMissingLockfile = false;
@@ -61,12 +62,18 @@ export class ConnectorService implements OnDestroy {
       this.loggedMissingLockfile = false;
 
       const data = await this.parseLockfile(lockfilePath);
-      if (!data) return;
+      if (!data) {
+        if (this.connector) this.setReady(false);
+        return;
+      }
 
       const connectorUrl = `${data.protocol}://${data.address}:${data.port}`;
-      if (this.connector && this.connector.url === connectorUrl && this.lockfilePath === lockfilePath) return;
+      const lockfileSignature = this.lockfileSignatureFor(data);
+      if (this.connector && this.connector.url === connectorUrl && this.lockfilePath === lockfilePath && this.lockfileSignature === lockfileSignature) return;
 
+      if (this.connector) this.setReady(false);
       this.lockfilePath = lockfilePath;
+      this.lockfileSignature = lockfileSignature;
       await this.verifyAndSetConnection(data);
     } finally {
       this.connecting = false;
@@ -149,7 +156,10 @@ export class ConnectorService implements OnDestroy {
   }
 
   private setReady(ready: boolean): void {
-    if (!ready) this.connector = null;
+    if (!ready) {
+      this.connector = null;
+      this.lockfileSignature = '';
+    }
     if (this.ready === ready) return;
     this.ready = ready;
     this.readySubject.next(ready);
@@ -165,10 +175,15 @@ export class ConnectorService implements OnDestroy {
 
     this.addInstallPathCandidate(selectedPath);
     this.lockfilePath = '';
+    this.lockfileSignature = '';
     this.loggedMissingLockfile = false;
     this.startRetryLoop();
     await this.tryConnectFromLockfile('manual selection');
     return selectedPath;
+  }
+
+  private lockfileSignatureFor(data: Data): string {
+    return `${data.protocol}:${data.port}:${data.password}`;
   }
 
   private normalizeClientPath(clientPath: string): string {

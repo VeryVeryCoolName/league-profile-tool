@@ -241,30 +241,7 @@ export class BackgroundComponent implements OnInit, OnDestroy {
     const championName = this.championDisplayName(alt);
 
     for (const skin of Object.values(skinsById || {})) {
-      const skinId = Number(skin && skin.id);
-      if (!championKey || !Number.isFinite(skinId)) continue;
-      if (Math.floor(skinId / 1000) !== championKey) continue;
-      if (skin.skinClassification && skin.skinClassification !== 'kChampion') continue;
-
-      const skinNum = skinId - championKey * 1000;
-      if (!Number.isInteger(skinNum) || skinNum < 0) continue;
-
-      const rawName = String(skin.name || '').trim();
-      const name = skin.isBase || rawName === championName
-        ? `${championName} Default`
-        : this.displaySkinName(rawName, championName);
-      const src = this.communityDragonAssetUrl(skin.loadScreenPath) ||
-        `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${alt}_${skinNum}.jpg`;
-
-      skinImages.push({
-        src,
-        alt: String(skinId),
-        num: skinNum,
-        name,
-        order: 0,
-        loaded: false,
-        broken: false
-      });
+      this.catalogSkinEntries(skin, championKey, championName, alt).forEach(entry => skinImages.push(entry));
     }
 
     return skinImages.sort((left, right) => {
@@ -274,6 +251,62 @@ export class BackgroundComponent implements OnInit, OnDestroy {
     }).map((image, index) => {
       return {...image, order: index};
     });
+  }
+
+  private catalogSkinEntries(skin: any, championKey: number, championName: string, alt: string): Array<Record<string, unknown>> {
+    if (!this.isCatalogChampionSkin(skin, championKey)) return [];
+
+    const baseEntry = this.catalogSkinEntry(skin, championKey, championName, alt);
+    const tierEntries = this.catalogSkinTierEntries(skin, championKey, championName, alt);
+    const entries = [baseEntry, ...tierEntries].filter(Boolean);
+    const seen = {};
+    return entries.filter(entry => {
+      const id = String(entry.alt || '');
+      if (!id || seen[id]) return false;
+      seen[id] = true;
+      return true;
+    });
+  }
+
+  private catalogSkinTierEntries(skin: any, championKey: number, championName: string, alt: string): Array<Record<string, unknown>> {
+    const tiers = skin && skin.questSkinInfo && Array.isArray(skin.questSkinInfo.tiers)
+      ? skin.questSkinInfo.tiers
+      : [];
+    return tiers
+      .map(tier => this.catalogSkinEntry(tier, championKey, championName, alt))
+      .filter(Boolean);
+  }
+
+  private catalogSkinEntry(skin: any, championKey: number, championName: string, alt: string): Record<string, unknown> | null {
+    const skinId = Number(skin && skin.id);
+    if (!Number.isFinite(skinId)) return null;
+    if (Math.floor(skinId / 1000) !== championKey) return null;
+
+    const skinNum = skinId - championKey * 1000;
+    if (!Number.isInteger(skinNum) || skinNum < 0) return null;
+
+    const rawName = String(skin.name || '').trim();
+    const name = skin.isBase || rawName === championName
+      ? `${championName} Default`
+      : this.displaySkinName(rawName, championName);
+    const src = this.communityDragonAssetUrl(skin.loadScreenPath || skin.splashPath) ||
+      `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${alt}_${skinNum}.jpg`;
+
+    return {
+      src,
+      alt: String(skinId),
+      num: skinNum,
+      name,
+      order: 0,
+      loaded: false,
+      broken: false
+    };
+  }
+
+  private isCatalogChampionSkin(skin: any, championKey: number): boolean {
+    const skinId = Number(skin && skin.id);
+    if (!Number.isFinite(skinId) || Math.floor(skinId / 1000) !== championKey) return false;
+    return !skin.skinClassification || skin.skinClassification === 'kChampion';
   }
 
   private isUsableSkin(alt: string, skin: Record<string, unknown>): boolean {
@@ -402,6 +435,7 @@ export class BackgroundComponent implements OnInit, OnDestroy {
       if (response === 'Success') {
         this.selectedBackgroundSkinId = body.value;
         this.identityPreviewService.applyBackgroundSkinId(body.value);
+        void this.identityPreviewService.refreshPreview();
       }
       this.dialog.open(DialogComponent, {
         data: {body: response}
