@@ -1,10 +1,10 @@
 # League Profile Tool - League of Legends Profile Customization Tool
 
-A modernized and actively maintained **League of Legends profile customization tool** built around Riot's local **League Client Update API**.
+A modernized and actively maintained League of Legends profile customization tool built around Riot's local League Client Update API.
 
 League Profile Tool lets you customize League profile icons, profile backgrounds, chat rank, challenge rank, status/presence, lobby links, and other League Client profile visuals through the local League Client API.
 
-**Official website:** https://leagueprofiletool.servertheo.top/
+Official website: https://leagueprofiletool.servertheo.top/
 
 Originally based on the project by [MManoah](https://github.com/MManoah/league-profile-tool), this fork focuses on restoring broken functionality, improving compatibility with the modern League Client, polishing the UI, and adding new customization features while preserving the original spirit of the application.
 
