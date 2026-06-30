@@ -24,6 +24,7 @@ export interface IdentityPreviewState {
   challengeSpoofActive: boolean;
   backgroundSkinId: number | null;
   backgroundImageUrl: string;
+  backgroundVideoUrl: string;
   backgroundLabel: string;
   availabilityLabel: string;
   statusMessage: string;
@@ -51,6 +52,7 @@ export class IdentityPreviewService implements OnDestroy {
     challengeSpoofActive: false,
     backgroundSkinId: null,
     backgroundImageUrl: '',
+    backgroundVideoUrl: '',
     backgroundLabel: '',
     availabilityLabel: '',
     statusMessage: ''
@@ -131,6 +133,14 @@ export class IdentityPreviewService implements OnDestroy {
       const backgroundSkinId = this.numberFrom(profile.backgroundSkinId, fallbackState.backgroundSkinId);
       const sameProfileIcon = fallbackState.profileIconId === profileIconId;
       const sameBackground = fallbackState.backgroundSkinId === backgroundSkinId;
+      const chatRankTier = fallbackState.challengeSpoofActive
+        ? fallbackState.chatRankTier
+        : this.stringFrom(lol.rankedLeagueTier, fallbackState.chatRankTier);
+      const chatRankDivision = chatRankTier.toUpperCase() === 'UNRANKED'
+        ? ''
+        : fallbackState.challengeSpoofActive
+          ? fallbackState.chatRankDivision
+          : this.stringFrom(lol.rankedLeagueDivision, fallbackState.chatRankDivision);
 
       const nextState: Partial<IdentityPreviewState> = {
         loaded: true,
@@ -144,14 +154,15 @@ export class IdentityPreviewService implements OnDestroy {
         profileIconUrl: this.profileIconUrl(profileIconId),
         availabilityLabel: this.availabilityLabel(availability, fallbackState.availabilityLabel),
         statusMessage: this.stringFrom(chat && chat.statusMessage, fallbackState.statusMessage),
-        chatRankTier: fallbackState.challengeSpoofActive ? fallbackState.chatRankTier : this.stringFrom(lol.rankedLeagueTier, fallbackState.chatRankTier),
-        chatRankDivision: fallbackState.challengeSpoofActive ? fallbackState.chatRankDivision : this.stringFrom(lol.rankedLeagueDivision, fallbackState.chatRankDivision),
+        chatRankTier,
+        chatRankDivision,
         chatRankQueue: fallbackState.challengeSpoofActive ? fallbackState.chatRankQueue : this.stringFrom(lol.rankedLeagueQueue, fallbackState.chatRankQueue),
         challengeCrystalLevel: fallbackState.challengeSpoofActive ? fallbackState.challengeCrystalLevel : this.stringFrom(summaryLevel, this.stringFrom(lol.challengeCrystalLevel, fallbackState.challengeCrystalLevel)),
         challengePoints: fallbackState.challengeSpoofActive ? fallbackState.challengePoints : this.numberFrom(summaryPoints, this.numberFrom(lol.challengePoints, fallbackState.challengePoints)),
         challengeSpoofActive: fallbackState.challengeSpoofActive,
         backgroundSkinId,
         backgroundImageUrl: sameBackground ? fallbackState.backgroundImageUrl : '',
+        backgroundVideoUrl: sameBackground ? fallbackState.backgroundVideoUrl : '',
         backgroundLabel: sameBackground ? fallbackState.backgroundLabel : (backgroundSkinId ? `Skin ${backgroundSkinId}` : '')
       };
 
@@ -236,6 +247,8 @@ export class IdentityPreviewService implements OnDestroy {
     this.patchState({
       loaded: true,
       backgroundSkinId,
+      backgroundImageUrl: '',
+      backgroundVideoUrl: '',
       backgroundLabel: backgroundSkinId ? `Skin ${backgroundSkinId}` : '',
       updatedAt: new Date().toLocaleTimeString()
     });
@@ -243,6 +256,7 @@ export class IdentityPreviewService implements OnDestroy {
       if (this.stateSubject.value.backgroundSkinId !== backgroundSkinId) return;
       this.patchState({
         backgroundImageUrl: background.url,
+        backgroundVideoUrl: background.videoUrl,
         backgroundLabel: background.label
       });
     });
@@ -266,6 +280,7 @@ export class IdentityPreviewService implements OnDestroy {
       this.patchState({
         profileIconName,
         backgroundImageUrl: background.url,
+        backgroundVideoUrl: background.videoUrl,
         backgroundLabel: background.label
       });
     } catch (error) {
@@ -350,28 +365,30 @@ export class IdentityPreviewService implements OnDestroy {
     return name ? `name:${name}#${tagLine}` : '';
   }
 
-  private async resolveBackground(backgroundSkinId: number | null): Promise<{url: string; label: string}> {
-    if (!backgroundSkinId && backgroundSkinId !== 0) return {url: '', label: ''};
-    if (backgroundSkinId === 0) return {url: '', label: 'Default'};
+  private async resolveBackground(backgroundSkinId: number | null): Promise<{url: string; videoUrl: string; label: string}> {
+    if (!backgroundSkinId && backgroundSkinId !== 0) return {url: '', videoUrl: '', label: ''};
+    if (backgroundSkinId === 0) return {url: '', videoUrl: '', label: 'Default'};
 
     try {
       await this.ensureChampionMap();
       const championKey = Math.floor(backgroundSkinId / 1000);
       const skinNumber = backgroundSkinId % 1000;
       const championId = this.championIdByKey[championKey];
-      if (!championId) return {url: '', label: `Skin ${backgroundSkinId}`};
+      if (!championId) return {url: '', videoUrl: '', label: `Skin ${backgroundSkinId}`};
       const championName = this.championNameByKey[championKey] || championId;
       const catalogSkin = await this.resolveCatalogSkin(backgroundSkinId);
       const skinName = this.catalogSkinName(catalogSkin, championName);
       const catalogUrl = this.communityDragonAssetUrl(catalogSkin && (catalogSkin.splashPath || catalogSkin.loadScreenPath));
+      const catalogVideoUrl = this.communityDragonAssetUrl(catalogSkin && catalogSkin.splashVideoPath);
 
       return {
         url: catalogUrl || `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championId}_${skinNumber}.jpg`,
+        videoUrl: catalogVideoUrl,
         label: skinName || `${championName} skin ${skinNumber}`
       };
     } catch (error) {
       console.warn('[Preview] background metadata unavailable', error);
-      return {url: '', label: `Skin ${backgroundSkinId}`};
+      return {url: '', videoUrl: '', label: `Skin ${backgroundSkinId}`};
     }
   }
 

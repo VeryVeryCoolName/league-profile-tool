@@ -27,13 +27,15 @@ const CHALLENGE_CRYSTAL_POINT_THRESHOLDS: Record<string, number> = {
     standalone: false
 })
 export class ChatrankComponent implements OnInit {
-  public ranks = ["IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "EMERALD", "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"];
+  public ranks = ["UNRANKED", "IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "EMERALD", "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"];
   public challengeLevels = ["NONE", "IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"];
   public divisions = ["I", "II", "III", "IV"];
   public queues = [
     {label: "Ranked Solo/Duo", value: "RANKED_SOLO_5x5"},
     {label: "Ranked Flex", value: "RANKED_FLEX_SR"},
-    {label: "Ranked TFT", value: "RANKED_TFT"}
+    {label: "Ranked 5V5", value: "RANKED_PREMADE_5x5"},
+    {label: "Ranked TFT", value: "RANKED_TFT"},
+    {label: "TFT Double Up", value: "RANKED_TFT_DOUBLE_UP"}
   ];
   public queue: string;
   public division: string;
@@ -60,29 +62,50 @@ export class ChatrankComponent implements OnInit {
   }
 
   public chatRank(): void {
-    if (!this.queue || !this.rank || !this.division) {
+    if (!this.queue || !this.rank) {
       this.dialog.open(DialogComponent, {
-        data: {body: 'Select a queue, rank, and division before updating chat rank.'}
+        data: {body: 'Select a queue and rank before updating chat rank.'}
       });
       return;
     }
+    const normalizedRank = this.rank.toUpperCase();
+    const normalizedDivision = this.usesDivision(normalizedRank) && this.division ? this.division : undefined;
+    const lol: Record<string, unknown> = {
+      rankedLeagueQueue: this.queue,
+      rankedLeagueTier: normalizedRank,
+      rankedLeagueDivision: normalizedDivision,
+    };
     const body = {
-      lol: {
-        rankedLeagueQueue: this.queue,
-        rankedLeagueTier: this.rank,
-        rankedLeagueDivision: this.division,
-      },
+      lol,
     };
     this.presenceAutomationService.suspendAutoReapply();
     this.lcuConnectionService.requestSend(body, 'PUT', 'lolChat').then(response => {
       if (response === 'Success') {
-        this.identityPreviewService.applyChatRank(this.queue, this.rank, this.division);
-        this.presenceAutomationService.recordChatRankPreset(this.queue, this.rank, this.division);
+        this.rank = normalizedRank;
+        this.division = normalizedDivision || '';
+        this.identityPreviewService.applyChatRank(this.queue, normalizedRank, this.division);
+        this.presenceAutomationService.recordChatRankPreset(this.queue, normalizedRank, this.division || undefined);
       }
       this.dialog.open(DialogComponent, {
         data: {body: response}
       });
     });
+  }
+
+  public isUnrankedSelected(): boolean {
+    return String(this.rank || '').toUpperCase() === 'UNRANKED';
+  }
+
+  public requiresDivision(): boolean {
+    return this.usesDivision(this.rank);
+  }
+
+  public syncChatRankInputs(): void {
+    if (!this.requiresDivision()) this.division = '';
+  }
+
+  private usesDivision(rank: string): boolean {
+    return ['MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED'].indexOf(String(rank || '').toUpperCase()) < 0;
   }
 
   public setChallengeRank(): void {

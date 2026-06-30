@@ -23,7 +23,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.updateCheckTimer = setTimeout(() => {
       void this.checkNewestVersion();
-    }, 6000);
+    }, 250);
   }
 
   ngOnDestroy(): void {

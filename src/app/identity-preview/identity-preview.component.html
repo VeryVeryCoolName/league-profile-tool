@@ -1,5 +1,8 @@
 <mat-card class="preview-card">
-  @if (backgroundStyle) {
+  @if (showBackgroundVideo) {
+    <video class="preview-video" [src]="state.backgroundVideoUrl" [poster]="state.backgroundImageUrl" autoplay muted loop playsinline (error)="videoFailed = true"></video>
+  }
+  @if (!showBackgroundVideo && backgroundStyle) {
     <div class="preview-art" [style.background-image]="backgroundStyle"></div>
   }
   <div class="preview-shade"></div>

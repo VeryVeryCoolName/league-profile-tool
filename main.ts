@@ -38,6 +38,7 @@ const CONTENT_SECURITY_POLICY = [
   SCRIPT_SRC_POLICY,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https://ddragon.leagueoflegends.com https://raw.communitydragon.org",
+  "media-src 'self' https://raw.communitydragon.org",
   CONNECT_SRC_POLICY,
   "font-src 'self' data:",
   "object-src 'none'",

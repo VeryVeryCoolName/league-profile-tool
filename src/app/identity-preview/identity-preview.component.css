@@ -1,14 +1,15 @@
 .preview-card {
   position: relative;
   overflow: hidden;
-  width: min(62rem, calc(100vw - 2rem));
-  margin: 1.5rem auto 0;
+  width: min(68rem, calc(100vw - 2rem));
+  margin: 1.6rem auto 0;
   text-align: left;
   background: #1d2227;
   border: 1px solid rgba(105, 189, 245, 0.22);
-  box-shadow: var(--shadow-md) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28) !important;
 }
 
+.preview-video,
 .preview-art,
 .preview-shade {
   position: absolute;
@@ -16,41 +17,58 @@
   pointer-events: none;
 }
 
+.preview-video {
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  opacity: 0.78;
+  filter: saturate(1.06) brightness(0.98);
+}
+
 .preview-art {
+  z-index: 0;
   background-position: center 18%;
   background-size: cover;
-  opacity: 0.48;
+  opacity: 0.78;
+  filter: saturate(1.06) brightness(1.02);
 }
 
 .preview-shade {
-  background: linear-gradient(90deg, rgba(20, 22, 25, 0.94), rgba(20, 22, 25, 0.66) 48%, rgba(20, 22, 25, 0.91));
+  z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(12, 16, 20, 0.91), rgba(12, 16, 20, 0.56) 52%, rgba(12, 16, 20, 0.84)),
+    linear-gradient(180deg, rgba(7, 11, 15, 0.16), rgba(7, 11, 15, 0.44));
 }
 
 .preview-content {
   position: relative;
+  z-index: 3;
   display: grid;
-  gap: 0.95rem;
-  padding: 1.35rem;
+  gap: 1rem;
+  padding: clamp(1.25rem, 2vw, 1.65rem);
 }
 
 .preview-header {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 1rem;
+  gap: 1.05rem;
   align-items: center;
 }
 
 .profile-icon {
   display: grid;
   place-items: center;
-  width: 5rem;
-  height: 5rem;
+  width: 5.6rem;
+  height: 5.6rem;
   overflow: hidden;
   border: 2px solid #c2a05a;
   border-radius: 50%;
   background: #111820;
   color: #d8e9ff;
   font-weight: 700;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 .profile-icon img {
@@ -68,16 +86,20 @@
   display: block;
   color: #9fd3ff;
   font-size: 0.78rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.42);
 }
 
 h2 {
   margin: 0.15rem 0 0;
   overflow-wrap: anywhere;
   color: #f6eedc;
-  font-size: 1.55rem;
-  line-height: 1.15;
+  font-size: clamp(1.7rem, 2.45vw, 2.15rem);
+  font-weight: 600;
+  line-height: 1.1;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.42);
 }
 
 h2 small {
@@ -88,9 +110,10 @@ h2 small {
 .status-line {
   margin: 0.4rem 0 0;
   color: #c7dced;
-  font-size: 1rem;
+  font-size: 1.02rem;
   font-weight: 800;
   line-height: 1.2;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
 p {
@@ -101,23 +124,26 @@ p {
 .preview-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.8rem;
 }
 
 .preview-grid div {
   min-width: 0;
-  padding: 0.75rem 0.85rem;
-  background: rgba(13, 20, 26, 0.56);
-  border: 1px solid rgba(203, 222, 238, 0.13);
+  min-height: 5.9rem;
+  padding: 0.8rem 0.9rem;
+  background: rgba(10, 16, 22, 0.68);
+  border: 1px solid rgba(203, 222, 238, 0.16);
   border-radius: 7px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 8px 20px rgba(0, 0, 0, 0.16);
 }
 
 .preview-grid strong {
   display: block;
-  margin-top: 0.25rem;
+  margin-top: 0.3rem;
   overflow-wrap: anywhere;
   color: #fff;
-  font-size: 1rem;
+  font-size: 1.05rem;
+  line-height: 1.2;
 }
 
 .preview-grid small {
@@ -163,7 +189,7 @@ p {
   }
 
   .profile-icon {
-    width: 4.25rem;
-    height: 4.25rem;
+    width: 4.5rem;
+    height: 4.5rem;
   }
 }

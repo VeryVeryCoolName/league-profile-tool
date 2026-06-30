@@ -7,13 +7,14 @@ import {timeout} from 'rxjs/operators';
   providedIn: 'root'
 })
 export class VersionService {
-  private readonly githubVersionUrls = [
-    'https://api.github.com/repos/VeryVeryCoolName/league-profile-tool/releases/latest',
-    'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/main/package.json',
-    'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/master/package.json',
+  private readonly githubLatestReleaseUrl = 'https://api.github.com/repos/VeryVeryCoolName/league-profile-tool/releases/latest';
+  private readonly githubFallbackVersionUrls = [
     'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/main/version.json',
-    'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/master/version.json'
+    'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/main/package.json',
+    'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/master/version.json',
+    'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/master/package.json'
   ];
+  private readonly githubVersionTimeoutMs = 1200;
   private readonly dataDragonVersions = this.http
     .get<string[]>('https://ddragon.leagueoflegends.com/api/versions.json')
     .pipe(shareReplay({bufferSize: 1, refCount: false}));
@@ -36,17 +37,38 @@ export class VersionService {
   }
 
   private async fetchLatestGithubVersion(): Promise<string> {
-    for (const url of this.githubVersionUrls) {
-      try {
-        const response = await firstValueFrom(this.http.get(url).pipe(timeout(2500)));
-        const version = this.extractVersion(response);
-        if (version) return version;
-      } catch (error) {
-        continue;
-      }
-    }
+    const fallbackVersion = this.firstSuccessfulVersion(this.githubFallbackVersionUrls);
 
-    throw new Error('Could not check GitHub version.');
+    try {
+      return await this.fetchGithubVersionUrl(this.githubLatestReleaseUrl);
+    } catch (error) {
+      return await fallbackVersion;
+    }
+  }
+
+  private async firstSuccessfulVersion(urls: string[]): Promise<string> {
+    return await new Promise<string>((resolve, reject) => {
+      let pending = urls.length;
+      let settled = false;
+
+      urls.forEach(url => {
+        this.fetchGithubVersionUrl(url).then(version => {
+          if (settled) return;
+          settled = true;
+          resolve(version);
+        }).catch(() => {
+          pending--;
+          if (pending === 0 && !settled) reject(new Error('Could not check GitHub version.'));
+        });
+      });
+    });
+  }
+
+  private async fetchGithubVersionUrl(url: string): Promise<string> {
+    const response = await firstValueFrom(this.http.get(url).pipe(timeout(this.githubVersionTimeoutMs)));
+    const version = this.extractVersion(response);
+    if (!version) throw new Error('GitHub version response did not include a version.');
+    return version;
   }
 
   private extractVersion(response: any): string {

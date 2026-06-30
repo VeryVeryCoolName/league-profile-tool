@@ -26,14 +26,14 @@ Originally based on the project by [MManoah](https://github.com/MManoah/league-p
 
 Choose the version that fits your setup:
 
-# [Download the Installer](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.4.4/League.Profile.Tool.Setup.3.4.4.exe)
-# [Download the 64-bit Portable ZIP](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.4.4/LeagueProfileTool.zip)
-# [Download the 32-bit Portable ZIP](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.4.4/LeagueProfileTool.32-bit.zip)
+# [Download the Installer](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.5.0/League.Profile.Tool.Setup.3.5.0.exe)
+# [Download the 64-bit Portable ZIP](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.5.0/LeagueProfileTool.zip)
+# [Download the 32-bit Portable ZIP](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.5.0/LeagueProfileTool.32-bit.zip)
 
 Setup:
 
 1. Make sure the League Client is already running.
-2. If you downloaded the installer, launch `League.Profile.Tool.Setup.3.4.4.exe` and follow the prompts.
+2. If you downloaded the installer, launch `League.Profile.Tool.Setup.3.5.0.exe` and follow the prompts.
 3. If you downloaded a portable ZIP, extract it somewhere on your computer and launch `League Profile Tool.exe`.
 
 Older versions and changelogs are available in the [Releases](https://github.com/VeryVeryCoolName/league-profile-tool/releases) section.

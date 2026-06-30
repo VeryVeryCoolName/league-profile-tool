@@ -14,7 +14,7 @@
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Rank</mat-label>
-        <mat-select [(value)]="rank">
+        <mat-select [(value)]="rank" (selectionChange)="syncChatRankInputs()">
           @for (rank of ranks; track rank) {
             <mat-option [value]="rank">
               {{rank}}
@@ -24,7 +24,8 @@
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Division</mat-label>
-        <mat-select [(value)]="division">
+        <mat-select [(value)]="division" [disabled]="!requiresDivision()">
+          <mat-option value="">No division</mat-option>
           @for (division of divisions; track division) {
             <mat-option [value]="division">
               {{division}}

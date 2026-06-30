@@ -13,6 +13,7 @@ import {ConnectorService} from '../core/services/connector/connector.service';
 export class IdentityPreviewComponent implements OnDestroy {
   public state: IdentityPreviewState;
   public iconFailed = false;
+  public videoFailed = false;
   private subscription: Subscription;
   private connectionSubscription: Subscription;
   private loadedForCurrentConnection = false;
@@ -20,6 +21,7 @@ export class IdentityPreviewComponent implements OnDestroy {
   constructor(private identityPreviewService: IdentityPreviewService, private connector: ConnectorService) {
     this.subscription = this.identityPreviewService.state$.subscribe(state => {
       if (!this.state || this.state.profileIconUrl !== state.profileIconUrl) this.iconFailed = false;
+      if (!this.state || this.state.backgroundVideoUrl !== state.backgroundVideoUrl) this.videoFailed = false;
       this.state = state;
     });
 
@@ -56,6 +58,7 @@ export class IdentityPreviewComponent implements OnDestroy {
 
   public get chatRankText(): string {
     if (!this.state || !this.state.chatRankTier) return 'Not loaded';
+    if (this.state.chatRankTier.toUpperCase() === 'UNRANKED') return 'Unranked';
     const division = this.state.chatRankDivision ? ` ${this.state.chatRankDivision}` : '';
     return `${this.state.chatRankTier}${division}`;
   }
@@ -73,5 +76,9 @@ export class IdentityPreviewComponent implements OnDestroy {
   public get backgroundStyle(): string {
     if (!this.state || !this.state.backgroundImageUrl) return '';
     return `url("${this.state.backgroundImageUrl}")`;
+  }
+
+  public get showBackgroundVideo(): boolean {
+    return !!(this.state && this.state.backgroundVideoUrl && !this.videoFailed);
   }
 }

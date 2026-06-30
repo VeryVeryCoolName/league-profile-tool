@@ -113,6 +113,9 @@ export class LCUConnectionService {
           ...currentLol,
           ...nextLol
         };
+        Object.keys(nextLol).forEach(key => {
+          if (nextLol[key] === undefined) delete (requestBody.lol as Record<string, unknown>)[key];
+        });
       }
       return requestBody;
     }
@@ -178,6 +181,7 @@ export class LCUConnectionService {
         if (!actual || typeof actual !== 'object') return false;
         return this.matchesPatch(actual as Record<string, unknown>, expected as Record<string, unknown>);
       }
+      if (expected === undefined) return true;
       return this.valuesMatch(key, actual, expected);
     });
   }
@@ -192,6 +196,9 @@ export class LCUConnectionService {
   private valuesMatch(key: string, actual: unknown, expected: unknown): boolean {
     if (key === 'challengePoints') {
       return String(actual) === String(expected);
+    }
+    if (key === 'rankedLeagueDivision' && expected === '') {
+      return actual === undefined || actual === null || actual === '';
     }
     if (typeof actual === 'string' && typeof expected === 'string' && this.shouldNormalizeCase(key)) {
       return actual.toUpperCase() === expected.toUpperCase();

@@ -80,7 +80,7 @@ export class PresenceAutomationService implements OnDestroy {
     this.markAction('Status preset captured');
   }
 
-  public recordChatRankPreset(queue: string, tier: string, division: string): void {
+  public recordChatRankPreset(queue: string, tier: string, division?: string): void {
     this.chatRankPatch = {
       lol: {
         rankedLeagueQueue: queue,
@@ -277,7 +277,9 @@ export class PresenceAutomationService implements OnDestroy {
       const matchesLol = Object.keys(patch.lol).every(key => {
         const expected = patch.lol[key];
         const actual = currentLol[key];
+        if (expected === undefined) return true;
         if (key === 'challengePoints') return String(actual) === String(expected);
+        if (key === 'rankedLeagueDivision' && expected === '') return actual === undefined || actual === null || actual === '';
         if (typeof actual === 'string' && typeof expected === 'string' && this.shouldNormalizeCase(key)) {
           return actual.toUpperCase() === expected.toUpperCase();
         }
