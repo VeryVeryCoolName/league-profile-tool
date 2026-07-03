@@ -5,8 +5,121 @@
   <title>League Profile Tool 3.5</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    .boot-shell {
+      min-height: 100vh;
+      background: #111820;
+      color: #f4f8ff;
+      font-size: 14px;
+    }
+
+    .boot-shell .banner {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-height: 2.35rem;
+      padding: 0.48rem 1rem;
+      color: #ffd5d8;
+      background: linear-gradient(90deg, rgba(255, 125, 136, 0.12), transparent 30rem), #25171b;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      font-size: 0.8rem;
+    }
+
+    .boot-shell .banner::before {
+      width: 0.5rem;
+      height: 0.5rem;
+      content: "";
+      border-radius: 50%;
+      background: #ff7d88;
+    }
+
+    .boot-shell .tabs {
+      display: flex;
+      gap: 0.25rem;
+      overflow: hidden;
+      padding: 0 0.75rem;
+      white-space: nowrap;
+      background: #102a3f;
+      border-bottom: 1px solid rgba(105, 189, 245, 0.2);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.17);
+    }
+
+    .boot-shell .tabs span {
+      padding: 0.9rem 1.1rem;
+      color: rgba(244, 248, 255, 0.72);
+      font-weight: 500;
+    }
+
+    .boot-shell .tabs span:first-child {
+      color: #ffffff;
+      box-shadow: inset 0 -2px 0 #69bdf5;
+    }
+
+    .boot-shell .page {
+      max-width: 82rem;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      text-align: center;
+    }
+
+    .boot-shell h1 {
+      margin: 0.4rem 0 1.25rem;
+      color: #f7fbff;
+      font-size: 2.75rem;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .boot-shell .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(14rem, 1fr));
+      gap: 0.8rem;
+      max-width: 46rem;
+      margin: 1.25rem auto 0;
+    }
+
+    .boot-shell .card {
+      height: 9rem;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 6px;
+    }
+
+    .boot-shell .wide-card {
+      width: min(68rem, 100%);
+      height: 13rem;
+      margin: 1.6rem auto 0;
+      background: #1d2227;
+      border: 1px solid rgba(105, 189, 245, 0.22);
+      border-radius: 6px;
+    }
+
+    .boot-shell .card,
+    .boot-shell .wide-card {
+      animation: boot-shimmer 1.1s ease-in-out infinite alternate;
+    }
+
+    @keyframes boot-shimmer {
+      from { opacity: 0.55; }
+      to { opacity: 1; }
+    }
+  </style>
 </head>
 <body class="mat-typography">
-<app-root></app-root>
+<app-root>
+  <div class="boot-shell">
+    <div class="banner"><span>Select the League folder while the client is open</span></div>
+    <div class="tabs">
+      <span>Home</span><span>Match Tools</span><span>Friends</span><span>Status</span><span>Custom Icons</span><span>Background</span><span>Chat Rank</span><span>Champion Purchases</span><span>Custom API</span><span>Developer Tools</span><span>FAQ</span>
+    </div>
+    <div class="page">
+      <h1>LEAGUE PROFILE TOOL</h1>
+      <div class="cards">
+        <div class="card"></div>
+        <div class="card"></div>
+      </div>
+      <div class="wide-card"></div>
+    </div>
+  </div>
+</app-root>
 </body>
 </html>

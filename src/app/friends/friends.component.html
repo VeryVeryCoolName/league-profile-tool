@@ -20,7 +20,7 @@
           color="primary"
           type="button"
           (click)="generateLobbyLink()"
-          [disabled]="lobbyLink.loading || lobbyLink.generating || !lobbyState.active">
+          [disabled]="lobbyLink.generating || !lobbyState.active">
           {{lobbyLink.generating ? 'Generating...' : 'Generate Link'}}
         </button>
         @if (lobbyLink.copiedAt) {
@@ -52,18 +52,39 @@
       </div>
     </form>
 
-    <div class="filter-row">
-      @for (filter of filterOptions; track filter.id) {
-        <button
-          mat-stroked-button
-          type="button"
-          class="filter-button"
-          [class.active]="activeFilter === filter.id"
-          (click)="setFilter(filter.id)">
-          {{filter.label}}
-          <span>{{filterCount(filter.id)}}</span>
-        </button>
-      }
+    <div class="filter-controls">
+      <div class="filter-group" role="group" aria-label="Filter friends">
+        <span class="filter-group-label">Filter</span>
+        <div class="segmented">
+          @for (option of presenceOptions; track option.id) {
+            <button
+              type="button"
+              class="segment"
+              [class.active]="presenceFilter === option.id"
+              [attr.aria-pressed]="presenceFilter === option.id"
+              (click)="setPresence(option.id)">
+              {{option.label}}
+              <span class="count">{{presenceCount(option.id)}}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="filter-group" role="group" aria-label="More filters">
+        <div class="refine-toggles">
+          @for (option of refineOptions; track option.id) {
+            <button
+              type="button"
+              class="refine-toggle"
+              [class.active]="isRefineActive(option.id)"
+              [attr.aria-pressed]="isRefineActive(option.id)"
+              (click)="toggleRefine(option.id)">
+              {{option.label}}
+              <span class="count">{{refineCount(option.id)}}</span>
+            </button>
+          }
+        </div>
+      </div>
     </div>
 
     @if (actionMessage) {
@@ -96,7 +117,7 @@
           [class.action-error]="friend.actionState === 'error'">
           <header>
             <div class="avatar-wrap">
-              <img [src]="friend.profileIconUrl" [alt]="friend.displayName" loading="lazy" decoding="async">
+              <img [src]="friend.profileIconUrl" [alt]="friend.displayName" loading="lazy" decoding="async" (error)="onFriendIconError($event)">
               <span class="presence-dot" [ngClass]="friend.statusKind"></span>
             </div>
             <div class="friend-title">

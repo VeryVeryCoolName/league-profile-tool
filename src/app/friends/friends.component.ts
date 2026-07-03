@@ -3,10 +3,12 @@ import {firstValueFrom, Subscription} from 'rxjs';
 import {ConnectorService} from '../core/services/connector/connector.service';
 import {LCUConnectionService} from '../core/services/lcuconnection/lcuconnection.service';
 import {ElectronService} from '../core/services/electron/electron.service';
+import {LcuEventsService, LcuJsonApiEvent} from '../core/services/lcu-events/lcu-events.service';
 import {MatDialog} from '@angular/material/dialog';
 import {DialogComponent} from '../core/dialog/dialog.component';
 
-type FriendFilter = 'all' | 'online' | 'offline' | 'busy' | 'mobile' | 'discord' | 'league' | 'eligible' | 'lobby';
+type PresenceFilter = 'all' | 'online' | 'offline' | 'busy' | 'mobile';
+type RefineToggle = 'discord' | 'league' | 'eligible' | 'lobby';
 type FriendAction = 'invite' | '';
 type FriendActionState = 'idle' | 'unfriending' | 'removed' | 'error';
 
@@ -20,7 +22,6 @@ interface HelpCapabilities {
   loaded: boolean;
   leagueInvite: boolean;
   unfriend: boolean;
-  lobbyLinkRead: boolean;
   lobbyLinkGenerate: boolean;
 }
 
@@ -64,16 +65,18 @@ interface FriendCardView {
     standalone: false
 })
 export class FriendsComponent implements OnDestroy {
-  private readonly lobbyJoinCodeFunction = 'GetLolLobbyV2AgsByActivityIdJoinCode';
   private readonly lobbyJoinCodePostFunction = 'PostLolLobbyV2AgsByActivityIdJoinCode';
   private readonly fallbackActivityIds = ['lol', 'league_of_legends'];
 
-  public readonly filterOptions: Array<{id: FriendFilter; label: string}> = [
+  public readonly presenceOptions: Array<{id: PresenceFilter; label: string}> = [
     {id: 'all', label: 'All'},
     {id: 'online', label: 'Online'},
     {id: 'offline', label: 'Offline'},
     {id: 'busy', label: 'In Game'},
-    {id: 'mobile', label: 'Mobile'},
+    {id: 'mobile', label: 'Mobile'}
+  ];
+
+  public readonly refineOptions: Array<{id: RefineToggle; label: string}> = [
     {id: 'discord', label: 'Discord'},
     {id: 'league', label: 'League Only'},
     {id: 'eligible', label: 'Invite Eligible'},
@@ -82,17 +85,25 @@ export class FriendsComponent implements OnDestroy {
 
   public connected$ = this.connector.ready$;
   public searchKeyword = '';
-  public activeFilter: FriendFilter = 'all';
+  public presenceFilter: PresenceFilter = 'all';
+  public activeRefines: Record<RefineToggle, boolean> = {
+    discord: false,
+    league: false,
+    eligible: false,
+    lobby: false
+  };
   public friends: FriendCardView[] = [];
   public filteredFriends: FriendCardView[] = [];
   public visibleFriends: FriendCardView[] = [];
   public visibleLimit = 48;
-  public filterCounts: Record<FriendFilter, number> = {
+  public presenceCounts: Record<PresenceFilter, number> = {
     all: 0,
     online: 0,
     offline: 0,
     busy: 0,
-    mobile: 0,
+    mobile: 0
+  };
+  public refineCounts: Record<RefineToggle, number> = {
     discord: 0,
     league: 0,
     eligible: 0,
@@ -110,16 +121,7 @@ export class FriendsComponent implements OnDestroy {
     loaded: false,
     leagueInvite: false,
     unfriend: false,
-    lobbyLinkRead: false,
     lobbyLinkGenerate: false
-  };
-
-  public summary = {
-    totalFriends: 0,
-    onlineFriends: 0,
-    discordFriends: 0,
-    inviteEligible: 0,
-    inCurrentLobby: 0
   };
 
   public lobbyState = {
@@ -130,23 +132,25 @@ export class FriendsComponent implements OnDestroy {
   };
 
   public lobbyLink = {
-    loading: false,
     generating: false,
     message: 'Create a lobby first.',
     copiedAt: '',
-    activityId: '',
-    canGenerate: false
+    activityId: ''
   };
 
   private readonly connectorSubscription: Subscription;
   private readonly removeAnimationMs = 260;
   private readonly removalTimers: Array<ReturnType<typeof setTimeout>> = [];
+  private readonly eventsSubscription: Subscription;
+  private lobbyRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private lobbyRefreshActive = false;
   private refreshedForConnection = false;
 
   constructor(
     private lcuConnectionService: LCUConnectionService,
     private connector: ConnectorService,
     private electronService: ElectronService,
+    private lcuEventsService: LcuEventsService,
     private dialog: MatDialog
   ) {
     this.connectorSubscription = this.connector.ready$.subscribe(ready => {
@@ -156,7 +160,6 @@ export class FriendsComponent implements OnDestroy {
           loaded: false,
           leagueInvite: false,
           unfriend: false,
-          lobbyLinkRead: false,
           lobbyLinkGenerate: false
         };
         return;
@@ -165,10 +168,13 @@ export class FriendsComponent implements OnDestroy {
       this.refreshedForConnection = true;
       void this.refreshAll();
     });
+    this.eventsSubscription = this.lcuEventsService.events$.subscribe(event => this.handleLcuEvent(event));
   }
 
   ngOnDestroy(): void {
     this.connectorSubscription.unsubscribe();
+    this.eventsSubscription.unsubscribe();
+    if (this.lobbyRefreshTimer !== null) clearTimeout(this.lobbyRefreshTimer);
     this.removalTimers.forEach(timer => clearTimeout(timer));
   }
 
@@ -213,15 +219,27 @@ export class FriendsComponent implements OnDestroy {
 
   public applyFilters(): void {
     const search = (this.searchKeyword || '').trim().toLowerCase();
-    const filtered = this.friends.filter(friend => this.matchesSearch(friend, search) && this.matchesFilter(friend, this.activeFilter));
+    const filtered = this.friends.filter(friend =>
+      this.matchesSearch(friend, search)
+      && this.matchesPresence(friend, this.presenceFilter)
+      && this.matchesActiveRefines(friend));
     this.filteredFriends = filtered;
     this.visibleFriends = filtered.slice(0, this.visibleLimit);
-    this.updateFriendSummary();
+    this.updateFilterCounts();
   }
 
-  public setFilter(filter: FriendFilter): void {
-    this.activeFilter = filter;
+  public setPresence(presence: PresenceFilter): void {
+    this.presenceFilter = presence;
     this.resetVisibleLimit();
+  }
+
+  public toggleRefine(toggle: RefineToggle): void {
+    this.activeRefines = {...this.activeRefines, [toggle]: !this.activeRefines[toggle]};
+    this.resetVisibleLimit();
+  }
+
+  public isRefineActive(toggle: RefineToggle): boolean {
+    return !!this.activeRefines[toggle];
   }
 
   public resetVisibleLimit(): void {
@@ -234,8 +252,12 @@ export class FriendsComponent implements OnDestroy {
     this.applyFilters();
   }
 
-  public filterCount(filter: FriendFilter): number {
-    return this.filterCounts[filter] || 0;
+  public presenceCount(presence: PresenceFilter): number {
+    return this.presenceCounts[presence] || 0;
+  }
+
+  public refineCount(toggle: RefineToggle): number {
+    return this.refineCounts[toggle] || 0;
   }
 
   public async invite(friend: FriendCardView): Promise<void> {
@@ -317,9 +339,9 @@ export class FriendsComponent implements OnDestroy {
   }
 
   public async generateLobbyLink(): Promise<void> {
-    if (this.lobbyLink.loading || this.lobbyLink.generating) return;
+    if (this.lobbyLink.generating) return;
     if (!this.lobbyState.active) {
-      this.patchLobbyLink({message: 'Create a lobby first.', canGenerate: false});
+      this.patchLobbyLink({message: 'Create a lobby first.'});
       return;
     }
 
@@ -340,12 +362,11 @@ export class FriendsComponent implements OnDestroy {
       }
 
       const activityIds = this.lobbyLink.activityId ? [this.lobbyLink.activityId] : await this.resolveActivityIds();
-      const result = await this.fetchFirstJoinCode(activityIds, 'POST');
+      const result = await this.fetchFirstJoinCode(activityIds);
       if (!result) {
         this.patchLobbyLink({
           message: 'Could not generate lobby link.',
           activityId: activityIds[0] || '',
-          canGenerate: Boolean(activityIds[0]),
           generating: false
         });
         return;
@@ -356,7 +377,6 @@ export class FriendsComponent implements OnDestroy {
         message: 'Lobby link copied.',
         copiedAt: new Date().toLocaleTimeString(),
         activityId: result.activityId,
-        canGenerate: false,
         generating: false
       });
     } catch (error) {
@@ -385,7 +405,6 @@ export class FriendsComponent implements OnDestroy {
       loaded: raw.length > 0 && !/connection is not ready|failed/i.test(raw),
       leagueInvite: raw.indexOf('PostLolLobbyV2LobbyInvitations') >= 0,
       unfriend: raw.indexOf('DeleteLolChatV1FriendsById') >= 0,
-      lobbyLinkRead: raw.indexOf(this.lobbyJoinCodeFunction) >= 0 || raw.indexOf('/lol-lobby/v2/ags/{activityId}/joinCode') >= 0,
       lobbyLinkGenerate: raw.indexOf(this.lobbyJoinCodePostFunction) >= 0
     };
   }
@@ -441,12 +460,12 @@ export class FriendsComponent implements OnDestroy {
 
   private updateLobbyLinkMessage(): void {
     if (!this.lobbyState.active) {
-      this.patchLobbyLink({message: 'Create a lobby first.', canGenerate: false});
+      this.patchLobbyLink({message: 'Create a lobby first.'});
       return;
     }
 
     if (this.lobbyLink.message === 'Create a lobby first.') {
-      this.patchLobbyLink({message: 'Generate a lobby link to copy it.', canGenerate: true});
+      this.patchLobbyLink({message: 'Generate a lobby link to copy it.'});
     }
   }
 
@@ -460,6 +479,36 @@ export class FriendsComponent implements OnDestroy {
       inCurrentLobby: this.isFriendInCurrentLobby(friend)
     }));
     this.applyFilters();
+  }
+
+  private handleLcuEvent(event: LcuJsonApiEvent): void {
+    const uri = String(event && event.uri || '');
+    if (uri.indexOf('/lol-lobby/') === 0 || uri === '/lol-gameflow/v1/gameflow-phase') {
+      this.scheduleLobbyRefresh();
+    }
+  }
+
+  private scheduleLobbyRefresh(): void {
+    if (!this.connector.isReady()) return;
+    if (this.lobbyRefreshTimer !== null) clearTimeout(this.lobbyRefreshTimer);
+    this.lobbyRefreshTimer = setTimeout(() => {
+      this.lobbyRefreshTimer = null;
+      void this.runScheduledLobbyRefresh();
+    }, 350);
+  }
+
+  private async runScheduledLobbyRefresh(): Promise<void> {
+    if (!this.connector.isReady()) return;
+    if (this.refreshLoading || this.lobbyRefreshActive) {
+      this.scheduleLobbyRefresh();
+      return;
+    }
+    this.lobbyRefreshActive = true;
+    try {
+      await this.refreshLobbyOnly();
+    } finally {
+      this.lobbyRefreshActive = false;
+    }
   }
 
   private async fetchLobbyDetailsWhenActive(partyActiveResult: RequestResult): Promise<{lobbyResult: RequestResult; lobbyMembersResult: RequestResult}> {
@@ -626,51 +675,57 @@ export class FriendsComponent implements OnDestroy {
     ].join(' ').toLowerCase().indexOf(search) >= 0;
   }
 
-  private matchesFilter(friend: FriendCardView, filter: FriendFilter): boolean {
-    if (filter === 'all') return true;
-    if (filter === 'online') return friend.statusKind === 'online' || friend.statusKind === 'mobile';
-    if (filter === 'offline') return friend.statusKind === 'offline';
-    if (filter === 'busy') return friend.statusKind === 'busy' || friend.availability === 'dnd';
-    if (filter === 'mobile') return friend.isMobile;
-    if (filter === 'discord') return friend.isDiscordLinked;
-    if (filter === 'league') return friend.isLeagueFriend && !friend.isDiscordLinked;
-    if (filter === 'eligible') return friend.isInviteEligible;
-    if (filter === 'lobby') return friend.inCurrentLobby;
+  private matchesPresence(friend: FriendCardView, presence: PresenceFilter): boolean {
+    if (presence === 'all') return true;
+    if (presence === 'online') return friend.statusKind === 'online' || friend.statusKind === 'mobile';
+    if (presence === 'offline') return friend.statusKind === 'offline';
+    if (presence === 'busy') return friend.statusKind === 'busy' || friend.availability === 'dnd';
+    if (presence === 'mobile') return friend.isMobile;
     return true;
   }
 
-  private updateFriendSummary(): void {
-    this.filterCounts = this.buildFilterCounts();
-    this.summary.totalFriends = this.friends.length;
-    this.summary.onlineFriends = this.filterCounts.online;
-    this.summary.discordFriends = this.filterCounts.discord;
-    this.summary.inviteEligible = this.filterCounts.eligible;
-    this.summary.inCurrentLobby = this.filterCounts.lobby;
+  private matchesRefine(friend: FriendCardView, toggle: RefineToggle): boolean {
+    if (toggle === 'discord') return friend.isDiscordLinked;
+    if (toggle === 'league') return friend.isLeagueFriend && !friend.isDiscordLinked;
+    if (toggle === 'eligible') return friend.isInviteEligible;
+    if (toggle === 'lobby') return friend.inCurrentLobby;
+    return true;
   }
 
-  private buildFilterCounts(): Record<FriendFilter, number> {
-    const counts: Record<FriendFilter, number> = {
-      all: this.friends.length,
-      online: 0,
-      offline: 0,
-      busy: 0,
-      mobile: 0,
-      discord: 0,
-      league: 0,
-      eligible: 0,
-      lobby: 0
-    };
-    this.friends.forEach(friend => {
-      if (this.matchesFilter(friend, 'online')) counts.online++;
-      if (this.matchesFilter(friend, 'offline')) counts.offline++;
-      if (this.matchesFilter(friend, 'busy')) counts.busy++;
-      if (friend.isMobile) counts.mobile++;
-      if (friend.isDiscordLinked) counts.discord++;
-      if (this.matchesFilter(friend, 'league')) counts.league++;
-      if (friend.isInviteEligible) counts.eligible++;
-      if (friend.inCurrentLobby) counts.lobby++;
-    });
-    return counts;
+  private matchesActiveRefines(friend: FriendCardView): boolean {
+    return this.refineOptions.every(option => !this.activeRefines[option.id] || this.matchesRefine(friend, option.id));
+  }
+
+  private updateFilterCounts(): void {
+    const search = (this.searchKeyword || '').trim().toLowerCase();
+    const presenceCounts: Record<PresenceFilter, number> = {all: 0, online: 0, offline: 0, busy: 0, mobile: 0};
+    const refineCounts: Record<RefineToggle, number> = {discord: 0, league: 0, eligible: 0, lobby: 0};
+
+    for (const friend of this.friends) {
+      if (!this.matchesSearch(friend, search)) continue;
+
+      if (this.matchesActiveRefines(friend)) {
+        presenceCounts.all++;
+        if (this.matchesPresence(friend, 'online')) presenceCounts.online++;
+        if (this.matchesPresence(friend, 'offline')) presenceCounts.offline++;
+        if (this.matchesPresence(friend, 'busy')) presenceCounts.busy++;
+        if (this.matchesPresence(friend, 'mobile')) presenceCounts.mobile++;
+      }
+
+      if (this.matchesPresence(friend, this.presenceFilter)) {
+        for (const option of this.refineOptions) {
+          if (this.matchesRefineFacet(friend, option.id)) refineCounts[option.id]++;
+        }
+      }
+    }
+
+    this.presenceCounts = presenceCounts;
+    this.refineCounts = refineCounts;
+  }
+
+  private matchesRefineFacet(friend: FriendCardView, toggle: RefineToggle): boolean {
+    return this.matchesRefine(friend, toggle)
+      && this.refineOptions.every(option => option.id === toggle || !this.activeRefines[option.id] || this.matchesRefine(friend, option.id));
   }
 
   private setFriendAction(friend: FriendCardView, action: FriendAction): void {
@@ -861,6 +916,12 @@ export class FriendsComponent implements OnDestroy {
     return tagLine ? base + ' #' + tagLine : base;
   }
 
+  public onFriendIconError(event: Event): void {
+    const image = event.target as HTMLImageElement;
+    const fallback = this.profileIconUrl(1);
+    if (image.src !== fallback) image.src = fallback;
+  }
+
   private profileIconUrl(iconId: number): string {
     const id = !isNaN(iconId) && iconId > 0 ? iconId : 1;
     return 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/' + id + '.jpg';
@@ -893,13 +954,12 @@ export class FriendsComponent implements OnDestroy {
     }
   }
 
-  private async fetchFirstJoinCode(activityIds: string[], method: 'GET' | 'POST' = 'GET'): Promise<{value: string; activityId: string}> {
+  private async fetchFirstJoinCode(activityIds: string[]): Promise<{value: string; activityId: string} | null> {
     for (const activityId of activityIds) {
       const path = '/lol-lobby/v2/ags/' + encodeURIComponent(activityId) + '/joinCode';
-      const response = await this.lcuConnectionService.requestCustomAPI({}, method, path);
+      const response = await this.lcuConnectionService.requestCustomAPI({}, 'POST', path);
       const value = this.extractJoinCode(response);
       if (value) return {value, activityId};
-      if (method === 'POST') return null;
     }
     return null;
   }

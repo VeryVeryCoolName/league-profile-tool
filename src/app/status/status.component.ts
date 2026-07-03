@@ -99,26 +99,52 @@ export class StatusComponent implements OnDestroy {
 
   public setMessage(): void {
     if (this.messageSaving) return;
+    this.text = this.sanitizeMessage(this.text);
     const body = this.messageBody();
     this.messageSaving = true;
     this.messageFeedback = '';
     this.presenceAutomationService.suspendAutoReapply();
-    this.lcuConnectionService.requestSendNoVerify(body, 'PUT', 'lolChat').then(response => {
+    void this.pushMessage(body);
+  }
+
+  private async pushMessage(body: Record<string, unknown>): Promise<void> {
+    try {
+      const alreadySet = await this.messageAlreadySet(body);
+      const response = alreadySet ? 'Success' : await this.lcuConnectionService.requestSendNoVerify(body, 'PUT', 'lolChat');
       if (response === 'Success') {
         this.presenceAutomationService.recordStatusPreset(body);
         if (this.isInvisibleSelected() && this.keepInvisible) {
           this.presenceAutomationService.setPersistentInvisible(true, {...body, availability: 'offline'});
         }
         this.identityPreviewService.applyStatusMessage(this.text);
-        this.messageFeedback = 'Message updated.';
+        this.messageFeedback = alreadySet ? 'Message already set.' : 'Message updated.';
       } else {
         this.messageFeedback = 'Could not update message.';
       }
-      this.messageSaving = false;
-    }).catch(() => {
+    } catch {
       this.messageFeedback = 'Could not update message.';
+    } finally {
       this.messageSaving = false;
-    });
+    }
+  }
+
+  private async messageAlreadySet(body: Record<string, unknown>): Promise<boolean> {
+    try {
+      const response = await this.lcuConnectionService.requestCustomAPI({}, 'GET', '/lol-chat/v1/me');
+      const current = typeof response === 'string' ? JSON.parse(response) : response;
+      return !!current && typeof current === 'object' && current.statusMessage === body.statusMessage;
+    } catch {
+      return false;
+    }
+  }
+
+  private sanitizeMessage(value: string): string {
+    return String(value || '')
+      .normalize('NFC')
+      .replace(/\r\n?/g, '\n')
+      .replace(/[\u0000-\u0008\u000B-\u001F\u007F-\u009F\uFFFE\uFFFF]/g, '')
+      .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '')
+      .replace(/(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
   }
 
   public isInvisibleSelected(): boolean {

@@ -46,6 +46,7 @@ export class PresenceAutomationService implements OnDestroy {
   private persistentInvisiblePatch: PresencePatch = null;
   private persistentInvisibleTimer: ReturnType<typeof setTimeout> | null = null;
   private lastReapplyAt = 0;
+  private statusMessageFightCount = 0;
   private autoReapplySuppressedUntil = 0;
   private lastPersistentInvisibleAttemptAt = 0;
   private persistentInvisibleSuppressedUntil = 0;
@@ -77,6 +78,7 @@ export class PresenceAutomationService implements OnDestroy {
 
   public recordStatusPreset(patch: PresencePatch): void {
     this.statusPatch = this.mergePatches(this.statusPatch, patch);
+    this.statusMessageFightCount = 0;
     this.markAction('Status preset captured');
   }
 
@@ -151,16 +153,6 @@ export class PresenceAutomationService implements OnDestroy {
     return response;
   }
 
-  public async reapplyEnabledPresets(): Promise<void> {
-    if (!this.stateSubject.value.autoReapply) return;
-    if (this.isAutoReapplySuppressed()) return;
-    const merged = this.mergePatches(this.statusPatch, this.chatRankPatch, this.challengeRankPatch);
-    if (!merged) return;
-
-    const response = await this.writePresence(merged);
-    if (response === 'Success') this.markAction('Reapplied changes after client refresh');
-  }
-
   private async captureOriginalPresence() {
     const response = await this.lcuConnectionService.requestCustomAPI({}, 'GET', '/lol-chat/v1/me');
     const current = this.parseResponse(response);
@@ -219,9 +211,11 @@ export class PresenceAutomationService implements OnDestroy {
       const response = await this.lcuConnectionService.requestCustomAPI({}, 'GET', '/lol-chat/v1/me');
       current = this.parseResponse(response);
     }
-    if (!current || this.matchesPatch(current, this.persistentInvisiblePatch)) return;
+    if (!current) return;
+    const drifted = this.diffPresencePatch(current, this.persistentInvisiblePatch);
+    if (!drifted) return;
 
-    const response = await this.writePresence(this.persistentInvisiblePatch);
+    const response = await this.writePresence(drifted);
     if (response === 'Success') {
       this.persistentInvisibleSuppressedUntil = Date.now() + 2500;
       this.markAction('Reapplied invisible status');
@@ -236,19 +230,62 @@ export class PresenceAutomationService implements OnDestroy {
     const patch = this.mergePatches(this.statusPatch, this.chatRankPatch, this.challengeRankPatch);
     if (!patch) return;
     if (event && event.uri === '/lol-chat/v1/me' && this.matchesPatch(event.data, patch)) return;
-
-    this.writeWithCooldown(patch, 'Reapplied changes after client refresh');
-  }
-
-  private async writeWithCooldown(patch: PresencePatch, action: string) {
-    if (!patch) return;
-    if (this.isAutoReapplySuppressed()) return;
     const now = Date.now();
     if (now - this.lastReapplyAt < 2500) return;
     this.lastReapplyAt = now;
 
-    const response = await this.writePresence(patch);
+    void this.reapplyDriftedFields(patch, event, 'Reapplied changes after client refresh');
+  }
+
+  private async reapplyDriftedFields(patch: PresencePatch, event: LcuJsonApiEvent | null, action: string): Promise<void> {
+    let current = event && event.uri === '/lol-chat/v1/me' && this.hasAvailability(event.data) ? event.data : null;
+    if (!current) {
+      const response = await this.lcuConnectionService.requestCustomAPI({}, 'GET', '/lol-chat/v1/me');
+      current = this.parseResponse(response);
+    }
+    if (!current || this.isAutoReapplySuppressed()) return;
+
+    const drifted = this.applyStatusFightGuard(this.diffPresencePatch(current, patch));
+    if (!drifted) return;
+
+    const response = await this.writePresence(drifted);
     if (response === 'Success') this.markAction(action);
+  }
+
+  private diffPresencePatch(current: any, patch: PresencePatch): PresencePatch {
+    const drifted: PresencePatch = {};
+    if (patch.availability !== undefined && current.availability !== patch.availability) {
+      drifted.availability = patch.availability;
+    }
+    if (patch.statusMessage !== undefined && current.statusMessage !== patch.statusMessage) {
+      drifted.statusMessage = patch.statusMessage;
+    }
+    if (patch.lol) {
+      const currentLol = (current.lol || {}) as Record<string, unknown>;
+      const driftedLol: Record<string, unknown> = {};
+      Object.keys(patch.lol).forEach(key => {
+        const expected = patch.lol[key];
+        if (expected === undefined) return;
+        if (!this.presenceValueMatches(key, currentLol[key], expected)) driftedLol[key] = expected;
+      });
+      if (Object.keys(driftedLol).length > 0) drifted.lol = driftedLol;
+    }
+    if (drifted.availability === undefined && drifted.statusMessage === undefined && !drifted.lol) return null;
+    return drifted;
+  }
+
+  private applyStatusFightGuard(drifted: PresencePatch): PresencePatch {
+    if (!drifted || drifted.statusMessage === undefined) {
+      this.statusMessageFightCount = 0;
+      return drifted;
+    }
+    this.statusMessageFightCount++;
+    if (this.statusMessageFightCount <= 2) return drifted;
+
+    const remaining = {...drifted};
+    delete remaining.statusMessage;
+    if (remaining.availability === undefined && !remaining.lol) return null;
+    return remaining;
   }
 
   private async writePresence(patch: PresencePatch): Promise<string> {
@@ -273,22 +310,25 @@ export class PresenceAutomationService implements OnDestroy {
     if (patch.statusMessage !== undefined && current.statusMessage !== patch.statusMessage) return false;
 
     if (patch.lol) {
-      const currentLol = current.lol || {};
+      const currentLol = (current.lol || {}) as Record<string, unknown>;
       const matchesLol = Object.keys(patch.lol).every(key => {
         const expected = patch.lol[key];
-        const actual = currentLol[key];
         if (expected === undefined) return true;
-        if (key === 'challengePoints') return String(actual) === String(expected);
-        if (key === 'rankedLeagueDivision' && expected === '') return actual === undefined || actual === null || actual === '';
-        if (typeof actual === 'string' && typeof expected === 'string' && this.shouldNormalizeCase(key)) {
-          return actual.toUpperCase() === expected.toUpperCase();
-        }
-        return actual === expected;
+        return this.presenceValueMatches(key, currentLol[key], expected);
       });
       if (!matchesLol) return false;
     }
 
     return true;
+  }
+
+  private presenceValueMatches(key: string, actual: unknown, expected: unknown): boolean {
+    if (key === 'challengePoints') return String(actual) === String(expected);
+    if (key === 'rankedLeagueDivision' && expected === '') return actual === undefined || actual === null || actual === '';
+    if (typeof actual === 'string' && typeof expected === 'string' && this.shouldNormalizeCase(key)) {
+      return actual.toUpperCase() === expected.toUpperCase();
+    }
+    return actual === expected;
   }
 
   private shouldNormalizeCase(key: string): boolean {

@@ -52,7 +52,9 @@ const ALLOWED_EXTERNAL_HOSTS = new Set([
   'github.com',
   'www.github.com',
   'lolalytics.com',
-  'www.lolalytics.com'
+  'www.lolalytics.com',
+  'ko-fi.com',
+  'www.ko-fi.com'
 ]);
 
 let win: BrowserWindow | null = null;
@@ -418,8 +420,8 @@ function createWindow(): BrowserWindow {
     height: 650,
     minWidth: 760,
     minHeight: 520,
-    backgroundColor: '#2b2b2d',
-    show: false,
+    backgroundColor: '#111820',
+    show: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -427,7 +429,8 @@ function createWindow(): BrowserWindow {
       sandbox: true,
       webSecurity: true,
       allowRunningInsecureContent: false,
-      devTools: serve
+      devTools: serve,
+      v8CacheOptions: 'bypassHeatCheck'
     },
     autoHideMenuBar: true,
     icon: appIconPath()
@@ -458,7 +461,6 @@ function createWindow(): BrowserWindow {
     const refresh = input.key === 'F5' || ((input.control || input.meta) && input.key.toLowerCase() === 'r');
     if (refresh) event.preventDefault();
   });
-  win.once('ready-to-show', () => win?.show());
 
   if (serve) {
     void win.loadURL('http://localhost:4200');

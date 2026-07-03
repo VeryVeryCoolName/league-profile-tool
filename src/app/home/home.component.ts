@@ -49,7 +49,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   public github(): void {
-    const url = 'https://github.com/VeryVeryCoolName/league-profile-tool';
+    this.openExternal('https://github.com/VeryVeryCoolName/league-profile-tool');
+  }
+
+  public kofi(): void {
+    this.openExternal('https://ko-fi.com/veryverycoolname');
+  }
+
+  private openExternal(url: string): void {
     if (this.electronService.shell) {
       void this.electronService.shell.openExternal(url);
       return;

@@ -14,7 +14,8 @@ export class VersionService {
     'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/master/version.json',
     'https://raw.githubusercontent.com/VeryVeryCoolName/league-profile-tool/master/package.json'
   ];
-  private readonly githubVersionTimeoutMs = 1200;
+  private readonly githubVersionTimeoutMs = 5000;
+  private readonly githubVersionRetryDelayMs = 2000;
   private readonly dataDragonVersions = this.http
     .get<string[]>('https://ddragon.leagueoflegends.com/api/versions.json')
     .pipe(shareReplay({bufferSize: 1, refCount: false}));
@@ -37,13 +38,27 @@ export class VersionService {
   }
 
   private async fetchLatestGithubVersion(): Promise<string> {
+    try {
+      return await this.fetchLatestGithubVersionOnce();
+    } catch (error) {
+      await this.delay(this.githubVersionRetryDelayMs);
+      return await this.fetchLatestGithubVersionOnce();
+    }
+  }
+
+  private async fetchLatestGithubVersionOnce(): Promise<string> {
     const fallbackVersion = this.firstSuccessfulVersion(this.githubFallbackVersionUrls);
+    fallbackVersion.catch(() => {});
 
     try {
       return await this.fetchGithubVersionUrl(this.githubLatestReleaseUrl);
     } catch (error) {
       return await fallbackVersion;
     }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private async firstSuccessfulVersion(urls: string[]): Promise<string> {
