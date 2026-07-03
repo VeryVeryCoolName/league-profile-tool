@@ -6,20 +6,9 @@
   margin-inline: auto;
 }
 
-.match-overview,
-.champ-select-panel,
-.idle-panel {
-  position: relative;
-  overflow: hidden;
-}
-
 .match-overview {
   display: grid;
   gap: 1rem;
-  background:
-    linear-gradient(135deg, rgba(24, 116, 173, 0.14), transparent 34rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 50%),
-    var(--surface-raised);
 }
 
 .panel-header,
@@ -42,14 +31,14 @@ p {
 
 h2 {
   margin-bottom: 0.25rem;
-  color: #f7fbff;
-  font-size: 1.45rem;
-  line-height: 1.15;
+  color: var(--text);
+  font-size: 1.3rem;
+  line-height: 1.25;
 }
 
 h3 {
   margin: 0;
-  color: #f4f9ff;
+  color: var(--text);
   font-size: 1.05rem;
   line-height: 1.2;
 }
@@ -57,11 +46,10 @@ h3 {
 .panel-header p,
 .tool-note,
 .opponent-note,
-.empty-state,
 .not-in-champ-select,
 .toggle-copy small,
 .idle-state small {
-  color: #c7dced;
+  color: var(--muted);
 }
 
 .ready-pill,
@@ -73,27 +61,24 @@ h3 {
   align-items: center;
   min-height: 1.85rem;
   padding: 0.18rem 0.72rem;
-  border: 1px solid rgba(203, 222, 238, 0.13);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #d9e6ef;
+  background: var(--surface-soft);
+  color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0;
+  font-weight: 700;
   white-space: nowrap;
 }
 
 .ready-pill.active,
 .state-chip.enabled {
-  border-color: rgba(245, 200, 107, 0.5);
-  background: rgba(245, 200, 107, 0.14);
-  color: #ffe0a3;
+  border-color: rgba(245, 200, 107, 0.4);
+  color: var(--warning);
 }
 
 .ready-pill.accepted {
-  border-color: rgba(94, 227, 154, 0.46);
-  background: rgba(94, 227, 154, 0.14);
-  color: #c9ffd9;
+  border-color: rgba(94, 227, 154, 0.4);
+  color: var(--success);
 }
 
 .match-status-grid,
@@ -113,21 +98,20 @@ h3 {
 .matchup-card,
 .enemy-row,
 .candidate-row {
-  border: 1px solid rgba(203, 222, 238, 0.12);
-  border-radius: 8px;
-  background: rgba(13, 19, 24, 0.34);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 7px;
 }
 
 .match-status-grid div {
   min-width: 0;
   padding: 0.78rem 0.9rem;
-  transition: border-color 140ms ease, background 140ms ease;
+  transition: border-color 140ms ease;
 }
 
 .match-status-grid div:hover,
 .tool-card:hover {
-  border-color: rgba(105, 189, 245, 0.28);
-  background: rgba(15, 24, 31, 0.48);
+  border-color: var(--line-strong);
 }
 
 .match-status-grid span,
@@ -137,7 +121,7 @@ h3 {
 .card-eyebrow {
   display: block;
   color: #9fd3ff;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -168,15 +152,11 @@ h3 {
   gap: 1rem;
   align-content: start;
   min-height: 10.5rem;
-  background:
-    linear-gradient(135deg, rgba(105, 189, 245, 0.07), transparent 62%),
-    rgba(13, 19, 24, 0.34);
-  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+  transition: border-color 140ms ease;
 }
 
 .tool-card.active {
-  border-color: rgba(94, 227, 154, 0.32);
-  box-shadow: inset 0 0 0 1px rgba(94, 227, 154, 0.08);
+  border-color: rgba(94, 227, 154, 0.35);
 }
 
 .card-eyebrow {
@@ -190,19 +170,18 @@ h3 {
   align-items: center;
   min-height: 4.6rem;
   padding: 0.85rem 1rem;
-  border: 1px solid rgba(134, 201, 255, 0.18);
-  border-radius: 8px;
-  background: rgba(7, 12, 17, 0.26);
-  color: #d9e6ef;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
   cursor: pointer;
-  transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+  transition: background 140ms ease, border-color 140ms ease;
 }
 
 .mode-toggle:hover,
 .mode-toggle.active {
-  border-color: rgba(94, 197, 255, 0.5);
-  background: rgba(13, 34, 52, 0.68);
-  box-shadow: 0 0 0 1px rgba(94, 197, 255, 0.08);
+  border-color: rgba(105, 189, 245, 0.45);
+  background: var(--surface-hover);
 }
 
 .toggle-copy {
@@ -212,7 +191,7 @@ h3 {
 }
 
 .toggle-copy strong {
-  color: #f7fbff;
+  color: var(--text);
   font-size: 0.98rem;
   line-height: 1.2;
 }
@@ -233,10 +212,9 @@ h3 {
   position: relative;
   width: 3.15rem;
   height: 1.68rem;
-  border: 1px solid rgba(203, 222, 238, 0.22);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 0.2rem 0.55rem rgba(0, 0, 0, 0.22);
+  background: rgba(255, 255, 255, 0.1);
   transition: background 140ms ease, border-color 140ms ease;
 }
 
@@ -249,27 +227,22 @@ h3 {
   content: "";
   border-radius: 50%;
   background: #d7e4ee;
-  box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.28);
   transition: transform 140ms ease, background 140ms ease;
 }
 
 .mode-toggle input:checked + .switch-track {
-  border-color: rgba(94, 227, 154, 0.58);
-  background: rgba(94, 227, 154, 0.24);
+  border-color: rgba(94, 227, 154, 0.55);
+  background: rgba(94, 227, 154, 0.2);
 }
 
 .mode-toggle input:checked + .switch-track::after {
   transform: translateX(1.43rem);
-  background: #5ee39a;
+  background: var(--success);
 }
 
 .mat-form-field,
 .mat-mdc-form-field {
   width: 100%;
-}
-
-:host ::ng-deep .matchup-source-card .mat-mdc-text-field-wrapper {
-  background: rgba(9, 14, 18, 0.24) !important;
 }
 
 .phase-pill {
@@ -284,9 +257,6 @@ h3 {
   min-height: 8.75rem;
   align-content: start;
   overflow: hidden;
-  background:
-    linear-gradient(135deg, rgba(105, 189, 245, 0.09), transparent 62%),
-    rgba(13, 19, 24, 0.34);
 }
 
 .champion-meta-line {
@@ -302,9 +272,8 @@ h3 {
 .champion-icon {
   object-fit: cover;
   object-position: center;
-  border: 2px solid rgba(105, 189, 245, 0.26);
+  border: 1px solid var(--line-strong);
   border-radius: 50%;
-  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.32);
 }
 
 .main-icon {
@@ -339,8 +308,7 @@ h3 {
 }
 
 .candidate-row {
-  border-color: rgba(94, 197, 255, 0.22);
-  background: rgba(13, 34, 52, 0.58);
+  border-color: rgba(105, 189, 245, 0.3);
 }
 
 .enemy-list {
@@ -357,30 +325,33 @@ h3 {
   min-height: 5.85rem;
   padding: 0.55rem 0.45rem;
   appearance: none;
-  border: 1px solid rgba(203, 222, 238, 0.1);
-  border-radius: 8px;
-  background: rgba(7, 11, 15, 0.25);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
   color: inherit;
   cursor: pointer;
   font: inherit;
   text-align: center;
-  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
 }
 
 .enemy-chip span {
-  color: #e4f2ff;
+  color: var(--text);
   font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
-.enemy-chip:hover,
-.enemy-chip.selected {
-  border-color: rgba(94, 227, 154, 0.68);
-  background: rgba(15, 42, 65, 0.92);
-  box-shadow: 0 0 0 1px rgba(94, 227, 154, 0.12), 0 0.65rem 1.3rem rgba(0, 0, 0, 0.2);
+.enemy-chip:hover {
+  border-color: rgba(142, 202, 255, 0.55);
+  background: var(--surface-hover);
   transform: translateY(-1px);
+}
+
+.enemy-chip.selected {
+  border-color: rgba(94, 227, 154, 0.65);
+  background: var(--surface-hover);
 }
 
 .enemy-chip:focus {
@@ -398,15 +369,12 @@ h3 {
   gap: 1rem;
   align-items: center;
   margin-top: 1rem;
-  background:
-    linear-gradient(135deg, rgba(94, 227, 154, 0.08), transparent 60%),
-    rgba(13, 19, 24, 0.34);
 }
 
 .matchup-label {
   width: fit-content;
   margin-bottom: 0.4rem;
-  color: #9dd7ff;
+  color: #9fd3ff;
 }
 
 .matchup-card h3 {
@@ -415,12 +383,7 @@ h3 {
 }
 
 .empty-state {
-  padding: 1rem;
   margin: 1rem 0 0;
-  border: 1px solid rgba(203, 222, 238, 0.1);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.12);
-  text-align: center;
 }
 
 .idle-panel {
@@ -436,9 +399,8 @@ h3 {
   text-align: center;
 }
 
-
 .idle-state strong {
-  color: #f7fbff;
+  color: var(--text);
   font-size: 1.05rem;
 }
 

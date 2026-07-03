@@ -23,7 +23,7 @@
 .friends-page-header h1,
 .link-header h2 {
   margin: 0;
-  color: #f7fbff;
+  color: var(--text);
   line-height: 1.15;
 }
 
@@ -36,7 +36,7 @@
 .link-message,
 .action-hint,
 .loading-text {
-  color: #c7dced;
+  color: var(--muted);
 }
 
 .friends-page-header p {
@@ -53,9 +53,6 @@
 .link-panel {
   display: grid;
   gap: 1rem;
-  background:
-    linear-gradient(135deg, rgba(105, 189, 245, 0.08), transparent 32rem),
-    var(--surface-raised);
 }
 
 .link-header {
@@ -65,7 +62,7 @@
 }
 
 .link-header h2 {
-  font-size: 1.35rem;
+  font-size: 1.3rem;
 }
 
 .link-header p,
@@ -98,11 +95,6 @@
   width: 100%;
 }
 
-:host ::ng-deep .search-panel .mat-mdc-text-field-wrapper,
-:host ::ng-deep .search-panel .mat-form-field-flex {
-  background: rgba(9, 14, 18, 0.24) !important;
-}
-
 .filter-controls {
   display: flex;
   flex-wrap: wrap;
@@ -119,7 +111,7 @@
 
 .filter-group-label {
   flex: none;
-  color: #9fb4c6;
+  color: var(--muted);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -130,9 +122,9 @@
   display: inline-flex;
   flex-wrap: wrap;
   padding: 0.2rem;
-  border: 1px solid rgba(203, 222, 238, 0.16);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
-  background: rgba(13, 19, 24, 0.42);
+  background: var(--surface-soft);
 }
 
 .segment {
@@ -144,7 +136,7 @@
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: #cfe1f0;
+  color: var(--muted);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -156,8 +148,8 @@
 }
 
 .segment.active {
-  background: linear-gradient(180deg, rgba(94, 197, 255, 0.95), rgba(56, 148, 214, 0.95));
-  color: #05141f;
+  background: var(--accent-strong);
+  color: #ffffff;
 }
 
 .refine-toggles {
@@ -172,10 +164,10 @@
   gap: 0.4rem;
   min-height: 2.25rem;
   padding: 0 0.85rem;
-  border: 1px solid rgba(203, 222, 238, 0.18);
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
-  background: rgba(13, 19, 24, 0.28);
-  color: #dceaf6;
+  background: var(--surface-soft);
+  color: var(--muted);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -183,19 +175,20 @@
 }
 
 .refine-toggle:hover {
-  border-color: rgba(94, 197, 255, 0.55);
+  border-color: rgba(105, 189, 245, 0.55);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
 .refine-toggle.active {
-  border-color: rgba(94, 197, 255, 0.9);
-  background: rgba(20, 57, 85, 0.82);
+  border-color: rgba(105, 189, 245, 0.7);
+  background: var(--accent-soft);
   color: #ffffff;
 }
 
 .segment:focus-visible,
 .refine-toggle:focus-visible {
-  outline: 2px solid rgba(94, 197, 255, 0.85);
+  outline: 2px solid rgba(105, 189, 245, 0.7);
   outline-offset: 2px;
 }
 
@@ -212,12 +205,12 @@
 }
 
 .segment.active .count {
-  background: rgba(5, 20, 31, 0.28);
-  color: #05141f;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
 }
 
 .refine-toggle.active .count {
-  background: rgba(94, 197, 255, 0.28);
+  background: rgba(105, 189, 245, 0.24);
   color: #ffffff;
 }
 
@@ -226,23 +219,21 @@
   width: min(100%, 42rem);
   margin: 0.15rem auto;
   padding: 0.85rem 1rem;
-  border: 1px solid rgba(203, 222, 238, 0.12);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(13, 19, 24, 0.34);
+  background: var(--surface-soft);
   text-align: center;
 }
 
 .action-message {
-  border-color: rgba(80, 190, 120, 0.32);
-  background: rgba(19, 55, 33, 0.45);
-  color: #bdf8cf;
+  border-color: rgba(94, 227, 154, 0.32);
+  color: var(--success);
 }
 
 .action-message.error,
 .loading-text.error {
-  border-color: rgba(220, 86, 86, 0.35);
-  background: rgba(80, 24, 24, 0.48);
-  color: #ffd2d2;
+  border-color: rgba(255, 146, 155, 0.4);
+  color: var(--danger);
 }
 
 .friend-grid {
@@ -253,20 +244,16 @@
 }
 
 .friend-card {
-  position: relative;
   display: grid;
   grid-template-rows: auto auto 1fr auto auto;
   min-width: 0;
   min-height: 17.5rem;
   padding: 1rem;
   overflow: hidden;
-  background:
-    linear-gradient(145deg, rgba(105, 189, 245, 0.08), transparent 58%),
-    rgba(24, 35, 43, 0.92);
-  border: 1px solid rgba(203, 222, 238, 0.12);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
-  transform-origin: center;
+  box-shadow: var(--shadow-sm);
   transition:
     border-color 140ms ease,
     background 140ms ease,
@@ -275,27 +262,11 @@
     transform 140ms ease;
 }
 
-.friend-card::before {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  content: "";
-  opacity: 0;
-  background: linear-gradient(90deg, rgba(94, 197, 255, 0.16), transparent 36%);
-  transition: opacity 140ms ease;
-}
-
 .friend-card:hover {
-  border-color: rgba(142, 202, 255, 0.6);
-  background:
-    linear-gradient(145deg, rgba(105, 189, 245, 0.12), transparent 58%),
-    rgba(26, 39, 49, 0.96);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.22);
-  transform: translateY(-2px);
-}
-
-.friend-card:hover::before {
-  opacity: 1;
+  border-color: rgba(142, 202, 255, 0.5);
+  background: var(--surface-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .friend-card.offline {
@@ -303,8 +274,7 @@
 }
 
 .friend-card.in-lobby {
-  border-color: rgba(94, 227, 154, 0.58);
-  box-shadow: 0 0 0 1px rgba(94, 227, 154, 0.14), 0 16px 32px rgba(0, 0, 0, 0.2);
+  border-color: rgba(94, 227, 154, 0.55);
 }
 
 .friend-card.removing {
@@ -318,12 +288,10 @@
 }
 
 .friend-card.action-error {
-  border-color: rgba(220, 86, 86, 0.58);
+  border-color: rgba(255, 146, 155, 0.55);
 }
 
 .friend-card header {
-  position: relative;
-  z-index: 1;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0.85rem;
@@ -341,10 +309,9 @@
   display: block;
   width: 100%;
   height: 100%;
-  border: 2px solid rgba(105, 189, 245, 0.24);
-  border-radius: 8px;
-  background: #11161b;
-  box-shadow: 0 0.55rem 1.15rem rgba(0, 0, 0, 0.26);
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: var(--surface-soft);
   object-fit: cover;
 }
 
@@ -354,10 +321,9 @@
   bottom: -0.15rem;
   width: 0.9rem;
   height: 0.9rem;
-  border: 2px solid #18232b;
+  border: 2px solid var(--surface-raised);
   border-radius: 50%;
   background: #777;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.18);
 }
 
 .presence-dot.online {
@@ -382,7 +348,7 @@
 
 .friend-title h3 {
   margin: 0;
-  color: #f2fbff;
+  color: var(--text);
   font-size: 1.08rem;
   line-height: 1.22;
   overflow-wrap: anywhere;
@@ -390,14 +356,12 @@
 
 .friend-title p {
   margin: 0.3rem 0 0;
-  color: #a9bdca;
+  color: var(--muted);
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
 .badge-row {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
@@ -413,63 +377,59 @@
   border: 1px solid transparent;
   border-radius: 999px;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .badge.league {
   border-color: rgba(134, 201, 255, 0.16);
-  background: rgba(134, 201, 255, 0.14);
+  background: rgba(134, 201, 255, 0.12);
   color: #9dd7ff;
 }
 
 .badge.discord {
   border-color: rgba(162, 171, 255, 0.16);
-  background: rgba(88, 101, 242, 0.2);
+  background: rgba(88, 101, 242, 0.18);
   color: #c8cdff;
 }
 
 .badge.lobby {
   border-color: rgba(80, 190, 120, 0.18);
-  background: rgba(80, 190, 120, 0.18);
+  background: rgba(80, 190, 120, 0.16);
   color: #bdf8cf;
 }
 
 .badge.muted {
-  border-color: rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.08);
-  color: #c7dced;
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--muted);
 }
 
 .friend-group {
-  position: relative;
-  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   margin: 1rem 0;
   padding: 0.8rem;
-  border: 1px solid rgba(203, 222, 238, 0.08);
-  border-radius: 8px;
-  background: rgba(7, 11, 15, 0.24);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-soft);
 }
 
 .friend-group span {
-  color: #8fcfff;
-  font-size: 0.76rem;
+  color: #9fd3ff;
+  font-size: 0.78rem;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .friend-group strong {
-  color: #e8f4ff;
+  color: var(--text);
   overflow-wrap: anywhere;
   text-align: right;
 }
 
 .card-actions {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.7rem;
@@ -481,18 +441,16 @@
 }
 
 .danger-action {
-  color: #ffd0d0;
-  border-color: rgba(220, 86, 86, 0.42);
+  color: var(--danger);
+  border-color: rgba(255, 146, 155, 0.42);
 }
 
 .danger-action:not(:disabled):hover {
-  background: rgba(220, 86, 86, 0.12);
+  background: rgba(255, 146, 155, 0.1);
   border-color: rgba(255, 146, 155, 0.7);
 }
 
 .action-hint {
-  position: relative;
-  z-index: 1;
   margin: 0.75rem 0 0;
   font-size: 0.8rem;
 }
@@ -508,7 +466,7 @@
   gap: 0.45rem;
   color: var(--warning);
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .inline-status::before {
@@ -517,15 +475,10 @@
   content: "";
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 0 3px rgba(245, 200, 107, 0.14);
 }
 
 .inline-status.ok {
   color: var(--success);
-}
-
-.inline-status.ok::before {
-  box-shadow: 0 0 0 3px rgba(94, 227, 154, 0.14);
 }
 
 @keyframes friend-card-remove {

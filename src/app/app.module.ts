@@ -2,7 +2,7 @@ import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {MatTabsModule} from '@angular/material/tabs';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
 import {MatCardModule} from '@angular/material/card';
 import {MatButtonModule} from '@angular/material/button';
 import {AppComponent} from './app.component';
@@ -30,13 +30,13 @@ import {FriendsComponent} from './friends/friends.component';
     bootstrap: [AppComponent], imports: [BrowserModule,
         FormsModule,
         MatTabsModule,
-        BrowserAnimationsModule,
         MatCardModule,
         MatButtonModule,
         MatInputModule,
         MatDialogModule,
         MatSelectModule,
         MatSortModule], providers: [
+        provideAnimationsAsync(),
         provideHttpClient(withXhr(), withInterceptorsFromDi()),
         {provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: {autoFocus: false, restoreFocus: true}}
     ] })
