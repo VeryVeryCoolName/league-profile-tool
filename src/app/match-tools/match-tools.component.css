@@ -54,8 +54,6 @@ h3 {
 
 .ready-pill,
 .phase-pill,
-.role-badge,
-.matchup-label,
 .state-chip {
   display: inline-flex;
   align-items: center;
@@ -115,9 +113,11 @@ h3 {
 }
 
 .match-status-grid span,
-.info-card span,
+.info-card > span,
 .enemy-row > span,
 .candidate-row > span,
+.role-badge,
+.matchup-label,
 .card-eyebrow {
   display: block;
   color: #9fd3ff;
@@ -134,9 +134,17 @@ h3 {
   overflow-wrap: anywhere;
 }
 
+.info-card strong {
+  margin-top: 0;
+}
+
 .tool-grid,
 .champ-grid {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.champ-grid.solo {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .tool-card,
@@ -253,15 +261,25 @@ h3 {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.7rem;
   min-height: 8.75rem;
-  align-content: start;
   overflow: hidden;
 }
 
+.info-card > span {
+  grid-column: 1;
+  align-self: start;
+}
+
+.info-card strong {
+  grid-row: 2;
+  grid-column: 1;
+  align-self: center;
+}
+
 .champion-meta-line {
-  grid-column: 1 / -1;
-  min-height: 1.75rem;
+  grid-column: 1;
 }
 
 .info-card strong {
@@ -277,8 +295,9 @@ h3 {
 }
 
 .main-icon {
-  grid-row: 2 / span 2;
+  grid-row: 2;
   grid-column: 2;
+  align-self: center;
   width: 4.4rem;
   height: 4.4rem;
 }
@@ -372,9 +391,7 @@ h3 {
 }
 
 .matchup-label {
-  width: fit-content;
   margin-bottom: 0.4rem;
-  color: #9fd3ff;
 }
 
 .matchup-card h3 {

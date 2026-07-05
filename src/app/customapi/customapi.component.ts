@@ -57,7 +57,7 @@ export class CustomapiComponent {
     {label: 'Challenge Summary', method: 'GET', endpoint: '/lol-challenges/v1/summary-player-data/local-player'},
     {label: 'Friend Hovercard', method: 'GET', endpoint: '/lol-hovercard/v1/friend-info/{puuid}'}
   ];
-  public selectedPreset = '';
+  public selectedPreset: number | '' = '';
   public method = "GET";
   public body = "{\n     \"\":\"\"\n}";
   public response: string;
@@ -98,8 +98,8 @@ export class CustomapiComponent {
   constructor(private lcuConnectionService: LCUConnectionService) {
   }
 
-  public applyPreset(endpoint: string): void {
-    const preset = this.endpointPresets.find(item => item.endpoint === endpoint);
+  public applyPreset(index: number | ''): void {
+    const preset = typeof index === 'number' ? this.endpointPresets[index] : undefined;
     if (!preset) return;
     this.method = preset.method;
     this.endPoint = preset.endpoint;

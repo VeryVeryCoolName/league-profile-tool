@@ -81,7 +81,7 @@
           </div>
           <span class="phase-pill">{{state.champSelect.phase || 'No phase'}}</span>
         </div>
-        <div class="champ-grid">
+        <div class="champ-grid" [class.solo]="!state.champSelect.laneContextEnabled">
           <div class="info-card champion-card primary-champion-card">
             <div class="champion-meta-line">
               @if (state.champSelect.role && state.champSelect.role !== 'Unknown') {
@@ -93,21 +93,25 @@
               <img class="champion-icon main-icon" [src]="state.champSelect.playerChampionIconUrl" [alt]="state.champSelect.playerChampionName">
             }
           </div>
-          <div class="info-card champion-card primary-champion-card">
-            <span>{{state.champSelect.enemyMatchupSource === 'manual' ? 'Selected Lane Opponent' : (state.champSelect.enemyMatchupFallback ? 'Possible Lane Opponent' : 'Lane Opponent')}}</span>
-            <strong>{{state.champSelect.enemyChampionName || (state.champSelect.possibleLaneOpponents.length > 1 ? 'Multiple candidates' : 'Waiting for lane opponent...')}}</strong>
-            @if (state.champSelect.enemyChampionIconUrl) {
-              <img class="champion-icon main-icon" [src]="state.champSelect.enemyChampionIconUrl" [alt]="state.champSelect.enemyChampionName">
-            }
-          </div>
-        </div>
-        <div class="opponent-note-row">
-          <p class="opponent-note">{{state.champSelect.enemyMatchupLabel}}</p>
-          @if (state.champSelect.manualOpponentChampionId) {
-            <button mat-stroked-button type="button" (click)="clearOpponent()">Auto detect</button>
+          @if (state.champSelect.laneContextEnabled) {
+            <div class="info-card champion-card primary-champion-card">
+              <span>{{state.champSelect.enemyMatchupSource === 'manual' ? 'Selected Lane Opponent' : (state.champSelect.enemyMatchupFallback ? 'Possible Lane Opponent' : 'Lane Opponent')}}</span>
+              <strong>{{state.champSelect.enemyChampionName || (state.champSelect.possibleLaneOpponents.length > 1 ? 'Multiple candidates' : 'Waiting for lane opponent...')}}</strong>
+              @if (state.champSelect.enemyChampionIconUrl) {
+                <img class="champion-icon main-icon" [src]="state.champSelect.enemyChampionIconUrl" [alt]="state.champSelect.enemyChampionName">
+              }
+            </div>
           }
         </div>
-        @if (state.champSelect.possibleLaneOpponents.length > 1) {
+        @if (state.champSelect.laneContextEnabled) {
+          <div class="opponent-note-row">
+            <p class="opponent-note">{{state.champSelect.enemyMatchupLabel}}</p>
+            @if (state.champSelect.manualOpponentChampionId) {
+              <button mat-stroked-button type="button" (click)="clearOpponent()">Auto detect</button>
+            }
+          </div>
+        }
+        @if (state.champSelect.laneContextEnabled && state.champSelect.possibleLaneOpponents.length > 1) {
           <div class="candidate-row">
             <span>Possible lane opponents</span>
             <div class="enemy-list">
@@ -122,7 +126,7 @@
             </div>
           </div>
         }
-        @if (state.champSelect.visibleEnemies.length) {
+        @if (state.champSelect.laneContextEnabled && state.champSelect.visibleEnemies.length) {
           <div class="enemy-row">
             <span>Visible enemies</span>
             <div class="enemy-list">
@@ -137,16 +141,18 @@
             </div>
           </div>
         }
-        @if (state.matchup) {
-          <article class="matchup-card">
-            <div>
-              <span class="matchup-label">{{state.champSelect.enemyMatchupSource === 'manual' ? 'Selected matchup' : (state.champSelect.enemyMatchupFallback ? 'Possible matchup' : 'Lane matchup')}}</span>
-              <h3>{{state.matchup.title}}</h3>
-            </div>
-            <button mat-stroked-button type="button" (click)="openExternal(state.matchup.sourceUrl)">Open Lolalytics</button>
-          </article>
-        } @else {
-          <p class="empty-state">Matchup appears once your champion and a likely enemy champion are known.</p>
+        @if (state.champSelect.laneContextEnabled) {
+          @if (state.matchup) {
+            <article class="matchup-card">
+              <div>
+                <span class="matchup-label">{{state.champSelect.enemyMatchupSource === 'manual' ? 'Selected matchup' : (state.champSelect.enemyMatchupFallback ? 'Possible matchup' : 'Lane matchup')}}</span>
+                <h3>{{state.matchup.title}}</h3>
+              </div>
+              <button mat-stroked-button type="button" (click)="openExternal(state.matchup.sourceUrl)">Open Lolalytics</button>
+            </article>
+          } @else {
+            <p class="empty-state">Matchup appears once your champion and a likely enemy champion are known.</p>
+          }
         }
       </section>
     } @else {

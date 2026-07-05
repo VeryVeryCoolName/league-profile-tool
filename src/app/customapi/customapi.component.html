@@ -9,9 +9,9 @@
       <mat-form-field appearance="fill" class="preset-field">
         <mat-label>Preset</mat-label>
         <mat-select [(value)]="selectedPreset" (selectionChange)="applyPreset($event.value)">
-          <mat-option value="">Custom endpoint</mat-option>
-          @for (preset of endpointPresets; track preset) {
-            <mat-option [value]="preset.endpoint">
+          <mat-option [value]="''">Custom endpoint</mat-option>
+          @for (preset of endpointPresets; track $index) {
+            <mat-option [value]="$index">
               {{preset.label}}
             </mat-option>
           }

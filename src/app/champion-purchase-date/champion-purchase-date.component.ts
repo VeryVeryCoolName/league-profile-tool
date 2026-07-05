@@ -95,28 +95,31 @@ export class ChampionPurchaseDateComponent implements OnInit {
       }
 
       const ownedChamps = [];
-      for (let i = 0; i < champions.length; i++) {
-        if (champions[i].ownership.owned) {
-          const o = {
-            alt: this.getDataDragonAlias(champions[i].alias),
-            name: this.displayChampionName(champions[i], champions[i].alias),
-            purchased: new Date(champions[i].purchased).toLocaleString("en-US"),
-            purchasedHidden: champions[i].purchased,
-            skins: [],
-            iconSrc: ''
-          };
-          o.iconSrc = `https://ddragon.leagueoflegends.com/cdn/${this.currentVersion}/img/champion/${o.alt}.png`;
-          for (let j = 1; j < champions[i].skins.length; j++) {
-            if (champions[i].skins[j].ownership.owned) {
-              o.skins.push({
-                name: champions[i].skins[j].name,
-                purchased: new Date(champions[i].skins[j].ownership.rental.purchaseDate).toLocaleString("en-US"),
-                purchasedHidden: champions[i].skins[j].ownership.rental.purchaseDate
-              });
-            }
-          }
-          ownedChamps.push(o);
+      for (const champion of champions) {
+        if (!champion || !champion.ownership || !champion.ownership.owned) continue;
+
+        const o = {
+          alt: this.getDataDragonAlias(champion.alias),
+          name: this.displayChampionName(champion, champion.alias),
+          purchased: this.formatPurchaseDate(champion.purchased),
+          purchasedHidden: Number(champion.purchased) || 0,
+          skins: [],
+          iconSrc: ''
+        };
+        o.iconSrc = `https://ddragon.leagueoflegends.com/cdn/${this.currentVersion}/img/champion/${o.alt}.png`;
+
+        const skins = Array.isArray(champion.skins) ? champion.skins : [];
+        for (let j = 1; j < skins.length; j++) {
+          const skin = skins[j];
+          if (!skin || !skin.ownership || !skin.ownership.owned) continue;
+          const purchaseDate = skin.ownership.rental && skin.ownership.rental.purchaseDate;
+          o.skins.push({
+            name: skin.name,
+            purchased: this.formatPurchaseDate(purchaseDate),
+            purchasedHidden: Number(purchaseDate) || 0
+          });
         }
+        ownedChamps.push(o);
       }
       this.ownedChamps = ownedChamps.sort((a, b) => {
         return compare(a.purchasedHidden, b.purchasedHidden, true);
@@ -130,6 +133,13 @@ export class ChampionPurchaseDateComponent implements OnInit {
 
   private getDataDragonAlias(alias: string): string {
     return this.championAliasOverrides[alias] || alias;
+  }
+
+  private formatPurchaseDate(value: unknown): string {
+    const timestamp = Number(value);
+    if (!timestamp || isNaN(timestamp)) return 'Unknown';
+    const date = new Date(timestamp);
+    return isNaN(date.getTime()) ? 'Unknown' : date.toLocaleString('en-US');
   }
 
   private displayChampionName(champion: any, fallback: string): string {

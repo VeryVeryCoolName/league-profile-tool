@@ -41,6 +41,8 @@ interface LaneOpponentScore {
 export interface ChampSelectViewState {
   inChampSelect: boolean;
   phase: string;
+  gameMode: string;
+  laneContextEnabled: boolean;
   localCellId: number | null;
   role: string;
   roleSource: 'assigned' | 'recommended' | 'none';
@@ -92,6 +94,8 @@ export class MatchToolsService implements OnDestroy {
   private readonly defaultChampSelect: ChampSelectViewState = {
     inChampSelect: false,
     phase: '',
+    gameMode: '',
+    laneContextEnabled: true,
     localCellId: null,
     role: '',
     roleSource: 'none',
@@ -126,8 +130,8 @@ export class MatchToolsService implements OnDestroy {
 
   private readonly stateSubject = new BehaviorSubject<MatchToolsState>({...this.defaultState});
   private readonly providers: IMatchupProvider[] = [new LolalyticsMatchupProvider()];
-  private readonly autoAcceptDelayMs = 750;
-  private readonly autoAcceptRetryCooldownMs = 2500;
+  private readonly autoAcceptDelayMs = 112;
+  private readonly autoAcceptRetryCooldownMs = 512;
   private eventSubscription: Subscription;
   private eventStateSubscription: Subscription;
   private acceptedStatusTimer: ReturnType<typeof setTimeout> | null = null;
@@ -145,6 +149,9 @@ export class MatchToolsService implements OnDestroy {
   private recommendedPositionsByChampionId: Record<number, string[]> = {};
   private recommendedPositionsPromise: Promise<void> | null = null;
   private lastChampSelectSession: any = null;
+  private currentGameMode = '';
+  private laneContextAllowed: boolean | null = null;
+  private gameModePromise: Promise<void> | null = null;
   private dataDragonVersion = '';
 
   public readonly state$: Observable<MatchToolsState> = this.stateSubject.asObservable();
@@ -196,6 +203,7 @@ export class MatchToolsService implements OnDestroy {
     const selectedChampionId = this.numberOrNull(championId);
     if (!selectedChampionId) return;
     const current = this.stateSubject.value.champSelect;
+    if (!current.laneContextEnabled) return;
     if (!current.visibleEnemies.some(enemy => enemy.championId === selectedChampionId)) return;
 
     this.patchState({
@@ -409,6 +417,9 @@ export class MatchToolsService implements OnDestroy {
   private resetChampSelect(phase: string) {
     this.lastMatchupKey = '';
     this.lastChampSelectSession = null;
+    this.currentGameMode = '';
+    this.laneContextAllowed = null;
+    this.gameModePromise = null;
     this.patchState({
       champSelect: {
         ...this.defaultChampSelect,
@@ -422,8 +433,10 @@ export class MatchToolsService implements OnDestroy {
     if (!this.isActiveChampSelectSession(session)) return;
     this.lastChampSelectSession = session;
     await this.ensureChampionNames();
+    await this.ensureGameMode();
     if (this.stateSubject.value.champSelect.phase !== 'ChampSelect') return;
 
+    const laneContextEnabled = this.laneContextAllowed !== false;
     const localCellId = this.cellIdOrNull(session.localPlayerCellId);
     const myTeam = Array.isArray(session.myTeam) ? session.myTeam as ChampSelectMember[] : [];
     const theirTeam = Array.isArray(session.theirTeam) ? session.theirTeam as ChampSelectMember[] : [];
@@ -432,17 +445,21 @@ export class MatchToolsService implements OnDestroy {
     const pickIntentChampionId = this.numberOrNull(localMember.championPickIntent);
     const hoveredChampionId = pickIntentChampionId || this.findHoveredChampionId(session, localCellId, lockedChampionId);
     const playerChampionId = lockedChampionId || pickIntentChampionId || hoveredChampionId;
-    const roleContext = this.resolveLocalRole(localMember.assignedPosition, playerChampionId);
+    const roleContext = laneContextEnabled
+      ? this.resolveLocalRole(localMember.assignedPosition, playerChampionId)
+      : {role: '', source: 'none' as const};
     const localRole = roleContext.role;
     const visibleEnemies = theirTeam
       .map(member => this.memberChampionId(member))
       .filter((id): id is number => !!id)
       .map(id => this.championCard(id));
     const currentManualOpponent = this.stateSubject.value.champSelect.manualOpponentChampionId;
-    const manualOpponentChampionId = visibleEnemies.some(enemy => enemy.championId === currentManualOpponent)
+    const manualOpponentChampionId = laneContextEnabled && visibleEnemies.some(enemy => enemy.championId === currentManualOpponent)
       ? currentManualOpponent
       : null;
-    const laneOpponent = this.findLaneOpponent(theirTeam, localRole, manualOpponentChampionId);
+    const laneOpponent = laneContextEnabled
+      ? this.findLaneOpponent(theirTeam, localRole, manualOpponentChampionId)
+      : {championId: null, isFallback: false, candidateIds: [], source: 'none' as const};
     const enemyChampionId = laneOpponent.championId;
     const enemyChampionName = this.championName(enemyChampionId);
     const possibleLaneOpponents = laneOpponent.candidateIds.map(id => this.championCard(id));
@@ -450,6 +467,8 @@ export class MatchToolsService implements OnDestroy {
     const champSelect: ChampSelectViewState = {
       inChampSelect: true,
       phase: 'ChampSelect',
+      gameMode: this.currentGameMode,
+      laneContextEnabled,
       localCellId,
       role: localRole,
       roleSource: roleContext.source,
@@ -463,7 +482,7 @@ export class MatchToolsService implements OnDestroy {
       enemyChampionId,
       enemyChampionName,
       enemyChampionIconUrl: this.championIconUrl(enemyChampionId),
-      enemyMatchupLabel: this.laneOpponentLabel(enemyChampionName, possibleLaneOpponents, laneOpponent),
+      enemyMatchupLabel: laneContextEnabled ? this.laneOpponentLabel(enemyChampionName, possibleLaneOpponents, laneOpponent) : '',
       enemyMatchupFallback: laneOpponent.isFallback,
       enemyMatchupSource: laneOpponent.source,
       manualOpponentChampionId,
@@ -757,6 +776,36 @@ export class MatchToolsService implements OnDestroy {
     } catch (error) {
       this.championMetadataPromise = null;
     }
+  }
+
+  private async ensureGameMode(): Promise<void> {
+    if (this.laneContextAllowed !== null) return;
+    if (this.gameModePromise === null) {
+      this.gameModePromise = this.loadGameMode();
+    }
+    try {
+      await this.gameModePromise;
+    } catch {
+      this.laneContextAllowed = null;
+    } finally {
+      if (this.laneContextAllowed === null) this.gameModePromise = null;
+    }
+  }
+
+  private async loadGameMode(): Promise<void> {
+    const response = await this.lcuConnectionService.requestCustomAPI({}, 'GET', '/lol-gameflow/v1/session');
+    const session = this.parseResponse(response);
+    if (!session || typeof session !== 'object' || this.isLcuErrorResponse(session)) return;
+
+    const map = session.map && typeof session.map === 'object' ? session.map : {};
+    const gameData = session.gameData && typeof session.gameData === 'object' ? session.gameData : {};
+    const queue = gameData.queue && typeof gameData.queue === 'object' ? gameData.queue : {};
+    const gameMode = String(map.gameMode || queue.gameMode || '').trim().toUpperCase();
+    const mapId = this.numberOrNull(map.id) || this.numberOrNull(queue.mapId);
+    if (!gameMode && mapId === null) return;
+
+    this.currentGameMode = gameMode;
+    this.laneContextAllowed = gameMode === 'CLASSIC' && mapId === 11;
   }
 
   private async loadChampionMetadata(): Promise<void> {
