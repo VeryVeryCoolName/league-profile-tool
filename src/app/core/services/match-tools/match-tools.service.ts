@@ -130,8 +130,8 @@ export class MatchToolsService implements OnDestroy {
 
   private readonly stateSubject = new BehaviorSubject<MatchToolsState>({...this.defaultState});
   private readonly providers: IMatchupProvider[] = [new LolalyticsMatchupProvider()];
-  private readonly autoAcceptDelayMs = 112;
-  private readonly autoAcceptRetryCooldownMs = 512;
+  private readonly autoAcceptDelayMs = 42;
+  private readonly autoAcceptRetryCooldownMs = 112;
   private eventSubscription: Subscription;
   private eventStateSubscription: Subscription;
   private acceptedStatusTimer: ReturnType<typeof setTimeout> | null = null;
