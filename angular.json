@@ -17,14 +17,17 @@
             },
             "index": "src/index.html",
             "tsConfig": "src/tsconfig.app.json",
-            "polyfills": [
-              "src/polyfills.ts"
-            ],
+            "polyfills": [],
             "assets": [
               {
                 "glob": "icon.ico",
                 "input": "src/assets",
                 "output": "assets"
+              },
+              {
+                "glob": "*.png",
+                "input": "src/assets/appx",
+                "output": "appx"
               }
             ],
             "styles": [
