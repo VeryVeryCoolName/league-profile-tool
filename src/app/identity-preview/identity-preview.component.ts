@@ -63,6 +63,13 @@ export class IdentityPreviewComponent implements OnDestroy {
     return `${this.state.chatRankTier}${division}`;
   }
 
+  public get classicRankText(): string {
+    if (!this.state || !this.state.classicRankTier) return '';
+    if (this.state.classicRankTier.toUpperCase() === 'UNRANKED') return 'Unranked';
+    const division = this.state.classicRankDivision ? ` ${this.state.classicRankDivision}` : '';
+    return `${this.state.classicRankTier}${division}`;
+  }
+
   public get challengeText(): string {
     if (!this.state || !this.state.challengeCrystalLevel) return 'Not loaded';
     return this.state.challengeCrystalLevel;

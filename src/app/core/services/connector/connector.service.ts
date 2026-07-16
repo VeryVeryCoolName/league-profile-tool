@@ -1,6 +1,6 @@
 import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, Observable} from 'rxjs';
-import {ElectronService, RequestOptions} from '..';
+import {ClientInstallInfo, ElectronService, RequestOptions} from '..';
 import {Options} from './options';
 import {Data} from './data';
 
@@ -10,13 +10,16 @@ import {Data} from './data';
 export class ConnectorService implements OnDestroy {
   private readonly readySubject = new BehaviorSubject<boolean>(false);
   public readonly ready$: Observable<boolean> = this.readySubject.asObservable();
+  private readonly installPathSubject = new BehaviorSubject<string>('');
+  public readonly installPath$: Observable<string> = this.installPathSubject.asObservable();
   public connector: Options | null = null;
   private retryTimer: ReturnType<typeof setInterval> | null = null;
   private connecting = false;
+  private connectToken = 0;
   private lockfilePath = '';
   private lockfileSignature = '';
   private ready = false;
-  private readonly installPathCandidates: string[] = [];
+  private installPath = '';
   private loggedMissingLockfile = false;
 
   constructor(private electronService: ElectronService) {
@@ -33,24 +36,26 @@ export class ConnectorService implements OnDestroy {
   private async initializeConnector(): Promise<void> {
     const configuredPath = await this.readConfiguredClientPath();
     if (configuredPath) {
-      this.addInstallPathCandidate(configuredPath);
+      this.setInstallPath(configuredPath);
       this.startRetryLoop();
     }
   }
 
   private startRetryLoop(): void {
-    if (this.retryTimer !== null || this.installPathCandidates.length === 0) return;
+    if (this.retryTimer !== null || !this.installPath) return;
     void this.tryConnectFromLockfile('startup');
     this.retryTimer = setInterval(() => {
       void this.tryConnectFromLockfile('retry');
     }, 3000);
   }
 
-  private async tryConnectFromLockfile(source: string): Promise<void> {
-    if (this.connecting) return;
+  private async tryConnectFromLockfile(source: string, force = false): Promise<void> {
+    if (this.connecting && !force) return;
+    const token = ++this.connectToken;
     this.connecting = true;
     try {
       const lockfilePath = await this.findLockfilePath();
+      if (token !== this.connectToken) return;
       if (!lockfilePath) {
         if (this.connector && this.lockfilePath) this.setReady(false);
         if (!this.loggedMissingLockfile) {
@@ -62,6 +67,7 @@ export class ConnectorService implements OnDestroy {
       this.loggedMissingLockfile = false;
 
       const data = await this.parseLockfile(lockfilePath);
+      if (token !== this.connectToken) return;
       if (!data) {
         if (this.connector) this.setReady(false);
         return;
@@ -74,21 +80,16 @@ export class ConnectorService implements OnDestroy {
       if (this.connector) this.setReady(false);
       this.lockfilePath = lockfilePath;
       this.lockfileSignature = lockfileSignature;
-      await this.verifyAndSetConnection(data);
+      await this.verifyAndSetConnection(data, token);
     } finally {
-      this.connecting = false;
+      if (token === this.connectToken) this.connecting = false;
     }
   }
 
   private async findLockfilePath(): Promise<string> {
-    const candidateLockfiles = this.installPathCandidates.map(candidate => {
-      return this.electronService.joinPath(this.normalizeClientPath(candidate), 'lockfile');
-    }).filter(Boolean);
-    if (this.lockfilePath) candidateLockfiles.unshift(this.lockfilePath);
-
-    const existing = await this.electronService.findLockfile(Array.from(new Set(candidateLockfiles)));
-    if (existing) return existing;
-    return '';
+    if (!this.installPath) return '';
+    const lockfile = this.electronService.joinPath(this.installPath, 'lockfile');
+    return lockfile ? this.electronService.findLockfile([lockfile]) : '';
   }
 
   private async readConfiguredClientPath(): Promise<string> {
@@ -99,11 +100,11 @@ export class ConnectorService implements OnDestroy {
     }
   }
 
-  private addInstallPathCandidate(candidate: string): void {
+  private setInstallPath(candidate: string): void {
     const clientPath = this.normalizeClientPath(candidate);
-    if (clientPath && !this.installPathCandidates.includes(clientPath)) {
-      this.installPathCandidates.push(clientPath);
-    }
+    if (clientPath === this.installPath) return;
+    this.installPath = clientPath;
+    this.installPathSubject.next(clientPath);
   }
 
   private async parseLockfile(lockfilePath: string): Promise<Data | null> {
@@ -126,19 +127,22 @@ export class ConnectorService implements OnDestroy {
     }
   }
 
-  private async verifyAndSetConnection(data: Data): Promise<void> {
+  private async verifyAndSetConnection(data: Data, token: number): Promise<void> {
     const nextConnector = this.buildConnectorOptions(data);
     const requestOptions: RequestOptions = {
       ...nextConnector,
       headers: {...nextConnector.headers},
       method: 'GET',
+      timeoutMs: 5000,
       url: `${nextConnector.url}/lol-summoner/v1/current-summoner`
     };
     try {
       await this.electronService.request(requestOptions);
+      if (token !== this.connectToken) return;
       this.connector = nextConnector;
       this.setReady(true);
     } catch (error) {
+      if (token !== this.connectToken) return;
       this.setReady(false);
       console.error('[LCU] auth failed', error instanceof Error ? error.message : error);
     }
@@ -169,17 +173,41 @@ export class ConnectorService implements OnDestroy {
     return this.ready;
   }
 
+  public getInstallPath(): string {
+    return this.installPath;
+  }
+
+  public listClientPaths(): Promise<ClientInstallInfo[]> {
+    return this.electronService.listClientPaths();
+  }
+
+  public async selectClientPath(clientPath: string): Promise<string> {
+    const selectedPath = this.normalizeClientPath(await this.electronService.setClientPath(clientPath));
+    if (!selectedPath) return '';
+
+    this.applySelectedPath(selectedPath);
+    void this.tryConnectFromLockfile('install switch', true);
+    return selectedPath;
+  }
+
   public async chooseClientPath(): Promise<string> {
     const selectedPath = this.normalizeClientPath(await this.electronService.chooseClientPath());
     if (!selectedPath) return '';
 
-    this.addInstallPathCandidate(selectedPath);
+    this.applySelectedPath(selectedPath);
+    void this.tryConnectFromLockfile('manual selection', true);
+    return selectedPath;
+  }
+
+  private applySelectedPath(selectedPath: string): void {
+    this.connectToken++;
+    this.connecting = false;
+    this.setInstallPath(selectedPath);
     this.lockfilePath = '';
     this.lockfileSignature = '';
     this.loggedMissingLockfile = false;
+    this.setReady(false);
     this.startRetryLoop();
-    await this.tryConnectFromLockfile('manual selection');
-    return selectedPath;
   }
 
   private lockfileSignatureFor(data: Data): string {

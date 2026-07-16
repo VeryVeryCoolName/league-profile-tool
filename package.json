@@ -1,6 +1,6 @@
 {
   "name": "league-profile-tool",
-  "version": "3.5.2",
+  "version": "3.6.0",
   "description": "Tool that interacts with the Riot LCU",
   "homepage": "https://github.com/VeryVeryCoolName/league-profile-tool",
   "author": "VeryVeryCoolName",
@@ -26,6 +26,8 @@
     "electron:local": "npm run build:prod && electron .",
     "electron:package": "electron-builder build --publish=never",
     "electron:build": "npm run build:prod && npm run electron:package",
+    "electron:package:store": "electron-builder build --win appx --publish=never",
+    "electron:build:store": "npm run build:prod && npm run electron:package:store",
     "test": "ng test --watch=false",
     "test:watch": "ng test",
     "lint": "eslint \"src/**/*.{ts,html}\" \"main.ts\" \"preload.ts\"",
@@ -36,6 +38,7 @@
     "appId": "com.veryverycoolname.leagueprofiletool",
     "productName": "League Profile Tool",
     "asar": true,
+    "npmRebuild": false,
     "mac": {
       "category": "Utility"
     },
@@ -60,23 +63,21 @@
         {
           "target": "nsis",
           "arch": [
-            "x64",
-            "ia32"
-          ]
-        },
-        {
-          "target": "appx",
-          "arch": [
             "x64"
           ]
         }
       ],
       "icon": "assets/icon.ico"
     },
+    "nsis": {
+      "differentialPackage": false
+    },
     "appx": {
       "displayName": "League Profile Tool",
       "identityName": "VeryVeryCoolName.LeagueProfileTool",
-      "publisher": "CN=VeryVeryCoolName",
+      "minVersion": "10.0.17763.0",
+      "maxVersionTested": "10.0.22621.0",
+      "publisher": "CN=9DC3397F-BC87-4541-83D2-8175D1471425",
       "publisherDisplayName": "VeryVeryCoolName",
       "applicationId": "LeagueProfileTool",
       "backgroundColor": "#111820",

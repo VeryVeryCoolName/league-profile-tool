@@ -6,11 +6,19 @@ interface RequestOptions {
   headers?: Record<string, string>;
   body?: string;
   rejectUnauthorized?: boolean;
+  timeoutMs?: number;
 }
 
 interface LcuEventConnectionOptions {
   url: string;
   authorization?: string;
+}
+
+interface ClientInstallInfo {
+  path: string;
+  label: string;
+  running: boolean;
+  active: boolean;
 }
 
 type LcuEventCallback = (event: unknown) => void;
@@ -51,6 +59,8 @@ contextBridge.exposeInMainWorld('leagueProfileTool', {
   findLockfile: (targetPaths: string[]): Promise<string> => ipcRenderer.invoke('lpt:find-lockfile', targetPaths),
   readLockfile: (targetPath: string): Promise<string> => ipcRenderer.invoke('lpt:read-lockfile', targetPath),
   readConfiguredClientPath: (): Promise<string> => ipcRenderer.invoke('lpt:read-configured-client-path'),
+  listClientPaths: (): Promise<ClientInstallInfo[]> => ipcRenderer.invoke('lpt:list-client-paths'),
+  setClientPath: (clientPath: string): Promise<string> => ipcRenderer.invoke('lpt:set-client-path', clientPath),
   chooseClientPath: (): Promise<string> => ipcRenderer.invoke('lpt:choose-client-path'),
   writeClipboard: (text: string): Promise<void> => ipcRenderer.invoke('lpt:write-clipboard', text),
   joinPath: (...parts: string[]): string => joinPathParts(...parts),

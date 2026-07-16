@@ -4,7 +4,7 @@
     <div class="rank-grid">
       <mat-form-field appearance="fill">
         <mat-label>Queue</mat-label>
-        <mat-select [(value)]="queue">
+        <mat-select [(value)]="queue" (selectionChange)="syncQueueInputs()">
           @for (queue of queues; track queue) {
             <mat-option [value]="queue.value">
               {{queue.label}}
@@ -15,7 +15,7 @@
       <mat-form-field appearance="fill">
         <mat-label>Rank</mat-label>
         <mat-select [(value)]="rank" (selectionChange)="syncChatRankInputs()">
-          @for (rank of ranks; track rank) {
+          @for (rank of availableRanks; track rank) {
             <mat-option [value]="rank">
               {{rank}}
             </mat-option>
@@ -34,6 +34,9 @@
         </mat-select>
       </mat-form-field>
     </div>
+    @if (isClassicQueue()) {
+      <p class="rank-source">Classic Rift ladder: Salt, Wood, Silver, Gold, Platinum, Diamond, Legend (no division).</p>
+    }
     <button (click)="chatRank()" mat-raised-button color="primary">Set Rank</button>
   </section>
 

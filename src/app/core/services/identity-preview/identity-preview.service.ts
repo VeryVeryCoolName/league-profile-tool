@@ -5,6 +5,8 @@ import {VersionService} from '../version/version.service';
 import {ChampionService} from '../champion/champion.service';
 import {ConnectorService} from '../connector/connector.service';
 import {LcuEventsService, LcuJsonApiEvent} from '../lcu-events/lcu-events.service';
+import {isClassicChampionKey, isClassicRankedQueue} from '../../classic';
+import {COMMUNITY_DRAGON_LIVE_BRANCH, communityDragonAssetUrl, communityDragonUrl} from '../../community-dragon';
 
 export interface IdentityPreviewState {
   loaded: boolean;
@@ -19,6 +21,8 @@ export interface IdentityPreviewState {
   chatRankTier: string;
   chatRankDivision: string;
   chatRankQueue: string;
+  classicRankTier: string;
+  classicRankDivision: string;
   challengeCrystalLevel: string;
   challengePoints: number | null;
   challengeSpoofActive: boolean;
@@ -47,6 +51,8 @@ export class IdentityPreviewService implements OnDestroy {
     chatRankTier: '',
     chatRankDivision: '',
     chatRankQueue: '',
+    classicRankTier: '',
+    classicRankDivision: '',
     challengeCrystalLevel: '',
     challengePoints: null,
     challengeSpoofActive: false,
@@ -62,7 +68,7 @@ export class IdentityPreviewService implements OnDestroy {
   private dataDragonVersion = '';
   private championIdByKey: Record<number, string> = {};
   private championNameByKey: Record<number, string> = {};
-  private profileIconNameById: Record<number, string> = {};
+  private profileIconsById: Record<number, {name: string; branch: string}> = {};
   private refreshPromise: Promise<void> | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private lastIdentityKey = '';
@@ -141,6 +147,14 @@ export class IdentityPreviewService implements OnDestroy {
         : fallbackState.challengeSpoofActive
           ? fallbackState.chatRankDivision
           : this.stringFrom(lol.rankedLeagueDivision, fallbackState.chatRankDivision);
+      const classicRankTier = fallbackState.challengeSpoofActive
+        ? fallbackState.classicRankTier
+        : this.stringFrom(lol.classicRankedLeagueTier, fallbackState.classicRankTier);
+      const classicRankDivision = classicRankTier.toUpperCase() === 'UNRANKED'
+        ? ''
+        : fallbackState.challengeSpoofActive
+          ? fallbackState.classicRankDivision
+          : this.stringFrom(lol.classicRankedLeagueDivision, fallbackState.classicRankDivision);
 
       const nextState: Partial<IdentityPreviewState> = {
         loaded: true,
@@ -157,6 +171,8 @@ export class IdentityPreviewService implements OnDestroy {
         chatRankTier,
         chatRankDivision,
         chatRankQueue: fallbackState.challengeSpoofActive ? fallbackState.chatRankQueue : this.stringFrom(lol.rankedLeagueQueue, fallbackState.chatRankQueue),
+        classicRankTier,
+        classicRankDivision,
         challengeCrystalLevel: fallbackState.challengeSpoofActive ? fallbackState.challengeCrystalLevel : this.stringFrom(summaryLevel, this.stringFrom(lol.challengeCrystalLevel, fallbackState.challengeCrystalLevel)),
         challengePoints: fallbackState.challengeSpoofActive ? fallbackState.challengePoints : this.numberFrom(summaryPoints, this.numberFrom(lol.challengePoints, fallbackState.challengePoints)),
         challengeSpoofActive: fallbackState.challengeSpoofActive,
@@ -177,6 +193,15 @@ export class IdentityPreviewService implements OnDestroy {
   }
 
   public applyChatRank(queue: string, tier: string, division: string): void {
+    if (isClassicRankedQueue(queue)) {
+      this.patchState({
+        loaded: true,
+        classicRankTier: tier,
+        classicRankDivision: division,
+        updatedAt: new Date().toLocaleTimeString()
+      });
+      return;
+    }
     this.patchState({
       loaded: true,
       chatRankQueue: queue,
@@ -239,7 +264,7 @@ export class IdentityPreviewService implements OnDestroy {
     });
     this.resolveProfileIconName(profileIconId).then(profileIconName => {
       if (this.stateSubject.value.profileIconId !== profileIconId) return;
-      this.patchState({profileIconName});
+      this.patchState({profileIconName, profileIconUrl: this.profileIconUrl(profileIconId)});
     });
   }
 
@@ -279,6 +304,7 @@ export class IdentityPreviewService implements OnDestroy {
 
       this.patchState({
         profileIconName,
+        profileIconUrl: this.profileIconUrl(profileIconId),
         backgroundImageUrl: background.url,
         backgroundVideoUrl: background.videoUrl,
         backgroundLabel: background.label
@@ -370,16 +396,18 @@ export class IdentityPreviewService implements OnDestroy {
     if (backgroundSkinId === 0) return {url: '', videoUrl: '', label: 'Default'};
 
     try {
-      await this.ensureChampionMap();
       const championKey = Math.floor(backgroundSkinId / 1000);
       const skinNumber = backgroundSkinId % 1000;
+      if (isClassicChampionKey(championKey)) return await this.resolveClassicBackground(backgroundSkinId, championKey);
+
+      await this.ensureChampionMap();
       const championId = this.championIdByKey[championKey];
       if (!championId) return {url: '', videoUrl: '', label: `Skin ${backgroundSkinId}`};
       const championName = this.championNameByKey[championKey] || championId;
       const catalogSkin = await this.resolveCatalogSkin(backgroundSkinId);
       const skinName = this.catalogSkinName(catalogSkin, championName);
-      const catalogUrl = this.communityDragonAssetUrl(catalogSkin && (catalogSkin.splashPath || catalogSkin.loadScreenPath));
-      const catalogVideoUrl = this.communityDragonAssetUrl(catalogSkin && catalogSkin.splashVideoPath);
+      const catalogUrl = communityDragonAssetUrl(catalogSkin && (catalogSkin.splashPath || catalogSkin.loadScreenPath));
+      const catalogVideoUrl = communityDragonAssetUrl(catalogSkin && catalogSkin.splashVideoPath);
 
       return {
         url: catalogUrl || `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championId}_${skinNumber}.jpg`,
@@ -388,6 +416,26 @@ export class IdentityPreviewService implements OnDestroy {
       };
     } catch (error) {
       console.warn('[Preview] background metadata unavailable', error);
+      return {url: '', videoUrl: '', label: `Skin ${backgroundSkinId}`};
+    }
+  }
+
+  private async resolveClassicBackground(backgroundSkinId: number, championKey: number): Promise<{url: string; videoUrl: string; label: string}> {
+    try {
+      const detail = await firstValueFrom(this.championService.getClassicChampionDetail(championKey));
+      const champion: any = detail && detail.champion;
+      const branch = this.stringFrom(detail && detail.branch, 'latest');
+      const championName = `Classic ${this.stringFrom(champion && champion.name, String(championKey))}`;
+      const skin = ((champion && champion.skins) || []).find(item => Number(item && item.id) === backgroundSkinId) || null;
+      const skinName = this.catalogSkinName(skin, championName);
+
+      return {
+        url: communityDragonAssetUrl(skin && (skin.splashPath || skin.loadScreenPath), branch),
+        videoUrl: communityDragonAssetUrl(skin && skin.splashVideoPath, branch),
+        label: skinName || `Skin ${backgroundSkinId}`
+      };
+    } catch (error) {
+      console.warn('[Preview] classic background metadata unavailable', error);
       return {url: '', videoUrl: '', label: `Skin ${backgroundSkinId}`};
     }
   }
@@ -420,16 +468,6 @@ export class IdentityPreviewService implements OnDestroy {
     return rawName;
   }
 
-  private communityDragonAssetUrl(path: unknown): string {
-    const assetPath = String(path || '').trim();
-    if (!assetPath) return '';
-    const normalizedPath = assetPath
-      .replace(/^\/lol-game-data\/assets\//i, '')
-      .replace(/^\//, '')
-      .toLowerCase();
-    return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/${normalizedPath}`;
-  }
-
   private async ensureChampionMap(): Promise<void> {
     if (Object.keys(this.championIdByKey).length > 0) return;
     await this.ensureVersion();
@@ -454,7 +492,8 @@ export class IdentityPreviewService implements OnDestroy {
     if (profileIconId === undefined || profileIconId === null || isNaN(profileIconId)) return '';
     try {
       await this.ensureProfileIconMap();
-      return this.profileIconNameById[profileIconId] || 'Icon';
+      const entry = this.profileIconsById[profileIconId];
+      return (entry && entry.name) || 'Icon';
     } catch (error) {
       console.warn('[Preview] profile icon metadata unavailable', error);
       return 'Icon';
@@ -462,16 +501,21 @@ export class IdentityPreviewService implements OnDestroy {
   }
 
   private async ensureProfileIconMap(): Promise<void> {
-    if (Object.keys(this.profileIconNameById).length > 0) return;
+    if (Object.keys(this.profileIconsById).length > 0) return;
 
-    const icons: any = await firstValueFrom(this.championService.getSummonerIcons());
-    const nextMap: Record<number, string> = {};
+    const icons: any = await firstValueFrom(this.championService.getAllSummonerIcons());
+    const nextMap: Record<number, {name: string; branch: string}> = {};
     (icons || []).forEach(icon => {
       const id = Number(icon && icon.id);
       const name = this.stringFrom(icon && icon.title, this.stringFrom(icon && icon.name, 'Icon'));
-      if (!isNaN(id)) nextMap[id] = name || 'Icon';
+      if (!isNaN(id)) {
+        nextMap[id] = {
+          name: name || 'Icon',
+          branch: this.stringFrom(icon && icon.branch, COMMUNITY_DRAGON_LIVE_BRANCH)
+        };
+      }
     });
-    this.profileIconNameById = nextMap;
+    this.profileIconsById = nextMap;
   }
 
   private async ensureVersion(): Promise<void> {
@@ -482,7 +526,8 @@ export class IdentityPreviewService implements OnDestroy {
 
   private profileIconUrl(profileIconId: number | null): string {
     if (profileIconId === undefined || profileIconId === null || isNaN(profileIconId)) return '';
-    return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/${profileIconId}.jpg`;
+    const entry = this.profileIconsById[profileIconId];
+    return communityDragonUrl(entry ? entry.branch : COMMUNITY_DRAGON_LIVE_BRANCH, `v1/profile-icons/${profileIconId}.jpg`);
   }
 
   private availabilityLabel(availability: string, fallback = ''): string {

@@ -5,10 +5,29 @@
     </mat-card-header>
     <mat-card-content>
       <p>
-        1. Open task manager then go to the details tab<br>
-        2. Find LeagueClient.exe then right click and click properties<br>
-        3. Copy the location then go to config/clientPath.txt in the profile tool<br>
-        4. Paste it there, save, and restart the tool.
+        The tool finds your League installations automatically, so start the League client and
+        give it a few seconds. The banner at the top shows which one it is using.
+      </p>
+      <p>
+        If it points at the wrong installation, or your install was not found:<br>
+        1. Make sure the League client is running<br>
+        2. Use the banner at the top of the tool<br>
+        3. Click "Switch to Live" or "Switch to PBE" to change installation<br>
+        4. Or click "Browse..." and pick the folder that contains LeagueClient.exe
+      </p>
+      <p>
+        Your choice is remembered, so you only have to do this once per installation.
+      </p>
+    </mat-card-content>
+  </mat-card>
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Can I use this with PBE?</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p>
+        Yes. Live and PBE are detected separately. When both are installed the banner offers a
+        button to switch between them, and the tool only talks to the one you select.
       </p>
     </mat-card-content>
   </mat-card>

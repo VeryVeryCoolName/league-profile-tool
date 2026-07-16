@@ -5,6 +5,8 @@ import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection
 import {VersionService} from "../core/services/version/version.service";
 import {ChampionService} from "../core/services/champion/champion.service";
 import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
+import {isClassicChampionKey} from "../core/classic";
+import {communityDragonAssetUrl} from "../core/community-dragon";
 import {Subscription} from 'rxjs';
 
 @Component({
@@ -21,6 +23,12 @@ export class BackgroundComponent implements OnInit, OnDestroy {
   private static cachedSkins = {};
   private skinRequestId = 0;
   private championKeys: Record<string, number> = {};
+  public rosters = [
+    {id: 'modern', label: 'Modern'},
+    {id: 'classic', label: 'Classic'}
+  ];
+  public activeRoster = this.rosters[0].id;
+  public availableRosters: Array<{id: string; label: string}> = [];
   public showingSkins = false;
   public currentVersion: string;
   public championImages = [];
@@ -47,7 +55,9 @@ export class BackgroundComponent implements OnInit, OnDestroy {
       this.championImages = BackgroundComponent.cachedChampionImages;
       this.championKeys = BackgroundComponent.cachedChampionKeys;
       this.championsLoading = false;
+      this.updateAvailableRosters();
       this.refreshChampionView();
+      if (!this.championImages.some(image => this.championRoster(image) !== this.rosters[0].id)) this.loadClassicChampions();
       return;
     }
     this.version.apiVersion().subscribe(v => {
@@ -59,12 +69,15 @@ export class BackgroundComponent implements OnInit, OnDestroy {
           const championKeys: Record<string, number> = {};
           for (const champion in championPayload.data) {
             const championInfo = championPayload.data[champion];
+            const championKey = parseInt(championInfo.key, 10);
+            if (isClassicChampionKey(championKey)) continue;
             const src = `https://ddragon.leagueoflegends.com/cdn/${this.currentVersion}/img/champion/${champion}.png`;
-            championKeys[champion] = parseInt(championInfo.key, 10);
+            championKeys[champion] = championKey;
             championImages.push({
               src: src,
               alt: champion,
               name: this.displayChampionName(championInfo, champion),
+              roster: 'modern',
               loaded: false,
               broken: false
             });
@@ -78,7 +91,9 @@ export class BackgroundComponent implements OnInit, OnDestroy {
           this.championImages = championImages;
           this.championKeys = championKeys;
           this.championsLoading = false;
+          this.updateAvailableRosters();
           this.refreshChampionView();
+          this.loadClassicChampions();
         } catch (err) {
           console.error(err);
           this.championsLoading = false;
@@ -105,6 +120,11 @@ export class BackgroundComponent implements OnInit, OnDestroy {
       this.skinsLoaded = this.skinsImages.length;
       this.skinsTotal = this.skinsImages.length;
       this.skinsLoading = false;
+      return;
+    }
+    const championKey = this.championKeys[alt];
+    if (isClassicChampionKey(championKey)) {
+      this.loadClassicSkins(alt, championKey, requestId);
       return;
     }
     try {
@@ -155,6 +175,97 @@ export class BackgroundComponent implements OnInit, OnDestroy {
     }
   }
 
+  private loadClassicChampions(): void {
+    this.championData.getClassicChampionData().subscribe(data => {
+      if (!data.champions.length) return;
+
+      const championKeys = {...this.championKeys};
+      const championImages = this.championImages.filter(image => this.championRoster(image) !== 'classic');
+      for (const champion of data.champions) {
+        const alias = String(champion.alias || `Classic${champion.id}`);
+        championKeys[alias] = Number(champion.id);
+        championImages.push({
+          src: communityDragonAssetUrl(champion.squarePortraitPath, data.branch),
+          alt: alias,
+          name: `Classic ${this.displayChampionName(champion, alias)}`,
+          roster: 'classic',
+          loaded: false,
+          broken: false
+        });
+      }
+      championImages.sort((left, right) => {
+        return String(left.name || left.alt || '').localeCompare(String(right.name || right.alt || ''));
+      });
+      BackgroundComponent.cachedChampionImages = championImages;
+      BackgroundComponent.cachedChampionKeys = championKeys;
+      this.championImages = championImages;
+      this.championKeys = championKeys;
+      this.updateAvailableRosters();
+      this.refreshChampionView();
+    }, error => {
+      console.warn('[Assets] failed to load Classic champion list', error);
+    });
+  }
+
+  private loadClassicSkins(alt: string, championKey: number, requestId: number): void {
+    this.championData.getClassicChampionDetail(championKey).subscribe(detail => {
+      if (requestId !== this.skinRequestId) return;
+      const championName = this.championDisplayName(alt);
+      const skinImages = [];
+      const seen = {};
+      for (const skin of (detail && detail.champion && detail.champion.skins) || []) {
+        const entry = this.classicSkinEntry(skin, championKey, championName, detail.branch);
+        if (!entry) continue;
+        const id = String(entry.alt || '');
+        if (!id || seen[id]) continue;
+        seen[id] = true;
+        skinImages.push(entry);
+      }
+      const orderedSkins = skinImages.sort((left, right) => {
+        if (left.num === 0) return -1;
+        if (right.num === 0) return 1;
+        return (left.num as number) - (right.num as number);
+      }).map((image, index) => {
+        return {...image, order: index};
+      });
+      this.skinsTotal = orderedSkins.length;
+      this.preloadImages(orderedSkins, requestId).then(loadedSkins => {
+        if (requestId !== this.skinRequestId) return;
+        BackgroundComponent.cachedSkins[alt] = loadedSkins;
+        this.skinsImages = loadedSkins;
+        this.skinsLoading = false;
+      });
+    }, error => {
+      console.error('[Assets] failed to load Classic champion skin data', {champion: alt, error});
+      this.skinsLoading = false;
+    });
+  }
+
+  private classicSkinEntry(skin: any, championKey: number, championName: string, branch: string): Record<string, unknown> | null {
+    const skinId = Number(skin && skin.id);
+    if (!Number.isFinite(skinId)) return null;
+    if (Math.floor(skinId / 1000) !== championKey) return null;
+
+    const skinNum = skinId - championKey * 1000;
+    const src = communityDragonAssetUrl(skin.loadScreenPath || skin.splashPath, branch);
+    if (!src) return null;
+
+    const rawName = String(skin.name || '').trim();
+    const name = skin.isBase || !rawName
+      ? `${championName} Default`
+      : this.displaySkinName(rawName, championName);
+
+    return {
+      src,
+      alt: String(skinId),
+      num: skinNum,
+      name,
+      order: 0,
+      loaded: false,
+      broken: false
+    };
+  }
+
   public showChampions(): void {
     this.skinRequestId++;
     this.showingSkins = false;
@@ -162,14 +273,31 @@ export class BackgroundComponent implements OnInit, OnDestroy {
     this.skinsImages = [];
   }
 
+  private updateAvailableRosters(): void {
+    this.availableRosters = this.rosters.filter(roster => {
+      return this.championImages.some(champion => this.championRoster(champion) === roster.id);
+    });
+  }
+
+  public setRoster(rosterId: string): void {
+    if (this.activeRoster === rosterId) return;
+    this.activeRoster = rosterId;
+    this.refreshChampionView();
+  }
+
+  private championRoster(champion: Record<string, unknown>): string {
+    return String(champion && champion.roster || this.rosters[0].id);
+  }
+
   public refreshChampionView(): void {
     const search = String(this.searchText || '').trim().toLowerCase();
+    const rosterImages = this.championImages.filter(champion => this.championRoster(champion) === this.activeRoster);
     this.filteredChampionImages = search
-      ? this.championImages.filter(champion => {
+      ? rosterImages.filter(champion => {
         return String(champion.name || '').toLowerCase().indexOf(search) >= 0 ||
           String(champion.alt || '').toLowerCase().indexOf(search) >= 0;
       })
-      : this.championImages;
+      : rosterImages;
     this.visibleChampionImages = this.filteredChampionImages;
   }
 
@@ -289,7 +417,7 @@ export class BackgroundComponent implements OnInit, OnDestroy {
     const name = skin.isBase || rawName === championName
       ? `${championName} Default`
       : this.displaySkinName(rawName, championName);
-    const src = this.communityDragonAssetUrl(skin.loadScreenPath || skin.splashPath) ||
+    const src = communityDragonAssetUrl(skin.loadScreenPath || skin.splashPath) ||
       `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${alt}_${skinNum}.jpg`;
 
     return {
@@ -414,16 +542,6 @@ export class BackgroundComponent implements OnInit, OnDestroy {
     const name = String(skinName || '').trim();
     if (!name || name.toLowerCase() === 'default') return `${championName} Default`;
     return name;
-  }
-
-  private communityDragonAssetUrl(path: unknown): string {
-    const assetPath = String(path || '').trim();
-    if (!assetPath) return '';
-    const normalizedPath = assetPath
-      .replace(/^\/lol-game-data\/assets\//i, '')
-      .replace(/^\//, '')
-      .toLowerCase();
-    return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/${normalizedPath}`;
   }
 
   public setBackground(id: string): void {

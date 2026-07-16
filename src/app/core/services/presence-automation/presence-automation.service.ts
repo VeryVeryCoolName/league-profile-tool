@@ -4,6 +4,7 @@ import {ConnectorService} from '../connector/connector.service';
 import {LCUConnectionService} from '../lcuconnection/lcuconnection.service';
 import {LcuEventsService, LcuJsonApiEvent} from '../lcu-events/lcu-events.service';
 import {IdentityPreviewService} from '../identity-preview/identity-preview.service';
+import {isClassicRankedQueue} from '../../classic';
 
 interface PresencePatch {
   availability?: string;
@@ -83,13 +84,18 @@ export class PresenceAutomationService implements OnDestroy {
   }
 
   public recordChatRankPreset(queue: string, tier: string, division?: string): void {
-    this.chatRankPatch = {
-      lol: {
+    const lol: Record<string, unknown> = isClassicRankedQueue(queue)
+      ? {
+        classicRankedLeagueQueue: queue,
+        classicRankedLeagueTier: tier,
+        classicRankedLeagueDivision: division
+      }
+      : {
         rankedLeagueQueue: queue,
         rankedLeagueTier: tier,
         rankedLeagueDivision: division
-      }
-    };
+      };
+    this.chatRankPatch = this.mergePatches(this.chatRankPatch, {lol});
     this.markAction('Chat rank preset captured');
   }
 
@@ -166,6 +172,9 @@ export class PresenceAutomationService implements OnDestroy {
         rankedLeagueQueue: lol.rankedLeagueQueue,
         rankedLeagueTier: lol.rankedLeagueTier,
         rankedLeagueDivision: lol.rankedLeagueDivision,
+        classicRankedLeagueQueue: lol.classicRankedLeagueQueue,
+        classicRankedLeagueTier: lol.classicRankedLeagueTier,
+        classicRankedLeagueDivision: lol.classicRankedLeagueDivision,
         challengeCrystalLevel: lol.challengeCrystalLevel,
         challengePoints: lol.challengePoints
       }
@@ -324,7 +333,9 @@ export class PresenceAutomationService implements OnDestroy {
 
   private presenceValueMatches(key: string, actual: unknown, expected: unknown): boolean {
     if (key === 'challengePoints') return String(actual) === String(expected);
-    if (key === 'rankedLeagueDivision' && expected === '') return actual === undefined || actual === null || actual === '';
+    if ((key === 'rankedLeagueDivision' || key === 'classicRankedLeagueDivision') && expected === '') {
+      return actual === undefined || actual === null || actual === '';
+    }
     if (typeof actual === 'string' && typeof expected === 'string' && this.shouldNormalizeCase(key)) {
       return actual.toUpperCase() === expected.toUpperCase();
     }
@@ -332,7 +343,11 @@ export class PresenceAutomationService implements OnDestroy {
   }
 
   private shouldNormalizeCase(key: string): boolean {
-    return ['rankedLeagueQueue', 'rankedLeagueTier', 'rankedLeagueDivision', 'challengeCrystalLevel'].indexOf(key) >= 0;
+    return [
+      'rankedLeagueQueue', 'rankedLeagueTier', 'rankedLeagueDivision',
+      'classicRankedLeagueQueue', 'classicRankedLeagueTier', 'classicRankedLeagueDivision',
+      'challengeCrystalLevel'
+    ].indexOf(key) >= 0;
   }
 
   private isAutoReapplySuppressed(): boolean {

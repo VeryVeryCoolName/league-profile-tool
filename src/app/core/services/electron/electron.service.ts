@@ -6,6 +6,7 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   body?: string;
   rejectUnauthorized?: boolean;
+  timeoutMs?: number;
 }
 
 export interface LcuEventConnectionOptions {
@@ -13,11 +14,20 @@ export interface LcuEventConnectionOptions {
   authorization?: string;
 }
 
+export interface ClientInstallInfo {
+  path: string;
+  label: string;
+  running: boolean;
+  active: boolean;
+}
+
 export interface LeagueProfileToolBridge {
   request(options: RequestOptions): Promise<string>;
   findLockfile(targetPaths: string[]): Promise<string>;
   readLockfile(targetPath: string): Promise<string>;
   readConfiguredClientPath(): Promise<string>;
+  listClientPaths(): Promise<ClientInstallInfo[]>;
+  setClientPath(clientPath: string): Promise<string>;
   chooseClientPath(): Promise<string>;
   writeClipboard(text: string): Promise<void>;
   joinPath(...parts: string[]): string;
@@ -67,6 +77,15 @@ export class ElectronService {
 
   public readConfiguredClientPath(): Promise<string> {
     return this.bridge ? this.bridge.readConfiguredClientPath() : Promise.resolve('');
+  }
+
+  public listClientPaths(): Promise<ClientInstallInfo[]> {
+    return this.bridge ? this.bridge.listClientPaths() : Promise.resolve([]);
+  }
+
+  public setClientPath(clientPath: string): Promise<string> {
+    if (!this.bridge) return Promise.reject(new Error('Electron bridge is unavailable.'));
+    return this.bridge.setClientPath(clientPath);
   }
 
   public chooseClientPath(): Promise<string> {

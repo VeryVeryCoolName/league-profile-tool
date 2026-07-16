@@ -4,6 +4,8 @@ import {LCUConnectionService} from '../lcuconnection/lcuconnection.service';
 import {LcuEventsService, LcuJsonApiEvent} from '../lcu-events/lcu-events.service';
 import {ChampionService} from '../champion/champion.service';
 import {VersionService} from '../version/version.service';
+import {isClassicChampionKey} from '../../classic';
+import {communityDragonAssetUrl} from '../../community-dragon';
 import {IMatchupProvider, LaneMatchupResult, LolalyticsMatchupProvider} from './matchup-provider';
 
 export type ReadyCheckStatus = 'Idle' | 'Searching' | 'Ready Check' | 'Accepted';
@@ -145,6 +147,7 @@ export class MatchToolsService implements OnDestroy {
   private championNameById: Record<number, string> = {};
   private championSlugById: Record<number, string> = {};
   private championMetadataById: Record<number, ChampionMetadata> = {};
+  private classicChampionIconById: Record<number, string> = {};
   private championMetadataPromise: Promise<void> | null = null;
   private recommendedPositionsByChampionId: Record<number, string[]> = {};
   private recommendedPositionsPromise: Promise<void> | null = null;
@@ -837,6 +840,42 @@ export class MatchToolsService implements OnDestroy {
     this.championNameById = nextMap;
     this.championSlugById = nextSlugMap;
     this.championMetadataById = nextMetadata;
+    this.mergeClassicChampionMetadata();
+  }
+
+  private mergeClassicChampionMetadata(): void {
+    this.championService.getClassicChampionData().subscribe(data => {
+      if (!data.champions.length) return;
+
+      const nameMap = {...this.championNameById};
+      const slugMap = {...this.championSlugById};
+      const metadataMap = {...this.championMetadataById};
+      const iconMap: Record<number, string> = {};
+      for (const champion of data.champions) {
+        const key = Number(champion && champion.id);
+        if (isNaN(key)) continue;
+
+        const displayName = `Classic ${this.displayChampionName(champion, String(key))}`;
+        nameMap[key] = displayName;
+        if (!slugMap[key]) slugMap[key] = String(champion && champion.alias || displayName);
+        if (!metadataMap[key]) {
+          metadataMap[key] = {
+            name: displayName,
+            imageFull: '',
+            tags: Array.isArray(champion && champion.roles) ? champion.roles.map(role => String(role || '')) : [],
+            info: {}
+          };
+        }
+        const iconUrl = communityDragonAssetUrl(champion && champion.squarePortraitPath, data.branch);
+        if (iconUrl) iconMap[key] = iconUrl;
+      }
+      this.championNameById = nameMap;
+      this.championSlugById = slugMap;
+      this.championMetadataById = metadataMap;
+      this.classicChampionIconById = iconMap;
+    }, error => {
+      console.warn('[MatchTools] classic champion metadata unavailable', error);
+    });
   }
 
   private async ensureRecommendedChampionPositions(): Promise<void> {
@@ -885,7 +924,11 @@ export class MatchToolsService implements OnDestroy {
   }
 
   private championIconUrl(championId: number | null): string {
-    if (!championId || !this.dataDragonVersion || !this.championMetadataById[championId]) return '';
+    if (!championId) return '';
+    const classicIconUrl = this.classicChampionIconById[championId];
+    if (classicIconUrl) return classicIconUrl;
+    if (isClassicChampionKey(championId)) return '';
+    if (!this.dataDragonVersion || !this.championMetadataById[championId]) return '';
     return `https://ddragon.leagueoflegends.com/cdn/${this.dataDragonVersion}/img/champion/${this.championMetadataById[championId].imageFull}`;
   }
 

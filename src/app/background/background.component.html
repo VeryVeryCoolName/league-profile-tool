@@ -5,6 +5,21 @@
         <mat-label>Search for a champion</mat-label>
         <input matInput name="search" [(ngModel)]="searchText" (ngModelChange)="resetChampionLimit()" placeholder="Ex. Ahri">
       </mat-form-field>
+      @if (availableRosters.length > 1) {
+        <div class="roster-toggle">
+          @for (roster of availableRosters; track roster.id) {
+            <button
+              mat-stroked-button
+              type="button"
+              class="roster-filter"
+              [class.active]="activeRoster === roster.id"
+              [attr.aria-pressed]="activeRoster === roster.id"
+              (click)="setRoster(roster.id)">
+              {{roster.label}}
+            </button>
+          }
+        </div>
+      }
     }
     @if (showingSkins) {
       <button (click)="showChampions()" mat-flat-button color="primary">Go Back</button>

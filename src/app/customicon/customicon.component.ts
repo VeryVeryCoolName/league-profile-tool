@@ -6,6 +6,7 @@ import {ChampionService} from "../core/services/champion/champion.service";
 import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
 import {ConnectorService} from "../core/services/connector/connector.service";
 import {Subscription} from "rxjs";
+import {COMMUNITY_DRAGON_LIVE_BRANCH, communityDragonUrl} from "../core/community-dragon";
 
 type IconUpdateStatus = 'updated' | 'accepted' | 'failed';
 type IconOwnershipState = 'owned' | 'not-owned' | 'unknown';
@@ -13,6 +14,7 @@ type IconOwnershipState = 'owned' | 'not-owned' | 'unknown';
 interface CustomIconRecord extends Record<string, unknown> {
   id?: unknown;
   title?: unknown;
+  branch?: unknown;
   src?: string;
   broken?: boolean;
   owned?: boolean;
@@ -68,14 +70,17 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.iconSubscription = this.championData.getSummonerIcons().subscribe(icons => {
+    this.iconSubscription = this.championData.getAllSummonerIcons().subscribe(icons => {
       this.allIcons = (icons as CustomIconRecord[])
         .filter(icon => icon && icon.id !== undefined && icon.id !== null)
         .sort((left, right) => Number(left.id) - Number(right.id))
         .map(icon => {
           return this.withOwnershipMetadata({
             ...icon,
-            src: `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/${String(icon.id)}.jpg`,
+            src: communityDragonUrl(
+              typeof icon.branch === 'string' && icon.branch ? icon.branch : COMMUNITY_DRAGON_LIVE_BRANCH,
+              `v1/profile-icons/${String(icon.id)}.jpg`
+            ),
             broken: false
           });
         });

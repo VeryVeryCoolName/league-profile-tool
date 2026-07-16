@@ -24,11 +24,36 @@
   box-shadow: 0 0 0 3px rgba(255, 125, 136, 0.12);
 }
 
-.connection-status span:first-of-type {
+.connection-label {
   flex: 0 0 auto;
 }
 
+.install-name {
+  flex: 0 1 auto;
+  overflow: hidden;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.install-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.4rem;
+  align-items: center;
+  margin-left: auto;
+}
+
 .connection-status button {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
   min-width: 0;
   height: 1.75rem;
   padding: 0 0.75rem;
@@ -38,14 +63,38 @@
   background: rgba(32, 126, 184, 0.58);
   font-size: 0.75rem;
   line-height: 1.75rem;
+  cursor: pointer;
+}
+
+.connection-status button:hover:not(:disabled) {
+  background: rgba(32, 126, 184, 0.78);
 }
 
 .connection-status button:disabled {
   color: rgba(234, 246, 255, 0.58);
   background: rgba(32, 126, 184, 0.24);
+  cursor: default;
+}
+
+.connection-status .install-browse {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.connection-status .install-browse:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.running-dot {
+  flex: 0 0 auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #5ee39a;
+  box-shadow: 0 0 0 2px rgba(94, 227, 154, 0.2);
 }
 
 .connection-error {
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   color: #ffd5d8;

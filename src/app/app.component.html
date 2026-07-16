@@ -1,16 +1,50 @@
-@if (connected$ | async; as connected) {
-  <div class="connection-status connected" role="status" aria-live="polite">League Client connected</div>
+@if (connected$ | async) {
+  <div class="connection-status connected" role="status" aria-live="polite">
+    <span class="connection-label">League Client connected</span>
+    @if (activeInstall) {
+      <span class="install-name" [title]="activePath">{{activeInstall.label}}</span>
+    }
+    <ng-container *ngTemplateOutlet="installPicker"></ng-container>
+  </div>
 } @else {
   <div class="connection-status" role="status" aria-live="polite">
-    <span>Select the League folder while the client is open</span>
-    <button mat-button type="button" (click)="chooseClientPath()" [disabled]="choosingClientPath">
-      {{choosingClientPath ? 'Choosing...' : 'Select League folder'}}
-    </button>
-    @if (clientPathError) {
-      <span class="connection-error">{{clientPathError}}</span>
+    <span class="connection-label">
+      @if (activePath) {
+        Waiting for the League client
+      } @else {
+        No League installation found
+      }
+    </span>
+    @if (activeInstall) {
+      <span class="install-name" [title]="activePath">{{activeInstall.label}}</span>
     }
+    <ng-container *ngTemplateOutlet="installPicker"></ng-container>
   </div>
 }
+
+<ng-template #installPicker>
+  @if (clientPathError) {
+    <span class="connection-error" [title]="clientPathError">{{clientPathError}}</span>
+  }
+  <span class="install-actions">
+    @for (install of otherInstalls; track install.path) {
+      <button
+        type="button"
+        class="install-switch"
+        [disabled]="switching"
+        [title]="install.path"
+        (click)="selectInstall(install)">
+        <span>Switch to {{install.label}}</span>
+        @if (install.running) {
+          <span class="running-dot" title="This client is running"></span>
+        }
+      </button>
+    }
+    <button type="button" class="install-browse" [disabled]="switching" (click)="browseForInstall()">
+      {{switching ? 'Switching...' : 'Browse...'}}
+    </button>
+  </span>
+</ng-template>
 <mat-tab-group class="app-tabs" [mat-stretch-tabs]="false" animationDuration="180ms">
   <mat-tab label="Home"><ng-template matTabContent><app-home></app-home></ng-template></mat-tab>
   <mat-tab label="Match Tools"><ng-template matTabContent><app-match-tools></app-match-tools></ng-template></mat-tab>

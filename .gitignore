@@ -44,3 +44,9 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+# design sources and unused art
+/src/assets/Artwork.psd
+/src/assets/Artwork.png
+/src/assets/ModernLogo.png
+/src/assets/Summoner Icon Pictures/

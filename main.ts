@@ -13,11 +13,22 @@ interface RequestOptions {
   headers?: Record<string, string>;
   body?: string;
   rejectUnauthorized?: boolean;
+  timeoutMs?: number;
 }
 
 interface EventConnectionOptions {
   url: string;
   authorization?: string;
+}
+
+interface ClientInstall {
+  path: string;
+  label: string;
+}
+
+interface ClientInstallInfo extends ClientInstall {
+  running: boolean;
+  active: boolean;
 }
 
 const versionInfo = require('./version.json');
@@ -29,6 +40,8 @@ const REQUEST_TIMEOUT_MS = 20000;
 const MAX_RESPONSE_BYTES = 32 * 1024 * 1024;
 const MAX_REQUEST_BODY_BYTES = 2 * 1024 * 1024;
 const MAX_EVENT_BUFFER_BYTES = 8 * 1024 * 1024;
+const MAX_SETTINGS_BYTES = 256 * 1024;
+const DISCOVERY_TTL_MS = 15000;
 const SCRIPT_SRC_POLICY = serve ? "script-src 'self' 'unsafe-eval'" : "script-src 'self'";
 const CONNECT_SRC_POLICY = serve
   ? "connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://ddragon.leagueoflegends.com https://raw.communitydragon.org http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*"
@@ -59,6 +72,7 @@ const ALLOWED_EXTERNAL_HOSTS = new Set([
 
 let win: BrowserWindow | null = null;
 let eventSocket: LcuEventSocket | null = null;
+let discoveryCache: {at: number; installs: ClientInstall[]} | null = null;
 
 function firstExistingPath(paths: string[]): string {
   return paths.find(candidate => fs.existsSync(candidate)) || paths[0];
@@ -137,6 +151,12 @@ function hasUnsafeLcuPathEncoding(pathname: string): boolean {
 
 function normalizeRequestMethod(value: string | undefined): string {
   return String(value || 'GET').trim().toUpperCase();
+}
+
+function requestTimeoutMs(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return REQUEST_TIMEOUT_MS;
+  return Math.min(Math.max(Math.trunc(parsed), 1000), REQUEST_TIMEOUT_MS);
 }
 
 function headerValue(headers: Record<string, string> | undefined, name: string): string {
@@ -243,7 +263,7 @@ function makeRequest(options: RequestOptions): Promise<string> {
       });
     });
 
-    request.setTimeout(REQUEST_TIMEOUT_MS, () => {
+    request.setTimeout(requestTimeoutMs(options.timeoutMs), () => {
       request.destroy(new Error('LCU request timed out.'));
     });
     request.once('error', rejectOnce);
@@ -267,12 +287,87 @@ function readConfiguredClientPath(): string {
   return '';
 }
 
-function savedClientPathFile(): string {
-  return path.join(app.getPath('userData'), 'clientPath.txt');
+function riotMetadataRoot(): string {
+  const programData = process.env.ProgramData || process.env.ALLUSERSPROFILE || 'C:\\ProgramData';
+  return path.join(programData, 'Riot Games', 'Metadata');
 }
 
-function writableConfigClientPathFile(): string {
-  return path.join(process.cwd(), 'config', 'clientPath.txt');
+function productLabel(productId: string): string {
+  const channel = (productId.split('.')[1] || '').toLowerCase();
+  if (channel === 'live') return 'Live';
+  if (channel === 'pbe') return 'PBE';
+  return channel ? channel.charAt(0).toUpperCase() + channel.slice(1) : 'League of Legends';
+}
+
+function readDiscoveredInstalls(): ClientInstall[] {
+  const root = riotMetadataRoot();
+  const installs: ClientInstall[] = [];
+  let entries: string[] = [];
+  try {
+    entries = fs.readdirSync(root);
+  } catch {
+    return installs;
+  }
+
+  for (const entry of entries) {
+    if (!/^league_of_legends\.[a-z0-9_]+$/i.test(entry)) continue;
+
+    const settingsFile = path.join(root, entry, `${entry}.product_settings.yaml`);
+    try {
+      if (fs.statSync(settingsFile).size > MAX_SETTINGS_BYTES) continue;
+      const match = /^\s*product_install_full_path:\s*"?([^"\r\n]+?)"?\s*$/m
+        .exec(fs.readFileSync(settingsFile, 'utf8'));
+      if (!match) continue;
+
+      const installPath = normalizeClientPath(path.normalize(match[1]));
+      if (isLeagueClientDirectory(installPath)) {
+        installs.push({path: installPath, label: productLabel(entry)});
+      }
+    } catch {
+    }
+  }
+  return installs;
+}
+
+function discoverClientInstalls(force = false): ClientInstall[] {
+  const now = Date.now();
+  if (!force && discoveryCache && now - discoveryCache.at < DISCOVERY_TTL_MS) {
+    return discoveryCache.installs;
+  }
+
+  const installs = readDiscoveredInstalls();
+  discoveryCache = {at: now, installs};
+  return installs;
+}
+
+function listClientInstalls(): ClientInstallInfo[] {
+  const activeKey = normalizedPathKey(readKnownClientPath());
+  const candidates: ClientInstall[] = [
+    ...discoverClientInstalls(true),
+    ...[readSavedClientPath(), readConfiguredClientPath()]
+      .map(candidate => normalizeClientPath(candidate))
+      .filter(Boolean)
+      .map(candidate => ({path: candidate, label: 'Custom'}))
+  ];
+
+  const seen = new Set<string>();
+  const installs: ClientInstallInfo[] = [];
+  for (const candidate of candidates) {
+    const key = normalizedPathKey(candidate.path);
+    if (!key || seen.has(key) || !isLeagueClientDirectory(candidate.path)) continue;
+    seen.add(key);
+    installs.push({
+      path: candidate.path,
+      label: candidate.label,
+      running: fs.existsSync(path.join(candidate.path, 'lockfile')),
+      active: key === activeKey
+    });
+  }
+  return installs;
+}
+
+function savedClientPathFile(): string {
+  return path.join(app.getPath('userData'), 'clientPath.txt');
 }
 
 function readSavedClientPath(): string {
@@ -284,7 +379,12 @@ function readSavedClientPath(): string {
 }
 
 function readKnownClientPath(): string {
-  return readConfiguredClientPath() || readSavedClientPath();
+  const chosen = normalizeClientPath(readSavedClientPath() || readConfiguredClientPath());
+  if (chosen) return chosen;
+
+  const discovered = discoverClientInstalls();
+  const running = discovered.find(install => fs.existsSync(path.join(install.path, 'lockfile')));
+  return (running || discovered[0])?.path || '';
 }
 
 function normalizeClientPath(clientPath: string): string {
@@ -320,22 +420,20 @@ function isLeagueClientDirectory(clientPath: string): boolean {
 function writeSavedClientPath(clientPath: string): string {
   const normalized = normalizeClientPath(clientPath);
   if (!isLeagueClientDirectory(normalized)) {
-    throw new Error('Select the League folder while the client is open.');
+    throw new Error('Select the folder that contains LeagueClient.exe or LeagueClientUx.exe.');
   }
 
   fs.mkdirSync(path.dirname(savedClientPathFile()), {recursive: true});
   fs.writeFileSync(savedClientPathFile(), normalized, 'utf8');
-  try {
-    const configPath = writableConfigClientPathFile();
-    fs.mkdirSync(path.dirname(configPath), {recursive: true});
-    fs.writeFileSync(configPath, normalized, 'utf8');
-  } catch {
-  }
   return normalized;
 }
 
 function allowedClientPathKeys(): Set<string> {
-  const paths = [readConfiguredClientPath(), readSavedClientPath()]
+  const paths = [
+    readConfiguredClientPath(),
+    readSavedClientPath(),
+    ...discoverClientInstalls().map(install => install.path)
+  ]
     .map(candidate => normalizeClientPath(candidate))
     .filter(Boolean)
     .map(candidate => normalizedPathKey(candidate))
@@ -369,11 +467,24 @@ function registerIpcHandlers(): void {
     return fs.readFileSync(targetPath, 'utf8');
   });
   ipcMain.handle('lpt:read-configured-client-path', () => readKnownClientPath());
+  ipcMain.handle('lpt:list-client-paths', () => listClientInstalls());
+  ipcMain.handle('lpt:set-client-path', (_event, clientPath: string) => {
+    const target = normalizeClientPath(String(clientPath || ''));
+    const targetKey = normalizedPathKey(target);
+    const known = discoverClientInstalls(true)
+      .some(install => normalizedPathKey(install.path) === targetKey);
+    if (!targetKey || !known) {
+      throw new Error('Unknown League installation. Use Browse to pick the folder.');
+    }
+    return writeSavedClientPath(target);
+  });
   ipcMain.handle('lpt:choose-client-path', async () => {
     if (!win) return '';
 
     const result = await dialog.showOpenDialog(win, {
-      title: 'Select League of Legends folder',
+      title: 'Choose League of Legends installation',
+      buttonLabel: 'Use this folder',
+      defaultPath: readKnownClientPath() || undefined,
       properties: ['openDirectory']
     });
     if (result.canceled || !result.filePaths[0]) return '';

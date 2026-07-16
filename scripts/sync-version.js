@@ -87,7 +87,9 @@ function syncReadme(version, tag) {
   replaceOptional('README.md', [
     [/releases\/download\/V\.?\d+\.\d+\.\d+\//g, `releases/download/${tag}/`],
     [/League\.Profile\.Tool\.Setup\.\d+\.\d+\.\d+\.exe/g, `League.Profile.Tool.Setup.${version}.exe`],
-    [/League Profile Tool Setup \d+\.\d+\.\d+\.exe/g, `League Profile Tool Setup ${version}.exe`]
+    [/League Profile Tool Setup \d+\.\d+\.\d+\.exe/g, `League Profile Tool Setup ${version}.exe`],
+    [/League\.Profile\.Tool\.\d+\.\d+\.\d+\.msix/g, `League.Profile.Tool.${version}.msix`],
+    [/League Profile Tool \d+\.\d+\.\d+\.msix/g, `League Profile Tool ${version}.msix`]
   ]);
 }
 

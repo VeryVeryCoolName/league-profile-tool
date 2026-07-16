@@ -1,7 +1,11 @@
 import {Component, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import {Sort} from '@angular/material/sort';
+import {firstValueFrom} from 'rxjs';
 import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {VersionService} from "../core/services/version/version.service";
+import {ChampionService} from "../core/services/champion/champion.service";
+import {isClassicChampionKey} from "../core/classic";
+import {communityDragonAssetUrl} from "../core/community-dragon";
 
 
 @Component({
@@ -24,7 +28,7 @@ export class ChampionPurchaseDateComponent implements OnInit {
     FiddleSticks: 'Fiddlesticks'
   };
 
-  constructor(private lcuConnectionService: LCUConnectionService, private version: VersionService) {
+  constructor(private lcuConnectionService: LCUConnectionService, private version: VersionService, private championService: ChampionService) {
   }
 
   ngOnInit(): void {
@@ -94,19 +98,29 @@ export class ChampionPurchaseDateComponent implements OnInit {
         return;
       }
 
+      const hasClassicChampions = champions.some(champion => champion && isClassicChampionKey(Number(champion.id)));
+      const classicData = hasClassicChampions
+        ? await firstValueFrom(this.championService.getClassicChampionData()).catch(() => null)
+        : null;
+
       const ownedChamps = [];
       for (const champion of champions) {
         if (!champion || !champion.ownership || !champion.ownership.owned) continue;
 
+        const isClassic = isClassicChampionKey(Number(champion.id));
         const o = {
-          alt: this.getDataDragonAlias(champion.alias),
-          name: this.displayChampionName(champion, champion.alias),
+          alt: isClassic ? String(champion.alias || champion.id) : this.getDataDragonAlias(champion.alias),
+          name: isClassic
+            ? `Classic ${this.displayChampionName(champion, champion.alias)}`
+            : this.displayChampionName(champion, champion.alias),
           purchased: this.formatPurchaseDate(champion.purchased),
           purchasedHidden: Number(champion.purchased) || 0,
           skins: [],
           iconSrc: ''
         };
-        o.iconSrc = `https://ddragon.leagueoflegends.com/cdn/${this.currentVersion}/img/champion/${o.alt}.png`;
+        o.iconSrc = isClassic
+          ? communityDragonAssetUrl(champion.squarePortraitPath || `v1/champion-icons/${Number(champion.id)}.png`, classicData ? classicData.branch : 'latest')
+          : `https://ddragon.leagueoflegends.com/cdn/${this.currentVersion}/img/champion/${o.alt}.png`;
 
         const skins = Array.isArray(champion.skins) ? champion.skins : [];
         for (let j = 1; j < skins.length; j++) {

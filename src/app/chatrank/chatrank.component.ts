@@ -5,6 +5,7 @@ import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection
 import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
 import {PresenceAutomationService, PresenceAutomationState} from '../core/services/presence-automation/presence-automation.service';
 import {LcuEventsService, LcuEventState} from '../core/services/lcu-events/lcu-events.service';
+import {CLASSIC_RANKED_QUEUE, CLASSIC_RANKED_TIERS, CLASSIC_TIERS_WITHOUT_DIVISION, isClassicRankedQueue} from '../core/classic';
 import {Observable} from 'rxjs';
 
 const CHALLENGE_CRYSTAL_POINT_THRESHOLDS: Record<string, number> = {
@@ -28,10 +29,12 @@ const CHALLENGE_CRYSTAL_POINT_THRESHOLDS: Record<string, number> = {
 })
 export class ChatrankComponent implements OnInit {
   public ranks = ["UNRANKED", "IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "EMERALD", "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"];
+  public classicRanks = CLASSIC_RANKED_TIERS;
   public challengeLevels = ["NONE", "IRON", "BRONZE", "SILVER", "GOLD", "PLATINUM", "DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"];
   public divisions = ["I", "II", "III", "IV"];
   public queues = [
     {label: "Ranked Solo/Duo", value: "RANKED_SOLO_5x5"},
+    {label: "League Classic Rank", value: CLASSIC_RANKED_QUEUE},
     {label: "Ranked Flex", value: "RANKED_FLEX_SR"},
     {label: "Ranked 5V5", value: "RANKED_PREMADE_5x5"},
     {label: "Ranked TFT", value: "RANKED_TFT"},
@@ -70,11 +73,17 @@ export class ChatrankComponent implements OnInit {
     }
     const normalizedRank = this.rank.toUpperCase();
     const normalizedDivision = this.usesDivision(normalizedRank) && this.division ? this.division : undefined;
-    const lol: Record<string, unknown> = {
-      rankedLeagueQueue: this.queue,
-      rankedLeagueTier: normalizedRank,
-      rankedLeagueDivision: normalizedDivision,
-    };
+    const lol: Record<string, unknown> = this.isClassicQueue()
+      ? {
+        classicRankedLeagueQueue: this.queue,
+        classicRankedLeagueTier: normalizedRank,
+        classicRankedLeagueDivision: normalizedDivision,
+      }
+      : {
+        rankedLeagueQueue: this.queue,
+        rankedLeagueTier: normalizedRank,
+        rankedLeagueDivision: normalizedDivision,
+      };
     const body = {
       lol,
     };
@@ -96,8 +105,21 @@ export class ChatrankComponent implements OnInit {
     return String(this.rank || '').toUpperCase() === 'UNRANKED';
   }
 
+  public isClassicQueue(): boolean {
+    return isClassicRankedQueue(this.queue);
+  }
+
+  public get availableRanks(): string[] {
+    return this.isClassicQueue() ? this.classicRanks : this.ranks;
+  }
+
   public requiresDivision(): boolean {
     return this.usesDivision(this.rank);
+  }
+
+  public syncQueueInputs(): void {
+    if (this.rank && this.availableRanks.indexOf(String(this.rank).toUpperCase()) < 0) this.rank = '';
+    this.syncChatRankInputs();
   }
 
   public syncChatRankInputs(): void {
@@ -105,7 +127,10 @@ export class ChatrankComponent implements OnInit {
   }
 
   private usesDivision(rank: string): boolean {
-    return ['MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED'].indexOf(String(rank || '').toUpperCase()) < 0;
+    const tiersWithoutDivision = this.isClassicQueue()
+      ? CLASSIC_TIERS_WITHOUT_DIVISION
+      : ['MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED'];
+    return tiersWithoutDivision.indexOf(String(rank || '').toUpperCase()) < 0;
   }
 
   public setChallengeRank(): void {

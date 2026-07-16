@@ -19,11 +19,31 @@ img {
 
 .search-champion {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
+  gap: 0 1rem;
   min-height: 7rem;
   margin-bottom: 1rem;
   padding: 1.25rem 1.5rem;
+}
+
+.roster-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.roster-filter {
+  min-width: 7rem;
+  height: 2.75rem;
+  padding: 0 1rem;
+  white-space: nowrap;
+}
+
+.roster-filter.active {
+  border-color: rgba(94, 197, 255, 0.9);
+  background: rgba(26, 68, 96, 0.7);
+  color: #dff6ff;
 }
 
 .search-champion.browsing-skins {
