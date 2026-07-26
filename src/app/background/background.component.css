@@ -144,6 +144,43 @@ img {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
 }
 
+.bonus-button {
+  width: 264px !important;
+  height: 180px !important;
+  background: #0e1419;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.bonus-button img {
+  object-position: center center;
+  transition: transform 180ms ease, filter 180ms ease, opacity 160ms ease-in;
+}
+
+.bonus-button:hover img {
+  transform: scale(1.025);
+  filter: saturate(1.05) brightness(1.04);
+}
+
+.bonus-button[disabled] {
+  opacity: 0.72;
+  cursor: wait;
+  transform: none;
+}
+
+.bonus-name {
+  opacity: 1;
+  transform: translateY(0);
+  padding: 1.1rem 0.55rem 0.45rem;
+  font-size: 0.8rem;
+}
+
+.bonus-note {
+  max-width: 52rem;
+  margin: 0 auto 1rem;
+  color: #c7dced;
+  text-align: center;
+}
+
 .skin-button img {
   object-position: center center;
   transition: transform 180ms ease, filter 180ms ease, opacity 160ms ease-in;

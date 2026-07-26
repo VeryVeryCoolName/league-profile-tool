@@ -1,31 +1,26 @@
 import {Component, OnDestroy, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import {DialogComponent} from "../core/dialog/dialog.component";
 import {MatDialog} from "@angular/material/dialog";
-import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection.service";
 import {ChampionService} from "../core/services/champion/champion.service";
+import {VersionService} from "../core/services/version/version.service";
 import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
+import {IconAutomationService} from "../core/services/icon-automation/icon-automation.service";
+import {IconOwnershipState, ProfileIconService} from "../core/services/profile-icon/profile-icon.service";
 import {ConnectorService} from "../core/services/connector/connector.service";
 import {Subscription} from "rxjs";
-import {COMMUNITY_DRAGON_LIVE_BRANCH, communityDragonUrl} from "../core/community-dragon";
-
-type IconUpdateStatus = 'updated' | 'accepted' | 'failed';
-type IconOwnershipState = 'owned' | 'not-owned' | 'unknown';
+import {COMMUNITY_DRAGON_LIVE_BRANCH} from "../core/community-dragon";
+import {cnIconAssetUrl, profileIconImageUrl} from "../core/cn-icons";
 
 interface CustomIconRecord extends Record<string, unknown> {
   id?: unknown;
   title?: unknown;
   branch?: unknown;
+  cnExclusive?: boolean;
   src?: string;
   broken?: boolean;
   owned?: boolean;
   ownershipLabel?: string;
   ownershipState?: IconOwnershipState;
-}
-
-interface IconUpdateResult {
-  success: boolean;
-  status: IconUpdateStatus;
-  response?: any;
 }
 
 @Component({
@@ -36,10 +31,6 @@ interface IconUpdateResult {
     standalone: false
 })
 export class CustomiconComponent implements OnInit, OnDestroy {
-  private static ownedIconIdsCache: Set<number> | null = null;
-  private static inventoryLoaded = false;
-  private static inventoryPromise: Promise<Set<number> | null> | null = null;
-
   public searchKeyword = '';
   public allIcons: CustomIconRecord[] = [];
   public filteredIcons: CustomIconRecord[] = [];
@@ -53,23 +44,52 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   public selectionNote = '';
   public updatingIconId: number | null = null;
   public selectedIconId: number | null = null;
+  public autoReapplyIcon = false;
+  public autoReapplyIconId: number | null = null;
+  private dataDragonVersion = '';
   private connectorSubscription: Subscription | null = null;
+  private versionSubscription: Subscription | null = null;
   private iconSubscription: Subscription | null = null;
   private previewSubscription: Subscription;
+  private automationSubscription: Subscription;
 
   constructor(
     public dialog: MatDialog,
-    private lcuConnectionService: LCUConnectionService,
     private championData: ChampionService,
+    private version: VersionService,
     private identityPreviewService: IdentityPreviewService,
+    private profileIconService: ProfileIconService,
+    private iconAutomationService: IconAutomationService,
     private connector: ConnectorService
   ) {
     this.previewSubscription = this.identityPreviewService.state$.subscribe(state => {
       this.selectedIconId = state.profileIconId;
     });
+    this.automationSubscription = this.iconAutomationService.state$.subscribe(state => {
+      this.autoReapplyIcon = state.autoReapply;
+      this.autoReapplyIconId = state.desiredIconId;
+    });
   }
 
   ngOnInit(): void {
+    this.versionSubscription = this.version.apiVersion().subscribe(versions => {
+      this.dataDragonVersion = versions && versions.length ? versions[0] : '';
+      this.loadIcons();
+    }, () => {
+      this.loadIcons();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.connectorSubscription) this.connectorSubscription.unsubscribe();
+    if (this.versionSubscription) this.versionSubscription.unsubscribe();
+    if (this.iconSubscription) this.iconSubscription.unsubscribe();
+    if (this.previewSubscription) this.previewSubscription.unsubscribe();
+    if (this.automationSubscription) this.automationSubscription.unsubscribe();
+  }
+
+  private loadIcons(): void {
+    if (this.iconSubscription) return;
     this.iconSubscription = this.championData.getAllSummonerIcons().subscribe(icons => {
       this.allIcons = (icons as CustomIconRecord[])
         .filter(icon => icon && icon.id !== undefined && icon.id !== null)
@@ -77,9 +97,10 @@ export class CustomiconComponent implements OnInit, OnDestroy {
         .map(icon => {
           return this.withOwnershipMetadata({
             ...icon,
-            src: communityDragonUrl(
+            src: profileIconImageUrl(
+              Number(icon.id),
               typeof icon.branch === 'string' && icon.branch ? icon.branch : COMMUNITY_DRAGON_LIVE_BRANCH,
-              `v1/profile-icons/${String(icon.id)}.jpg`
+              this.dataDragonVersion
             ),
             broken: false
           });
@@ -92,12 +113,6 @@ export class CustomiconComponent implements OnInit, OnDestroy {
       this.iconsLoading = false;
       this.iconsError = 'Could not load summoner icons.';
     });
-  }
-
-  ngOnDestroy(): void {
-    if (this.connectorSubscription) this.connectorSubscription.unsubscribe();
-    if (this.iconSubscription) this.iconSubscription.unsubscribe();
-    if (this.previewSubscription) this.previewSubscription.unsubscribe();
   }
 
   private refreshIconView(): void {
@@ -128,10 +143,14 @@ export class CustomiconComponent implements OnInit, OnDestroy {
     this.resetIconLimit();
   }
 
+  public toggleAutoReapplyIcon(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.iconAutomationService.setAutoReapply(!!target.checked);
+  }
+
   public get canFilterOwnedIcons(): boolean {
-    return CustomiconComponent.inventoryLoaded
-      && !!CustomiconComponent.ownedIconIdsCache
-      && CustomiconComponent.ownedIconIdsCache.size > 0;
+    const ownedIconIds = this.profileIconService.ownedIconIdsSnapshot;
+    return this.profileIconService.inventoryLoaded && !!ownedIconIds && ownedIconIds.size > 0;
   }
 
   public loadMoreIcons(): void {
@@ -140,12 +159,23 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   }
 
   public onIconError(icon: CustomIconRecord): void {
+    const fallback = cnIconAssetUrl(Number(icon.id));
+    if (icon.cnExclusive && icon.src !== fallback) {
+      icon.src = fallback;
+      return;
+    }
     icon.broken = true;
   }
 
   public isSelectedIcon(icon: CustomIconRecord): boolean {
     if (this.selectedIconId === null) return false;
     return Number(icon && icon.id) === this.selectedIconId;
+  }
+
+  public iconTooltip(icon: CustomIconRecord): string {
+    const name = String(icon.title || icon.id || '');
+    const base = `${name} - ${icon.ownershipLabel || 'Unknown'}`;
+    return icon.cnExclusive ? `${base} - CN exclusive` : base;
   }
 
   public async setIcon(id: unknown): Promise<void> {
@@ -158,25 +188,19 @@ export class CustomiconComponent implements OnInit, OnDestroy {
     }
     if (this.updatingIconId !== null) return;
 
-    const selectedOwnership = this.iconOwnershipStateById(iconId);
+    const selectedOwnership = this.profileIconService.ownershipStateFor(iconId);
     this.selectedIconId = iconId;
     this.updatingIconId = iconId;
     this.selectionNote = 'Applying icon...';
 
     try {
-      const accountResult = await this.setAccountProfileIcon(iconId);
-      const chatResult = await this.setSocialProfileIcon(iconId);
-
-      if (chatResult.success) {
-        this.identityPreviewService.applyProfileIcon(iconId);
-        if (chatResult.status === 'updated') await this.identityPreviewService.refreshPreview();
-      }
+      const outcome = await this.profileIconService.applyIcon(iconId);
 
       this.selectionNote = selectedOwnership === 'not-owned'
         ? 'Unowned icons may only affect the social/profile-card icon.'
         : '';
 
-      const message = this.iconUpdateMessage(accountResult, chatResult, selectedOwnership);
+      const message = this.profileIconService.applyMessage(outcome, selectedOwnership);
       this.dialog.open(DialogComponent, {
         data: {
           title: message.title,
@@ -194,45 +218,8 @@ export class CustomiconComponent implements OnInit, OnDestroy {
     return 'Unknown';
   }
 
-  private iconOwnershipStateById(iconId: number): IconOwnershipState {
-    if (isNaN(iconId) || !CustomiconComponent.inventoryLoaded || !CustomiconComponent.ownedIconIdsCache) {
-      return 'unknown';
-    }
-    return CustomiconComponent.ownedIconIdsCache.has(iconId) ? 'owned' : 'not-owned';
-  }
-
-  private async setAccountProfileIcon(iconId: number): Promise<IconUpdateResult> {
-    const response = await this.lcuConnectionService.requestCustomAPI(
-      {profileIconId: iconId},
-      'PUT',
-      '/lol-summoner/v1/current-summoner/icon'
-    );
-    if (this.responseContainsError(response)) return {success: false, status: 'failed', response};
-
-    const success = await this.verifyProfileIconId('/lol-summoner/v1/current-summoner', 'profileIconId', iconId);
-    return {success, status: success ? 'updated' : 'accepted', response};
-  }
-
-  private async setSocialProfileIcon(iconId: number): Promise<IconUpdateResult> {
-    const response = await this.lcuConnectionService.requestSendNoVerify({icon: iconId}, 'PUT', 'lolChat');
-    if (response !== 'Success') {
-      return {
-        success: false,
-        status: 'failed',
-        response
-      };
-    }
-
-    const verified = await this.verifyProfileIconId('/lol-chat/v1/me', 'icon', iconId);
-    return {
-      success: true,
-      status: verified ? 'updated' : 'accepted',
-      response
-    };
-  }
-
   private queueOwnedIconInventoryLoad(): void {
-    if (CustomiconComponent.inventoryLoaded) {
+    if (this.profileIconService.inventoryLoaded) {
       this.syncInventoryUiState();
       return;
     }
@@ -241,7 +228,7 @@ export class CustomiconComponent implements OnInit, OnDestroy {
       if (!this.connectorSubscription) {
         this.connectorSubscription = this.connector.ready$.subscribe(ready => {
           if (!ready) return;
-          this.loadOwnedIconInventoryOnce();
+          void this.loadOwnedIconInventory();
           this.connectorSubscription.unsubscribe();
           this.connectorSubscription = null;
         });
@@ -249,42 +236,19 @@ export class CustomiconComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.loadOwnedIconInventoryOnce();
+    void this.loadOwnedIconInventory();
   }
 
-  private async loadOwnedIconInventoryOnce(): Promise<void> {
+  private async loadOwnedIconInventory(): Promise<void> {
     this.inventoryLoading = true;
-
-    if (CustomiconComponent.inventoryPromise === null) {
-      CustomiconComponent.inventoryPromise = this.fetchOwnedIconInventory();
-    }
-
-    try {
-      CustomiconComponent.ownedIconIdsCache = await CustomiconComponent.inventoryPromise;
-      CustomiconComponent.inventoryLoaded = true;
-    } catch (error) {
-      console.error('[LCU] failed to load owned icon inventory', error);
-      CustomiconComponent.inventoryPromise = null;
-      CustomiconComponent.ownedIconIdsCache = null;
-      CustomiconComponent.inventoryLoaded = false;
-    } finally {
-      this.syncInventoryUiState();
-    }
-  }
-
-  private async fetchOwnedIconInventory(): Promise<Set<number> | null> {
-    const response = await this.lcuConnectionService.requestCustomAPI(
-      {},
-      'GET',
-      '/lol-inventory/v2/inventory/SUMMONER_ICON'
-    );
-    const inventory = this.parseResponse(response);
-    return Array.isArray(inventory) ? this.extractOwnedIconIds(inventory) : null;
+    await this.profileIconService.loadOwnedIconIds();
+    this.syncInventoryUiState();
   }
 
   private syncInventoryUiState(): void {
     this.inventoryLoading = false;
-    this.inventoryUnavailable = !CustomiconComponent.ownedIconIdsCache || CustomiconComponent.ownedIconIdsCache.size === 0;
+    const ownedIconIds = this.profileIconService.ownedIconIdsSnapshot;
+    this.inventoryUnavailable = !ownedIconIds || ownedIconIds.size === 0;
     if (!this.canFilterOwnedIcons) this.ownedOnly = false;
     this.applyOwnershipMetadata();
   }
@@ -295,139 +259,13 @@ export class CustomiconComponent implements OnInit, OnDestroy {
   }
 
   private withOwnershipMetadata(icon: CustomIconRecord): CustomIconRecord {
-    const ownershipState = this.iconOwnershipStateById(Number(icon.id));
+    const ownershipState = this.profileIconService.ownershipStateFor(Number(icon.id));
     return {
       ...icon,
       owned: ownershipState === 'owned',
       ownershipState,
       ownershipLabel: this.ownershipLabelForState(ownershipState)
     };
-  }
-
-  private extractOwnedIconIds(inventory: Array<Record<string, unknown>>): Set<number> {
-    const iconIds = new Set<number>();
-    inventory.forEach(item => {
-      if (!this.isOwnedInventoryItem(item)) return;
-      this.inventoryIconIds(item).forEach(iconId => iconIds.add(iconId));
-    });
-    return iconIds;
-  }
-
-  private isOwnedInventoryItem(item: Record<string, unknown>): boolean {
-    if (item.owned === true || item.isOwned === true || item.ownershipType === 'OWNED') return true;
-    const ownedQuantity = Number(item.ownedQuantity);
-    if (!isNaN(ownedQuantity) && ownedQuantity > 0) return true;
-    const ownedCount = Number(item.ownedCount);
-    if (!isNaN(ownedCount) && ownedCount > 0) return true;
-    const quantity = Number(item.quantity);
-    if (!isNaN(quantity) && quantity > 0) return true;
-    return false;
-  }
-
-  private inventoryIconIds(item: Record<string, unknown>): number[] {
-    const candidateKeys = ['itemId', 'itemID', 'id', 'iconId', 'profileIconId', 'summonerIconId'];
-    const ids: number[] = [];
-    candidateKeys.forEach(key => {
-      const parsed = Number(item[key]);
-      if (!isNaN(parsed)) ids.push(parsed);
-    });
-    return ids;
-  }
-
-  private iconUpdateMessage(
-    accountResult: IconUpdateResult,
-    chatResult: IconUpdateResult,
-    selectedOwnership: IconOwnershipState
-  ): {title: string; body: string} {
-    if (accountResult.success && chatResult.success && accountResult.status === 'updated' && chatResult.status === 'updated') {
-      return {title: 'Success', body: 'Icon updated.'};
-    }
-    if (chatResult.success) {
-      if (chatResult.status === 'accepted') {
-        return {
-          title: 'Success',
-          body: 'Icon update request accepted. League may take a moment to refresh the profile card.'
-        };
-      }
-      if (selectedOwnership === 'not-owned') {
-        return {
-          title: 'Success',
-          body: 'Social/profile icon updated.'
-        };
-      }
-      if (accountResult.status === 'accepted') {
-        return {
-          title: 'Success',
-          body: 'Social/profile icon updated. Account icon request was accepted, but League has not refreshed it yet.'
-        };
-      }
-      return {
-        title: 'Success',
-        body: `Social/profile icon updated. Account icon was not changed by Riot. ${this.summarizeResponse(accountResult.response)}`
-      };
-    }
-    if (accountResult.success) {
-      return {
-        title: 'Error',
-        body: `Account icon updated, but the social/profile card icon did not update. ${this.summarizeResponse(chatResult.response)}`
-      };
-    }
-    return {
-      title: 'Error',
-      body: `Icon update failed. ${this.summarizeResponse(chatResult.response || accountResult.response)}`
-    };
-  }
-
-  private parseResponse(response: any): any {
-    if (typeof response !== 'string') return response || {};
-    try {
-      return JSON.parse(response);
-    } catch (error) {
-      return {};
-    }
-  }
-
-  private responseContainsError(response: any): boolean {
-    if (response === undefined || response === null) return true;
-    if (response === '') return false;
-    if (typeof response === 'string') {
-      const parsed = this.parseResponse(response);
-      return response.indexOf('failed:') >= 0 || response.indexOf('errorCode') >= 0 || !!parsed.errorCode;
-    }
-    return !!response.errorCode;
-  }
-
-  private async verifyProfileIconId(path: string, field: string, iconId: number): Promise<boolean> {
-    for (let attempt = 0; attempt < 6; attempt++) {
-      if (attempt > 0) await this.delay(350);
-      const response = await this.lcuConnectionService.requestCustomAPI({}, 'GET', path);
-      const current = this.parseResponse(response);
-      if (this.numberMatches(current && current[field], iconId)) return true;
-    }
-    return false;
-  }
-
-  private numberMatches(actual: unknown, expected: number): boolean {
-    const parsed = Number(actual);
-    return !isNaN(parsed) && parsed === expected;
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  private summarizeResponse(response: any): string {
-    if (!response) return '';
-    if (typeof response === 'string') return response.length > 180 ? `${response.slice(0, 180)}...` : response;
-    const parsed = response as Record<string, unknown>;
-    const message = parsed.message || parsed.errorCode;
-    if (message) return String(message);
-    try {
-      const serialized = JSON.stringify(response);
-      return serialized.length > 180 ? `${serialized.slice(0, 180)}...` : serialized;
-    } catch (error) {
-      return String(response);
-    }
   }
 
   public trackByIcon(_index: number, icon: CustomIconRecord): unknown {

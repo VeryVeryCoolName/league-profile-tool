@@ -53,8 +53,7 @@ h3 {
 }
 
 .ready-pill,
-.phase-pill,
-.state-chip {
+.phase-pill {
   display: inline-flex;
   align-items: center;
   min-height: 1.85rem;
@@ -68,8 +67,7 @@ h3 {
   white-space: nowrap;
 }
 
-.ready-pill.active,
-.state-chip.enabled {
+.ready-pill.active {
   border-color: rgba(245, 200, 107, 0.4);
   color: var(--warning);
 }

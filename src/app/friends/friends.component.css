@@ -34,7 +34,6 @@
 .friends-page-header p,
 .link-header p,
 .link-message,
-.action-hint,
 .loading-text {
   color: var(--muted);
 }
@@ -244,10 +243,10 @@
 }
 
 .friend-card {
-  display: grid;
-  grid-template-rows: auto auto 1fr auto auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
   min-width: 0;
-  min-height: 17.5rem;
   padding: 1rem;
   overflow: hidden;
   background: var(--surface-raised);
@@ -347,18 +346,25 @@
 }
 
 .friend-title h3 {
+  display: -webkit-box;
   margin: 0;
+  overflow: hidden;
   color: var(--text);
-  font-size: 1.08rem;
-  line-height: 1.22;
+  font-size: 1.05rem;
+  line-height: 1.25;
   overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .friend-title p {
-  margin: 0.3rem 0 0;
+  margin: 0.25rem 0 0;
+  overflow: hidden;
   color: var(--muted);
+  font-size: 0.88rem;
   line-height: 1.25;
-  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .badge-row {
@@ -366,7 +372,7 @@
   flex-wrap: wrap;
   gap: 0.45rem;
   align-content: start;
-  margin-top: 0.9rem;
+  min-height: 1.55rem;
 }
 
 .badge {
@@ -398,45 +404,15 @@
   color: #bdf8cf;
 }
 
-.badge.muted {
-  border-color: var(--line);
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--muted);
-}
-
-.friend-group {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin: 1rem 0;
-  padding: 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--surface-soft);
-}
-
-.friend-group span {
-  color: #9fd3ff;
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.friend-group strong {
-  color: var(--text);
-  overflow-wrap: anywhere;
-  text-align: right;
-}
-
 .card-actions {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.7rem;
   margin-top: auto;
 }
 
 .card-actions button {
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 2.45rem;
 }
 
@@ -448,11 +424,6 @@
 .danger-action:not(:disabled):hover {
   background: rgba(255, 146, 155, 0.1);
   border-color: rgba(255, 146, 155, 0.7);
-}
-
-.action-hint {
-  margin: 0.75rem 0 0;
-  font-size: 0.8rem;
 }
 
 .load-more {

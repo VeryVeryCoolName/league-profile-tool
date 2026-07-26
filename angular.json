@@ -26,6 +26,11 @@
               },
               {
                 "glob": "*.png",
+                "input": "src/assets/cn-icons",
+                "output": "assets/cn-icons"
+              },
+              {
+                "glob": "*.png",
                 "input": "src/assets/appx",
                 "output": "appx"
               }

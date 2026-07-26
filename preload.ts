@@ -14,6 +14,12 @@ interface LcuEventConnectionOptions {
   authorization?: string;
 }
 
+interface LcuEventBridgeState {
+  connected: boolean;
+  connecting: boolean;
+  message: string;
+}
+
 interface ClientInstallInfo {
   path: string;
   label: string;
@@ -22,10 +28,10 @@ interface ClientInstallInfo {
 }
 
 type LcuEventCallback = (event: unknown) => void;
-type LcuEventStateCallback = (state: {connected: boolean; message: string}) => void;
+type LcuEventStateCallback = (state: LcuEventBridgeState) => void;
 
 let eventListener: ((_event: Electron.IpcRendererEvent, payload: unknown) => void) | null = null;
-let stateListener: ((_event: Electron.IpcRendererEvent, state: {connected: boolean; message: string}) => void) | null = null;
+let stateListener: ((_event: Electron.IpcRendererEvent, state: LcuEventBridgeState) => void) | null = null;
 
 function clearLcuEventListeners(): void {
   if (eventListener) ipcRenderer.removeListener('lpt:events-data', eventListener);

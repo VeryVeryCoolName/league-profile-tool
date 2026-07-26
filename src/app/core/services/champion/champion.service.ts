@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {catchError, forkJoin, map, Observable, of, shareReplay, switchMap, tap, throwError} from 'rxjs';
 import {CLASSIC_DATA_BRANCHES, isClassicChampionKey} from '../../classic';
+import {CN_EXCLUSIVE_SUMMONER_ICONS, CN_ICON_BRANCH, isCnExclusiveIconId} from '../../cn-icons';
 import {COMMUNITY_DRAGON_BRANCHES, COMMUNITY_DRAGON_LIVE_BRANCH, communityDragonUrl} from '../../community-dragon';
 
 export interface ChampionManifest {
@@ -126,8 +127,13 @@ export class ChampionService {
               const id = Number(icon && icon.id);
               if (isNaN(id) || seen.has(id)) return;
               seen.add(id);
-              merged.push({...icon, branch});
+              merged.push({...icon, branch, cnExclusive: isCnExclusiveIconId(id)});
             });
+          });
+          CN_EXCLUSIVE_SUMMONER_ICONS.forEach(icon => {
+            if (seen.has(icon.id)) return;
+            seen.add(icon.id);
+            merged.push({id: icon.id, title: icon.title, branch: CN_ICON_BRANCH, cnExclusive: true});
           });
           return merged;
         }),

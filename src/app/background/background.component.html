@@ -2,8 +2,8 @@
   <section class="tool-panel search-champion" [class.browsing-skins]="showingSkins">
     @if (!showingSkins) {
       <mat-form-field>
-        <mat-label>Search for a champion</mat-label>
-        <input matInput name="search" [(ngModel)]="searchText" (ngModelChange)="resetChampionLimit()" placeholder="Ex. Ahri">
+        <mat-label>{{searchFieldLabel}}</mat-label>
+        <input matInput name="search" [(ngModel)]="searchText" (ngModelChange)="refreshChampionView()" [placeholder]="searchFieldPlaceholder">
       </mat-form-field>
       @if (availableRosters.length > 1) {
         <div class="roster-toggle">
@@ -26,12 +26,38 @@
     }
   </section>
 
-  @if (!showingSkins) {
+  @if (!showingSkins && activeRoster === 'bonus') {
+    <p class="bonus-note">These backgrounds are hidden from the normal picker. Each one shows only while a summoner icon you own is equipped for it, so applying one also equips that icon and resets your skin background.</p>
+    <div class="asset-grid bonus-grid">
+      @for (bonus of filteredBonusBackgrounds; track trackByBonus($index, bonus)) {
+        <span class="bonusBackground">
+          @if (!bonus.broken) {
+            <button
+              class="image-button bonus-button"
+              [class.active]="isSelectedBonus(bonus)"
+              mat-stroked-button
+              [disabled]="applyingBonusKey !== null"
+              [attr.aria-label]="'Apply bonus background ' + bonus.title"
+              [attr.aria-pressed]="isSelectedBonus(bonus)"
+              [attr.title]="bonus.title"
+              (click)="applyBonusBackground(bonus)">
+              @if (!bonus.loaded) {
+                <span class="image-placeholder"></span>
+              }
+              <img [class.loaded]="bonus.loaded" [src]="bonus.src" [alt]="bonus.title" loading="lazy" decoding="async" (load)="onImageLoad(bonus)" (error)="onImageError($event, bonus)"/>
+              <span class="skin-name bonus-name">{{bonus.title}}</span>
+            </button>
+          }
+        </span>
+      }
+    </div>
+  }
+  @if (!showingSkins && activeRoster !== 'bonus') {
     <div class="asset-grid champion-grid">
       @if (championsLoading) {
         <p class="loading-text">Loading champions...</p>
       }
-      @for (champion of visibleChampionImages; track trackByAlt($index, champion)) {
+      @for (champion of filteredChampionImages; track trackByAlt($index, champion)) {
         <span class="champions">
           @if (!champion.broken) {
             <button

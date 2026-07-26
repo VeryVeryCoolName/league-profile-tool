@@ -1,7 +1,7 @@
 import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, Observable, Subject, Subscription} from 'rxjs';
 import {ConnectorService} from '../connector/connector.service';
-import {ElectronService} from '../electron/electron.service';
+import {ElectronService, LcuEventBridgeState} from '../electron/electron.service';
 
 export interface LcuJsonApiEvent {
   uri: string;
@@ -48,7 +48,7 @@ export class LcuEventsService implements OnDestroy {
       if (ready) {
         this.manuallyClosed = false;
         void this.connect();
-      } else {
+      } else if (this.connectionActive || this.stateSubject.value.connecting) {
         void this.closeConnection('LCU disconnected');
       }
     });
@@ -67,27 +67,40 @@ export class LcuEventsService implements OnDestroy {
     this.clearReconnectTimer();
     this.patchState({connecting: true, message: 'Connecting to LCU events'});
     const authorization = this.connector.connector.headers?.Authorization;
+    let settled = false;
 
     try {
       await this.electronService.connectLcuEvents(
         {url: this.connector.connector.url, authorization},
         event => this.handleBridgeEvent(event),
-        state => this.handleBridgeState(state)
+        state => {
+          if (!state.connecting) settled = true;
+          this.handleBridgeState(state);
+        }
       );
-      this.connectionActive = true;
+      if (!settled) this.connectionActive = true;
     } catch (error) {
       this.handleDisconnected(`Could not connect event socket: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
-  private handleBridgeState(state: {connected: boolean; message: string}): void {
+  private handleBridgeState(state: LcuEventBridgeState): void {
+    if (state.connecting) {
+      this.patchState({connected: false, connecting: true, message: state.message});
+      return;
+    }
+
     this.connectionActive = state.connected;
     this.patchState({
       connected: state.connected,
       connecting: false,
       message: state.message
     });
-    if (!state.connected && !this.manuallyClosed && this.connector.isReady()) this.scheduleReconnect();
+    if (state.connected) {
+      this.clearReconnectTimer();
+      return;
+    }
+    if (!this.manuallyClosed && this.connector.isReady()) this.scheduleReconnect();
   }
 
   private handleBridgeEvent(value: unknown): void {

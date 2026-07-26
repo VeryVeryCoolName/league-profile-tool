@@ -1,6 +1,6 @@
 import 'zone.js';
 import { enableProdMode, provideZoneChangeDetection } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { platformBrowser } from '@angular/platform-browser';
 
 import { AppModule } from './app/app.module';
 import { AppConfig } from './environments/environment';
@@ -10,7 +10,7 @@ export function bootstrapApp(): Promise<unknown> {
     enableProdMode();
   }
 
-  return platformBrowserDynamic().bootstrapModule(AppModule, {
+  return platformBrowser().bootstrapModule(AppModule, {
     applicationProviders: [provideZoneChangeDetection({
       eventCoalescing: true,
       runCoalescing: true

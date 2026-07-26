@@ -6,7 +6,9 @@ import {ChampionService} from '../champion/champion.service';
 import {ConnectorService} from '../connector/connector.service';
 import {LcuEventsService, LcuJsonApiEvent} from '../lcu-events/lcu-events.service';
 import {isClassicChampionKey, isClassicRankedQueue} from '../../classic';
-import {COMMUNITY_DRAGON_LIVE_BRANCH, communityDragonAssetUrl, communityDragonUrl} from '../../community-dragon';
+import {bonusBackdropImageUrl, bonusBackdropVideoUrl, bonusBackgroundForIconId} from '../../bonus-backgrounds';
+import {profileIconImageUrl} from '../../cn-icons';
+import {COMMUNITY_DRAGON_LIVE_BRANCH, communityDragonAssetUrl} from '../../community-dragon';
 
 export interface IdentityPreviewState {
   loaded: boolean;
@@ -255,6 +257,7 @@ export class IdentityPreviewService implements OnDestroy {
   }
 
   public applyProfileIcon(profileIconId: number): void {
+    const backgroundSkinId = this.stateSubject.value.backgroundSkinId;
     this.patchState({
       loaded: true,
       profileIconId,
@@ -265,6 +268,15 @@ export class IdentityPreviewService implements OnDestroy {
     this.resolveProfileIconName(profileIconId).then(profileIconName => {
       if (this.stateSubject.value.profileIconId !== profileIconId) return;
       this.patchState({profileIconName, profileIconUrl: this.profileIconUrl(profileIconId)});
+    });
+    this.resolveEffectiveBackground(backgroundSkinId, profileIconId).then(background => {
+      const current = this.stateSubject.value;
+      if (current.profileIconId !== profileIconId || current.backgroundSkinId !== backgroundSkinId) return;
+      this.patchState({
+        backgroundImageUrl: background.url,
+        backgroundVideoUrl: background.videoUrl,
+        backgroundLabel: background.label
+      });
     });
   }
 
@@ -277,7 +289,7 @@ export class IdentityPreviewService implements OnDestroy {
       backgroundLabel: backgroundSkinId ? `Skin ${backgroundSkinId}` : '',
       updatedAt: new Date().toLocaleTimeString()
     });
-    this.resolveBackground(backgroundSkinId).then(background => {
+    this.resolveEffectiveBackground(backgroundSkinId, this.stateSubject.value.profileIconId).then(background => {
       if (this.stateSubject.value.backgroundSkinId !== backgroundSkinId) return;
       this.patchState({
         backgroundImageUrl: background.url,
@@ -296,7 +308,7 @@ export class IdentityPreviewService implements OnDestroy {
     try {
       const [profileIconName, background] = await Promise.all([
         this.resolveProfileIconName(profileIconId),
-        this.resolveBackground(backgroundSkinId)
+        this.resolveEffectiveBackground(backgroundSkinId, profileIconId)
       ]);
 
       const current = this.stateSubject.value;
@@ -389,6 +401,20 @@ export class IdentityPreviewService implements OnDestroy {
     const name = this.stringFrom(summoner && summoner.gameName, this.stringFrom(summoner && summoner.displayName, ''));
     const tagLine = this.stringFrom(summoner && summoner.tagLine, '');
     return name ? `name:${name}#${tagLine}` : '';
+  }
+
+  private async resolveEffectiveBackground(backgroundSkinId: number | null, profileIconId: number | null): Promise<{url: string; videoUrl: string; label: string}> {
+    if (!backgroundSkinId && profileIconId !== null) {
+      const bonusBackground = bonusBackgroundForIconId(profileIconId);
+      if (bonusBackground) {
+        return {
+          url: bonusBackdropImageUrl(profileIconId),
+          videoUrl: bonusBackdropVideoUrl(bonusBackground, profileIconId),
+          label: `${bonusBackground.title} (Bonus)`
+        };
+      }
+    }
+    return this.resolveBackground(backgroundSkinId);
   }
 
   private async resolveBackground(backgroundSkinId: number | null): Promise<{url: string; videoUrl: string; label: string}> {
@@ -503,6 +529,7 @@ export class IdentityPreviewService implements OnDestroy {
   private async ensureProfileIconMap(): Promise<void> {
     if (Object.keys(this.profileIconsById).length > 0) return;
 
+    await this.ensureVersion();
     const icons: any = await firstValueFrom(this.championService.getAllSummonerIcons());
     const nextMap: Record<number, {name: string; branch: string}> = {};
     (icons || []).forEach(icon => {
@@ -527,7 +554,7 @@ export class IdentityPreviewService implements OnDestroy {
   private profileIconUrl(profileIconId: number | null): string {
     if (profileIconId === undefined || profileIconId === null || isNaN(profileIconId)) return '';
     const entry = this.profileIconsById[profileIconId];
-    return communityDragonUrl(entry ? entry.branch : COMMUNITY_DRAGON_LIVE_BRANCH, `v1/profile-icons/${profileIconId}.jpg`);
+    return profileIconImageUrl(profileIconId, entry ? entry.branch : COMMUNITY_DRAGON_LIVE_BRANCH, this.dataDragonVersion);
   }
 
   private availabilityLabel(availability: string, fallback = ''): string {

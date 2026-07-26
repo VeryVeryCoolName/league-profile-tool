@@ -21,6 +21,12 @@ interface EventConnectionOptions {
   authorization?: string;
 }
 
+interface LcuEventBridgeState {
+  connected: boolean;
+  connecting: boolean;
+  message: string;
+}
+
 interface ClientInstall {
   path: string;
   label: string;
@@ -42,6 +48,7 @@ const MAX_REQUEST_BODY_BYTES = 2 * 1024 * 1024;
 const MAX_EVENT_BUFFER_BYTES = 8 * 1024 * 1024;
 const MAX_SETTINGS_BYTES = 256 * 1024;
 const DISCOVERY_TTL_MS = 15000;
+const EVENT_HANDSHAKE_TIMEOUT_MS = 15000;
 const SCRIPT_SRC_POLICY = serve ? "script-src 'self' 'unsafe-eval'" : "script-src 'self'";
 const CONNECT_SRC_POLICY = serve
   ? "connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://ddragon.leagueoflegends.com https://raw.communitydragon.org http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*"
@@ -602,7 +609,7 @@ class LcuEventSocket {
   constructor(
     private readonly options: EventConnectionOptions,
     private readonly emitEvent: (event: unknown) => void,
-    private readonly emitState: (state: {connected: boolean; message: string}) => void
+    private readonly emitState: (state: LcuEventBridgeState) => void
   ) {
   }
 
@@ -622,11 +629,14 @@ class LcuEventSocket {
         this.finish('Invalid LCU event endpoint.');
         return;
       }
-      this.emitState({connected: false, message: 'Connecting to LCU events'});
+      this.emitState({connected: false, connecting: true, message: 'Connecting to LCU events'});
       this.socket = tls.connect({
         host: target.hostname,
         port: Number(target.port),
         rejectUnauthorized: false
+      });
+      this.socket.setTimeout(EVENT_HANDSHAKE_TIMEOUT_MS, () => {
+        if (!this.handshakeComplete) this.finish('LCU event socket handshake timed out');
       });
       this.socket.once('secureConnect', () => this.sendHandshake(target));
       this.socket.on('data', chunk => this.receiveData(chunk));
@@ -663,7 +673,8 @@ class LcuEventSocket {
     this.socket.write(`${lines.join('\r\n')}\r\n\r\n`);
   }
 
-  private receiveData(chunk: Buffer): void {
+  private receiveData(data: string | Buffer): void {
+    const chunk = typeof data === 'string' ? Buffer.from(data, 'utf8') : data;
     if (!this.handshakeComplete) {
       this.handshakeBuffer = Buffer.concat([this.handshakeBuffer, chunk]);
       if (this.handshakeBuffer.length > MAX_EVENT_BUFFER_BYTES) {
@@ -680,7 +691,8 @@ class LcuEventSocket {
         return;
       }
       this.handshakeComplete = true;
-      this.emitState({connected: true, message: 'LCU events connected'});
+      this.socket?.setTimeout(0);
+      this.emitState({connected: true, connecting: false, message: 'LCU events connected'});
       this.sendFrame(Buffer.from(JSON.stringify([5, 'OnJsonApiEvent']), 'utf8'), 1);
       if (remaining.length > 0) this.receiveFrames(remaining);
       return;
@@ -779,7 +791,7 @@ class LcuEventSocket {
   private finish(message: string): void {
     if (this.closed) return;
     this.close();
-    this.emitState({connected: false, message});
+    this.emitState({connected: false, connecting: false, message});
   }
 }
 

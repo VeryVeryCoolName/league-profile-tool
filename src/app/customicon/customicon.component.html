@@ -4,9 +4,25 @@
       <mat-card-title>Note</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <p>Owned icons can update your account icon when Riot accepts them. Any icon can still be applied to your social/profile-card presence and may reset after a client refresh.</p>
+      <p>Riot only accepts owned icons for your account icon. Any other icon can still be applied to your social/profile-card presence, which may reset after a client refresh. Icons marked CN are Chinese-server exclusives and may not display for other players in your region.</p>
     </mat-card-content>
   </mat-card>
+
+  <div class="automation-panel">
+    <label class="automation-toggle">
+      <input type="checkbox" [checked]="autoReapplyIcon" (change)="toggleAutoReapplyIcon($event)">
+      <span>Auto re-apply icon</span>
+    </label>
+    <p class="automation-note">
+      League can reset icons applied here when you get into a game or the client refreshes. This option reapplies your last applied icon automatically.
+      @if (autoReapplyIcon && autoReapplyIconId !== null) {
+        <span class="automation-target">Watching icon {{autoReapplyIconId}}.</span>
+      }
+      @if (autoReapplyIcon && autoReapplyIconId === null) {
+        <span class="automation-target">Apply an icon to start watching it.</span>
+      }
+    </p>
+  </div>
 
   <form class="tool-panel search-panel" (submit)="$event.preventDefault()">
     <mat-form-field>
@@ -52,11 +68,14 @@
               [disabled]="updatingIconId !== null"
               [attr.aria-label]="'Set profile icon to ' + (icon.title || icon.id)"
               [attr.aria-pressed]="isSelectedIcon(icon)"
-              [attr.title]="(icon.title || icon.id) + ' - ' + icon.ownershipLabel"
+              [attr.title]="iconTooltip(icon)"
               (click)="setIcon(icon.id)">
               <img [src]="icon.src" [alt]="icon.title || icon.id" loading="lazy" decoding="async" (error)="onIconError(icon)"/>
               @if (icon.owned) {
                 <span class="owned-badge">Owned</span>
+              }
+              @if (icon.cnExclusive) {
+                <span class="cn-badge">CN</span>
               }
             </button>
           }

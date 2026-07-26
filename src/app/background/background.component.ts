@@ -5,7 +5,9 @@ import {LCUConnectionService} from "../core/services/lcuconnection/lcuconnection
 import {VersionService} from "../core/services/version/version.service";
 import {ChampionService} from "../core/services/champion/champion.service";
 import {IdentityPreviewService} from "../core/services/identity-preview/identity-preview.service";
+import {ProfileIconService} from "../core/services/profile-icon/profile-icon.service";
 import {isClassicChampionKey} from "../core/classic";
+import {BONUS_BACKGROUNDS, BonusBackground, bonusBackgroundImageUrl} from "../core/bonus-backgrounds";
 import {communityDragonAssetUrl} from "../core/community-dragon";
 import {Subscription} from 'rxjs';
 
@@ -25,7 +27,8 @@ export class BackgroundComponent implements OnInit, OnDestroy {
   private championKeys: Record<string, number> = {};
   public rosters = [
     {id: 'modern', label: 'Modern'},
-    {id: 'classic', label: 'Classic'}
+    {id: 'classic', label: 'Classic'},
+    {id: 'bonus', label: 'Bonus'}
   ];
   public activeRoster = this.rosters[0].id;
   public availableRosters: Array<{id: string; label: string}> = [];
@@ -33,7 +36,6 @@ export class BackgroundComponent implements OnInit, OnDestroy {
   public currentVersion: string;
   public championImages = [];
   public filteredChampionImages = [];
-  public visibleChampionImages = [];
   public skinsImages = [];
   public searchText: string;
   public championsLoading = true;
@@ -41,15 +43,21 @@ export class BackgroundComponent implements OnInit, OnDestroy {
   public skinsLoaded = 0;
   public skinsTotal = 0;
   public selectedBackgroundSkinId: number | null = null;
+  public selectedProfileIconId: number | null = null;
+  public bonusBackgrounds: Array<Record<string, unknown>> = [];
+  public filteredBonusBackgrounds: Array<Record<string, unknown>> = [];
+  public applyingBonusKey: string | null = null;
   private previewSubscription: Subscription;
 
-  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private version: VersionService, private championData: ChampionService, private identityPreviewService: IdentityPreviewService) {
+  constructor(public dialog: MatDialog, private lcuConnectionService: LCUConnectionService, private version: VersionService, private championData: ChampionService, private identityPreviewService: IdentityPreviewService, private profileIconService: ProfileIconService) {
     this.previewSubscription = this.identityPreviewService.state$.subscribe(state => {
       this.selectedBackgroundSkinId = state.backgroundSkinId;
+      this.selectedProfileIconId = state.profileIconId;
     });
   }
 
   ngOnInit(): void {
+    this.buildBonusBackgrounds();
     if (BackgroundComponent.cachedChampionImages.length) {
       this.currentVersion = BackgroundComponent.cachedVersion;
       this.championImages = BackgroundComponent.cachedChampionImages;
@@ -275,6 +283,7 @@ export class BackgroundComponent implements OnInit, OnDestroy {
 
   private updateAvailableRosters(): void {
     this.availableRosters = this.rosters.filter(roster => {
+      if (roster.id === 'bonus') return this.bonusBackgrounds.length > 0;
       return this.championImages.some(champion => this.championRoster(champion) === roster.id);
     });
   }
@@ -291,6 +300,12 @@ export class BackgroundComponent implements OnInit, OnDestroy {
 
   public refreshChampionView(): void {
     const search = String(this.searchText || '').trim().toLowerCase();
+    if (this.activeRoster === 'bonus') {
+      this.filteredBonusBackgrounds = search
+        ? this.bonusBackgrounds.filter(bonus => String(bonus.title || '').toLowerCase().indexOf(search) >= 0)
+        : this.bonusBackgrounds;
+      return;
+    }
     const rosterImages = this.championImages.filter(champion => this.championRoster(champion) === this.activeRoster);
     this.filteredChampionImages = search
       ? rosterImages.filter(champion => {
@@ -298,11 +313,6 @@ export class BackgroundComponent implements OnInit, OnDestroy {
           String(champion.alt || '').toLowerCase().indexOf(search) >= 0;
       })
       : rosterImages;
-    this.visibleChampionImages = this.filteredChampionImages;
-  }
-
-  public resetChampionLimit(): void {
-    this.refreshChampionView();
   }
 
   public onImageLoad(image: Record<string, unknown>): void {
@@ -325,6 +335,94 @@ export class BackgroundComponent implements OnInit, OnDestroy {
   public isSelectedSkin(skinId: unknown): boolean {
     if (this.selectedBackgroundSkinId === null) return false;
     return Number(skinId) === this.selectedBackgroundSkinId;
+  }
+
+  public isSelectedBonus(bonus: Record<string, unknown>): boolean {
+    const background = bonus.background as BonusBackground;
+    if (!background) return false;
+    if (this.selectedProfileIconId === null || this.selectedBackgroundSkinId) return false;
+    return background.iconIds.indexOf(this.selectedProfileIconId) >= 0;
+  }
+
+  public get searchFieldLabel(): string {
+    return this.activeRoster === 'bonus' ? 'Search hidden backgrounds' : 'Search for a champion';
+  }
+
+  public get searchFieldPlaceholder(): string {
+    return this.activeRoster === 'bonus' ? 'Ex. All-Star' : 'Ex. Ahri';
+  }
+
+  private buildBonusBackgrounds(): void {
+    this.bonusBackgrounds = BONUS_BACKGROUNDS.map(background => ({
+      background,
+      key: background.key,
+      title: background.title,
+      src: bonusBackgroundImageUrl(background),
+      loaded: false,
+      broken: false
+    }));
+    this.refreshChampionView();
+  }
+
+  public async applyBonusBackground(bonus: Record<string, unknown>): Promise<void> {
+    const background = bonus.background as BonusBackground;
+    if (!background || this.applyingBonusKey !== null) return;
+
+    this.applyingBonusKey = background.key;
+    try {
+      const message = await this.applyBonusIconBackground(background);
+      this.dialog.open(DialogComponent, {
+        data: message
+      });
+    } finally {
+      this.applyingBonusKey = null;
+    }
+  }
+
+  private async applyBonusIconBackground(background: BonusBackground): Promise<{title: string; body: string}> {
+    const ownedIconIds = await this.profileIconService.loadOwnedIconIds();
+    const iconId = ownedIconIds ? background.iconIds.find(id => ownedIconIds.has(id)) : background.iconIds[0];
+    if (iconId === undefined) {
+      return {
+        title: 'Icon not owned',
+        body: `${background.title} needs one of its icons equipped, and this account owns none of them.`
+      };
+    }
+
+    const outcome = await this.profileIconService.applyIcon(iconId);
+    if (!outcome.account.success) {
+      return {
+        title: 'Error',
+        body: `Riot rejected equipping icon ${iconId}, so ${background.title} could not be applied.`
+      };
+    }
+
+    const clearResponse = await this.postBackgroundSkinId(0);
+    const clearedNote = clearResponse === 'Success'
+      ? ''
+      : ' Your skin background could not be reset and will keep overriding it.';
+    return {
+      title: 'Success',
+      body: `${background.title} applied. It shows while icon ${iconId} stays equipped.${clearedNote}`
+    };
+  }
+
+  private async postBackgroundSkinId(value: number): Promise<string> {
+    const body = {
+      key: "backgroundSkinId",
+      value
+    };
+    const response = await this.lcuConnectionService.requestSend(body, 'POST', 'profile');
+    if (response === 'Success') {
+      this.selectedBackgroundSkinId = value;
+      this.identityPreviewService.applyBackgroundSkinId(value);
+      void this.identityPreviewService.refreshPreview();
+    }
+    return String(response);
+  }
+
+  public trackByBonus(_index: number, bonus: Record<string, unknown>): unknown {
+    return bonus.key;
   }
 
   private buildSkinImages(alt: string, skins: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
@@ -545,16 +643,7 @@ export class BackgroundComponent implements OnInit, OnDestroy {
   }
 
   public setBackground(id: string): void {
-    const body = {
-      key: "backgroundSkinId",
-      value: parseInt(id)
-    };
-    this.lcuConnectionService.requestSend(body, 'POST', 'profile').then(response => {
-      if (response === 'Success') {
-        this.selectedBackgroundSkinId = body.value;
-        this.identityPreviewService.applyBackgroundSkinId(body.value);
-        void this.identityPreviewService.refreshPreview();
-      }
+    void this.postBackgroundSkinId(parseInt(id)).then(response => {
       this.dialog.open(DialogComponent, {
         data: {body: response}
       });

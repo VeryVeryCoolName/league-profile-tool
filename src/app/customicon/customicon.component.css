@@ -28,6 +28,42 @@ img {
   gap: 1rem;
 }
 
+.automation-panel {
+  max-width: 50rem;
+  margin: 1rem auto 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(105, 189, 245, 0.16);
+  border-radius: 8px;
+  background: rgba(13, 30, 42, 0.38);
+  text-align: left;
+}
+
+.automation-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  margin: 0;
+  color: #f2f7fb;
+  font-weight: 700;
+}
+
+.automation-toggle input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.automation-note {
+  margin: 0.25rem 0 0;
+  color: #c7dced;
+  font-size: 0.88rem;
+}
+
+.automation-target {
+  color: #aee7ff;
+  font-weight: 700;
+}
+
 .icon-button.mat-stroked-button,
 .icon-button.mat-mdc-outlined-button {
   margin: 0;
@@ -87,6 +123,20 @@ img {
   border-radius: 5px;
   background: rgba(10, 46, 70, 0.92);
   color: #aee7ff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.cn-badge {
+  position: absolute;
+  left: 0.25rem;
+  bottom: 0.25rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 5px;
+  background: rgba(70, 18, 24, 0.92);
+  color: #ffc7cf;
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 1;

@@ -127,8 +127,7 @@ export class FriendsComponent implements OnDestroy {
   public lobbyState = {
     active: false,
     members: [] as any[],
-    memberKeys: new Set<string>(),
-    lobbyFound: false
+    memberKeys: new Set<string>()
   };
 
   public lobbyLink = {
@@ -138,6 +137,7 @@ export class FriendsComponent implements OnDestroy {
     activityId: ''
   };
 
+  private readonly lobbylessPhases = ['none', 'inprogress', 'reconnect', 'waitingforstats', 'preendofgame', 'terminatedinerror'];
   private readonly connectorSubscription: Subscription;
   private readonly removeAnimationMs = 260;
   private readonly removalTimers: Array<ReturnType<typeof setTimeout>> = [];
@@ -191,16 +191,16 @@ export class FriendsComponent implements OnDestroy {
       const [
         friendsResult,
         groupsResult,
-        partyActiveResult
+        phaseResult
       ] = await Promise.all([
         this.fetchValue('/lol-chat/v1/friends'),
         this.fetchValue('/lol-chat/v1/friend-groups'),
-        this.fetchValue('/lol-lobby/v2/party-active')
+        this.fetchValue('/lol-gameflow/v1/gameflow-phase')
       ]);
-      const {lobbyResult, lobbyMembersResult} = await this.fetchLobbyDetailsWhenActive(partyActiveResult);
+      const {lobbyResult, lobbyMembersResult} = await this.fetchLobbyDetailsForPhase(phaseResult);
 
       this.friendGroups = this.mapGroups(groupsResult.value);
-      this.updateLobbyState(lobbyResult.value, lobbyMembersResult.value, partyActiveResult.value);
+      this.updateLobbyState(lobbyResult.value, lobbyMembersResult.value);
       this.updateLobbyLinkMessage();
 
       if (!friendsResult.ok) {
@@ -440,7 +440,7 @@ export class FriendsComponent implements OnDestroy {
     return value;
   }
 
-  private updateLobbyState(lobby: any, lobbyMembers: any, partyActive: any): void {
+  private updateLobbyState(lobby: any, lobbyMembers: any): void {
     const members = Array.isArray(lobbyMembers)
       ? lobbyMembers
       : lobby && Array.isArray(lobby.members)
@@ -451,10 +451,9 @@ export class FriendsComponent implements OnDestroy {
       this.memberKeys(member).forEach(key => memberKeys.add(key));
     });
     this.lobbyState = {
-      active: partyActive === true || !!(lobby && typeof lobby === 'object' && !Array.isArray(lobby) && lobby.gameConfig),
+      active: !!(lobby && typeof lobby === 'object' && !Array.isArray(lobby) && !lobby.errorCode),
       members,
-      memberKeys,
-      lobbyFound: !!(lobby && typeof lobby === 'object' && !Array.isArray(lobby) && !lobby.errorCode)
+      memberKeys
     };
   }
 
@@ -470,9 +469,9 @@ export class FriendsComponent implements OnDestroy {
   }
 
   private async refreshLobbyOnly(): Promise<void> {
-    const partyActiveResult = await this.fetchValue('/lol-lobby/v2/party-active');
-    const {lobbyResult, lobbyMembersResult} = await this.fetchLobbyDetailsWhenActive(partyActiveResult);
-    this.updateLobbyState(lobbyResult.value, lobbyMembersResult.value, partyActiveResult.value);
+    const phaseResult = await this.fetchValue('/lol-gameflow/v1/gameflow-phase');
+    const {lobbyResult, lobbyMembersResult} = await this.fetchLobbyDetailsForPhase(phaseResult);
+    this.updateLobbyState(lobbyResult.value, lobbyMembersResult.value);
     this.updateLobbyLinkMessage();
     this.friends = this.friends.map(friend => this.withInviteState({
       ...friend,
@@ -511,9 +510,9 @@ export class FriendsComponent implements OnDestroy {
     }
   }
 
-  private async fetchLobbyDetailsWhenActive(partyActiveResult: RequestResult): Promise<{lobbyResult: RequestResult; lobbyMembersResult: RequestResult}> {
+  private async fetchLobbyDetailsForPhase(phaseResult: RequestResult): Promise<{lobbyResult: RequestResult; lobbyMembersResult: RequestResult}> {
     const emptyResult = {ok: false, value: null, message: ''};
-    if (partyActiveResult.value !== true) {
+    if (!this.phaseCanHaveLobby(phaseResult)) {
       return {lobbyResult: emptyResult, lobbyMembersResult: emptyResult};
     }
 
@@ -522,6 +521,13 @@ export class FriendsComponent implements OnDestroy {
       this.fetchValue('/lol-lobby/v2/lobby/members')
     ]);
     return {lobbyResult, lobbyMembersResult};
+  }
+
+  private phaseCanHaveLobby(phaseResult: RequestResult): boolean {
+    if (!phaseResult.ok) return true;
+    const phase = this.valueToString(phaseResult.value).trim().toLowerCase();
+    if (!phase) return true;
+    return this.lobbylessPhases.indexOf(phase) < 0;
   }
 
   private mapFriends(friends: any[]): FriendCardView[] {
@@ -769,16 +775,16 @@ export class FriendsComponent implements OnDestroy {
       const [
         friendsResult,
         groupsResult,
-        partyActiveResult
+        phaseResult
       ] = await Promise.all([
         this.fetchValue('/lol-chat/v1/friends'),
         this.fetchValue('/lol-chat/v1/friend-groups'),
-        this.fetchValue('/lol-lobby/v2/party-active')
+        this.fetchValue('/lol-gameflow/v1/gameflow-phase')
       ]);
-      const {lobbyResult, lobbyMembersResult} = await this.fetchLobbyDetailsWhenActive(partyActiveResult);
+      const {lobbyResult, lobbyMembersResult} = await this.fetchLobbyDetailsForPhase(phaseResult);
 
       this.friendGroups = this.mapGroups(groupsResult.value);
-      this.updateLobbyState(lobbyResult.value, lobbyMembersResult.value, partyActiveResult.value);
+      this.updateLobbyState(lobbyResult.value, lobbyMembersResult.value);
       this.updateLobbyLinkMessage();
 
       if (!friendsResult.ok) {

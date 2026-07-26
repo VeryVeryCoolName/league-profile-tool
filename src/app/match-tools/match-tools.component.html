@@ -35,7 +35,6 @@
               <span class="card-eyebrow">Ready Check</span>
               <h3>Auto Accept</h3>
             </div>
-            <span class="state-chip" [class.enabled]="state.autoAcceptEnabled">{{state.autoAcceptEnabled ? 'Enabled' : 'Off'}}</span>
           </div>
           <label class="mode-toggle auto-accept-toggle" [class.active]="state.autoAcceptEnabled">
             <span class="toggle-copy">
@@ -52,7 +51,6 @@
               <span class="card-eyebrow">Matchups</span>
               <h3>Matchup Source</h3>
             </div>
-            <span class="state-chip">{{providerLabel(state.providerId)}}</span>
           </div>
           <mat-form-field appearance="fill">
             <mat-label>Provider</mat-label>

@@ -136,12 +136,6 @@
             @if (friend.inCurrentLobby) {
               <span class="badge lobby">In Lobby</span>
             }
-            <span class="badge muted">{{friend.availabilityLabel}}</span>
-          </div>
-
-          <div class="friend-group">
-            <span>Group</span>
-            <strong>{{friend.groupName}}</strong>
           </div>
 
           <div class="card-actions">
@@ -165,9 +159,6 @@
               </button>
             }
           </div>
-          @if (friend.inviteReason) {
-            <p class="action-hint">{{friend.inviteReason}}</p>
-          }
         </article>
       }
     </section>

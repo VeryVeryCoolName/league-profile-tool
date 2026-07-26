@@ -14,6 +14,12 @@ export interface LcuEventConnectionOptions {
   authorization?: string;
 }
 
+export interface LcuEventBridgeState {
+  connected: boolean;
+  connecting: boolean;
+  message: string;
+}
+
 export interface ClientInstallInfo {
   path: string;
   label: string;
@@ -36,7 +42,7 @@ export interface LeagueProfileToolBridge {
   connectLcuEvents(
     options: LcuEventConnectionOptions,
     onEvent: (event: unknown) => void,
-    onState: (state: {connected: boolean; message: string}) => void
+    onState: (state: LcuEventBridgeState) => void
   ): Promise<void>;
   disconnectLcuEvents(): Promise<void>;
 }
@@ -109,7 +115,7 @@ export class ElectronService {
   public connectLcuEvents(
     options: LcuEventConnectionOptions,
     onEvent: (event: unknown) => void,
-    onState: (state: {connected: boolean; message: string}) => void
+    onState: (state: LcuEventBridgeState) => void
   ): Promise<void> {
     if (!this.bridge) return Promise.reject(new Error('Electron bridge is unavailable.'));
     return this.bridge.connectLcuEvents(options, onEvent, onState);
