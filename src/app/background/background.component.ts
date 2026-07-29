@@ -9,7 +9,7 @@ import {ProfileIconService} from "../core/services/profile-icon/profile-icon.ser
 import {isClassicChampionKey} from "../core/classic";
 import {BONUS_BACKGROUNDS, BonusBackground, bonusBackgroundImageUrl} from "../core/bonus-backgrounds";
 import {communityDragonAssetUrl} from "../core/community-dragon";
-import {Subscription} from 'rxjs';
+import {forkJoin, Subscription} from 'rxjs';
 
 @Component({
     selector: 'app-background',
@@ -184,12 +184,19 @@ export class BackgroundComponent implements OnInit, OnDestroy {
   }
 
   private loadClassicChampions(): void {
-    this.championData.getClassicChampionData().subscribe(data => {
+    forkJoin({
+      data: this.championData.getClassicChampionData(),
+      renderable: this.championData.getClassicRenderableSkinIds()
+    }).subscribe(({data, renderable}) => {
       if (!data.champions.length) return;
+
+      const renderableChampionKeys = new Set<number>();
+      renderable.forEach(id => renderableChampionKeys.add(Math.floor(id / 1000)));
 
       const championKeys = {...this.championKeys};
       const championImages = this.championImages.filter(image => this.championRoster(image) !== 'classic');
       for (const champion of data.champions) {
+        if (!renderableChampionKeys.has(Number(champion.id))) continue;
         const alias = String(champion.alias || `Classic${champion.id}`);
         championKeys[alias] = Number(champion.id);
         championImages.push({
@@ -216,12 +223,16 @@ export class BackgroundComponent implements OnInit, OnDestroy {
   }
 
   private loadClassicSkins(alt: string, championKey: number, requestId: number): void {
-    this.championData.getClassicChampionDetail(championKey).subscribe(detail => {
+    forkJoin({
+      detail: this.championData.getClassicChampionDetail(championKey),
+      renderable: this.championData.getClassicRenderableSkinIds()
+    }).subscribe(({detail, renderable}) => {
       if (requestId !== this.skinRequestId) return;
       const championName = this.championDisplayName(alt);
       const skinImages = [];
       const seen = {};
       for (const skin of (detail && detail.champion && detail.champion.skins) || []) {
+        if (!renderable.has(Number(skin && skin.id))) continue;
         const entry = this.classicSkinEntry(skin, championKey, championName, detail.branch);
         if (!entry) continue;
         const id = String(entry.alt || '');

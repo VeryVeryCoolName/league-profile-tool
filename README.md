@@ -29,8 +29,8 @@ Originally based on the project by [MManoah](https://github.com/MManoah/league-p
 
 Choose the version that fits your setup:
 
-# [Download the Installer](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.6.0/League.Profile.Tool.Setup.3.6.0.exe)
-# [Download the 64-bit Portable ZIP](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.6.0/LeagueProfileTool.zip)
+# [Download the Installer](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.6.1/League.Profile.Tool.Setup.3.6.1.exe)
+# [Download the 64-bit Portable ZIP](https://github.com/VeryVeryCoolName/league-profile-tool/releases/download/V3.6.1/LeagueProfileTool.zip)
 # [MSIX Package COMING SOON]()
 
 Windows 10 or 11 (64-bit) is required. League of Legends itself no longer runs on 32-bit Windows, so 32-bit builds are no longer published.
@@ -38,7 +38,7 @@ Windows 10 or 11 (64-bit) is required. League of Legends itself no longer runs o
 Setup:
 
 1. Make sure the League Client is already running.
-2. If you downloaded the installer, launch `League.Profile.Tool.Setup.3.6.0.exe` and follow the prompts.
+2. If you downloaded the installer, launch `League.Profile.Tool.Setup.3.6.1.exe` and follow the prompts.
 3. If you downloaded the portable ZIP, extract it somewhere on your computer and launch `League Profile Tool.exe`.
 4. If you downloaded the MSIX package, double-click it and choose Install.
 

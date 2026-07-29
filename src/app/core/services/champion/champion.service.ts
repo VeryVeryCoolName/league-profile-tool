@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {catchError, forkJoin, map, Observable, of, shareReplay, switchMap, tap, throwError} from 'rxjs';
-import {CLASSIC_DATA_BRANCHES, isClassicChampionKey} from '../../classic';
+import {CLASSIC_DATA_BRANCHES, isClassicChampionKey, isClassicSkinId} from '../../classic';
 import {CN_EXCLUSIVE_SUMMONER_ICONS, CN_ICON_BRANCH, isCnExclusiveIconId} from '../../cn-icons';
 import {COMMUNITY_DRAGON_BRANCHES, COMMUNITY_DRAGON_LIVE_BRANCH, communityDragonUrl} from '../../community-dragon';
 
@@ -33,6 +33,7 @@ export class ChampionService {
   private skinCatalogRequest: Observable<Record<string, any>> | null = null;
   private classicChampionDataRequest: Observable<ClassicChampionData> | null = null;
   private readonly classicChampionDetailRequests = new Map<number, Observable<ClassicChampionDetail>>();
+  private classicRenderableSkinIdsRequest: Observable<Set<number>> | null = null;
 
   constructor(private http: HttpClient) { }
 
@@ -99,6 +100,31 @@ export class ChampionService {
       );
     }
     return this.classicChampionDetailRequests.get(championId);
+  }
+
+  getClassicRenderableSkinIds(): Observable<Set<number>> {
+    if (!this.classicRenderableSkinIdsRequest) {
+      this.classicRenderableSkinIdsRequest = this.getClassicChampionData().pipe(
+        switchMap(data => this.http
+          .get<Record<string, any>>(communityDragonUrl(data.branch, 'v1/skins.json'))
+          .pipe(
+            map(catalog => {
+              const ids = new Set<number>();
+              Object.values(catalog || {}).forEach(skin => {
+                const id = Number(skin && skin.id);
+                if (Number.isFinite(id) && isClassicSkinId(id)) ids.add(id);
+              });
+              return ids;
+            }),
+            catchError(() => of(new Set<number>()))
+          )),
+        tap(ids => {
+          if (!ids.size) this.classicRenderableSkinIdsRequest = null;
+        }),
+        shareReplay({bufferSize: 1, refCount: false})
+      );
+    }
+    return this.classicRenderableSkinIdsRequest;
   }
 
   getSummonerIcons(branch: string = COMMUNITY_DRAGON_LIVE_BRANCH): Observable<any[]> {
